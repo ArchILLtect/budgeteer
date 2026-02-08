@@ -1,8 +1,12 @@
+import { Box, Heading, Text } from '@chakra-ui/react';
+
 export default function Accounts() {
   return (
-    <div>
-      <h1>Accounts</h1>
-      <p>Accounts management coming soon...</p>
-    </div>
+    <Box>
+      <Heading size="lg" mb={3}>
+        Accounts
+      </Heading>
+      <Text color="gray.600">Accounts management coming soon...</Text>
+    </Box>
   );
 }

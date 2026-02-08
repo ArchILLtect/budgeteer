@@ -1,8 +1,12 @@
+import { Box, Heading, Text } from '@chakra-ui/react';
+
 export default function Planner() {
   return (
-    <div>
-      <h1>Planner</h1>
-      <p>Budget planning coming soon...</p>
-    </div>
+    <Box>
+      <Heading size="lg" mb={3}>
+        Planner
+      </Heading>
+      <Text color="gray.600">Budget planning coming soon...</Text>
+    </Box>
   );
 }

@@ -1,8 +1,12 @@
+import { Box, Heading, Text } from '@chakra-ui/react';
+
 export default function Settings() {
   return (
-    <div>
-      <h1>Settings</h1>
-      <p>Settings coming soon...</p>
-    </div>
+    <Box>
+      <Heading size="lg" mb={3}>
+        Settings
+      </Heading>
+      <Text color="gray.600">Settings coming soon...</Text>
+    </Box>
   );
 }

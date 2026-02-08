@@ -1,8 +1,12 @@
+import { Box, Heading, Text } from '@chakra-ui/react';
+
 export default function Imports() {
   return (
-    <div>
-      <h1>Imports</h1>
-      <p>CSV imports coming soon...</p>
-    </div>
+    <Box>
+      <Heading size="lg" mb={3}>
+        Imports
+      </Heading>
+      <Text color="gray.600">CSV imports coming soon...</Text>
+    </Box>
   );
 }
