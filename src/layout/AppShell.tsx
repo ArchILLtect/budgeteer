@@ -5,19 +5,23 @@ import { StorageDisclosureBanner } from "../components/ui/StorageDisclosureBanne
 import Navigation from "./Navigation";
 import Footer from "./Footer.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
+import type { AuthUserLike } from "../types";
 import { Suspense } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
+import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
+import { WelcomeModal } from "../components/ui/WelcomeModal";
 
-/*
 type AppShellProps = {
   user?: AuthUserLike | null;
   onSignOut?: () => void;
   signedIn: boolean;
   authLoading: boolean;
 };
-*/
 
-export function AppShell() {
+
+export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellProps) {
+
+  useBootstrapUserProfile(user);
 
   return (
     <Flex direction="column" h="100vh" bg="gray.50" overflow={"hidden"} className="AppShell" position="relative">
@@ -40,6 +44,7 @@ export function AppShell() {
         Skip to content
       </Link>
       <Toaster />
+      <WelcomeModal signedIn={signedIn && !authLoading} />
 
       <Flex minH="100vh" direction="column" bg="gray.50">
         <Navigation />
@@ -52,7 +57,7 @@ export function AppShell() {
             </ErrorBoundary>
           </Container>
         </Box>
-        <Footer />
+        <Footer signedIn={signedIn} onSignOut={onSignOut} />
       </Flex>
 
       <StorageDisclosureBanner />
