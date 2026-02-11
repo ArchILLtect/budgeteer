@@ -12,6 +12,9 @@ Developer Documentation Hub (start here): `docs/index.md`
 - State: Zustand stores under `src/store/` (some persisted to localStorage).
 - Cloud integration: AWS Amplify (Cognito auth + AppSync GraphQL client).
 
+## Key conventions and patterns to know before editing:
+
+
 ## Legacy / backward-compat stance (important)
 
 - There are currently no real users or accounts for this app yet (no admin/tester accounts either).
@@ -75,6 +78,15 @@ Note: When you start needing backward compatibility, switch to the legacy-mode g
 - Test runner: Vitest (`npm test`).
 - Existing unit tests focus on ingestion (see `src/ingest/__tests__/`).
 - Keep tests fast and deterministic; add new tests adjacent to the module under test.
+
+## For checklists
+
+- Never delete an item from a checklist in the docs; mark it as done with a strikethrough and add a note if needed.
+- For new features or significant refactors, add a new checklist item to the relevant milestone in `docs/MILESTONES.md` to ensure it gets verified in future manual test runs.
+- If the change is significant enough to require a new milestone, add a new section to `docs/MILESTONES.md` with a checklist for the new milestone.
+- For minor changes that don't warrant a new milestone, consider adding a note to the relevant existing checklist item or creating a new item under an "Other" category in the relevant milestone.
+- Keep the checklist items concrete and verifiable in the UI; avoid vague or subjective items.
+- Keep the checklist up-to-date as items are completed or as the app evolves; outdated checklists can lead to confusion and missed regressions.
 
 ## Verification (run this when it matters)
 
