@@ -159,7 +159,7 @@ export default function SettingsPage() {
         <Box pt={6} w="100%"> {/* Navigation */}
           <Heading size="lg">Navigation</Heading>
           <Text color="gray.600" fontSize="sm">
-            Customize your sidebar and default landing pages.
+            Customize your sidebar and default landing page.
           </Text>
 
           <VStack align="stretch" gap={4} pt={3}>

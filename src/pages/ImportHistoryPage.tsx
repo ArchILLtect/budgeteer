@@ -142,6 +142,9 @@ export default function ImportHistoryPage() {
     <Box p={6}>
       <Flex mb={4} align="center" gap={4} wrap="wrap">
         <Heading size='md'>Import History</Heading>
+        <Text fontSize="sm" color="gray.600">
+          Review recent import sessions, apply staged transactions, and undo within the undo window.
+        </Text>
         <Spacer />
         <HStack>
           <AppSelect size='sm' placeholder='Account' value={filterAccount} onChange={(e: event) => setFilterAccount(e.target.value)}>
@@ -168,7 +171,7 @@ export default function ImportHistoryPage() {
             <Text fontSize='sm'>{selectedEntries.length} selected</Text>
             <Button size='xs' onClick={doUndoSelected} colorScheme='red' variant='outline'>Undo</Button>
             <Button size='xs' onClick={doApplySelected} colorScheme='teal' variant='outline'>Apply</Button>
-            <Button size='xs' onClick={() => { doUndoSelected(); doApplySelected(); }} variant='outline'>Smart Resolve</Button>
+            <Button size='xs' onClick={() => { doUndoSelected(); doApplySelected(); }} variant='outline'>Resolve (Undo + Apply)</Button>
             <Button size='xs' onClick={exportSelected} variant='outline'>
               <TiDownloadOutline  />
               Export CSV
@@ -186,6 +189,14 @@ export default function ImportHistoryPage() {
           </HStack>
         )}
       </Flex>
+
+      {rows.length === 0 ? (
+        <Box borderWidth={1} borderRadius='md' p={4}>
+          <Text fontSize='sm' color='gray.600'>
+            No import sessions yet. Import transactions from the Accounts page to see history here.
+          </Text>
+        </Box>
+      ) : null}
 
       <Box borderWidth={1} borderRadius='md' overflowX='auto'>
         <Table.Root size="sm" variant="line" striped>
