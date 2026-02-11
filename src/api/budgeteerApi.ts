@@ -46,7 +46,8 @@ type UserProfileItem = NonNullable<NonNullable<ListUserProfilesQuery["listUserPr
 function stripOwnerField<T extends Record<string, unknown>>(input: T): Omit<T, "owner"> {
   // Defense-in-depth: never allow client code to send `owner` in *update* mutation inputs.
   // Ownership should not be transferable via client payloads.
-  const { owner: _owner, ...rest } = input as T & { owner?: unknown };
+  const rest = { ...(input as T & { owner?: unknown }) } as T & { owner?: unknown };
+  delete rest.owner;
   return rest;
 }
 
