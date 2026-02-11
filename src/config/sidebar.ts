@@ -16,7 +16,7 @@ export const sidebarItems: SidebarLink[] = [
 ];
 
 export const publicSidebarItems: SidebarLink[] = [
-    { to: "/homepage", label: "Homepage" },
+  { to: "/", label: "Home" },
     { to: "/about", label: "About" },
     { to: "/login", label: "Login / Signup" },
 ];

@@ -96,13 +96,9 @@ export default function Navigation({ user, userUI }: NavigationProps) {
                 </RouterLink>
 
                 {isAdmin ? (
-                  <RouterLink to="/admin">
-                    {({ isActive }) => (
-                      <Badge rounded="md" bg={isActive ? "purple.100" : undefined}>
-                        Admin
-                      </Badge>
-                    )}
-                  </RouterLink>
+                  <Badge rounded="md" bg="purple.100" color="purple.800">
+                    Admin
+                  </Badge>
                 ) : null}
 
                 {isDemo ? (

@@ -1,6 +1,5 @@
-import { Button, HStack, Text, Icon, Spacer } from "@chakra-ui/react";
+import { Button, HStack, Text, Spacer } from "@chakra-ui/react";
 import { RouterLink } from "./RouterLink";
-import { FiList, FiCalendar } from "react-icons/fi";
 
 export const SidebarItem = (
   {
@@ -30,8 +29,6 @@ export const SidebarItem = (
           _hover={{ bg: "blackAlpha.100" }}
         >
           <HStack w="100%" gap={2} minW={0} justify="start">
-            { to.startsWith("/lists/") && <Icon as={FiList } /> }
-            { (to === "/today" || to === "/week" || to === "/month") && !main && <Icon as={FiCalendar } /> }
             <Text truncate>{label}</Text>
             {rightAdornment ?
               <>

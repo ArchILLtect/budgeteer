@@ -7,11 +7,11 @@ function shouldBypassAuthForE2E(): boolean {
 }
 
 function sanitizeRedirect(raw: string | null): string {
-  if (!raw) return "/today";
+  if (!raw) return "/planner";
   // Only allow internal paths to prevent open redirects.
-  if (!raw.startsWith("/")) return "/today";
-  if (raw.startsWith("//")) return "/today";
-  if (raw.includes("://")) return "/today";
+  if (!raw.startsWith("/")) return "/planner";
+  if (raw.startsWith("//")) return "/planner";
+  if (raw.includes("://")) return "/planner";
   return raw;
 }
 
