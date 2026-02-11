@@ -17,8 +17,7 @@ export type AddDemoDataResult = Record<string, never>;
 
 // Clears only *demo-marked* data (`isDemo === true`).
 // Guardrails:
-// - Never deletes non-demo tasks or lists.
-// - If a demo list contains non-demo tasks, those tasks are moved to the system inbox before the demo list is deleted.
+// - Never deletes non-demo data.
 export async function clearDemoDataOnly(): Promise<ClearDemoDataResult> {
   // Requires auth.
   await getCurrentUser();

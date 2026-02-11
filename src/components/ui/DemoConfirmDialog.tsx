@@ -20,7 +20,7 @@ export function DemoConfirmDialog({
       body={
         <VStack align="start" gap={3}>
           <Text color="gray.700">
-            Demo mode creates a temporary demo user, signs you in, and seeds sample data.
+            Demo mode creates a temporary demo account, signs you in, and seeds sample data.
           </Text>
 
           <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" rounded="md" p={3} w="100%">

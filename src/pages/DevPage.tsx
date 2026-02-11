@@ -32,7 +32,7 @@ export function DevPage() {
               await clearCurrentUserPersistedCaches();
 
               // Repopulate current session state so the UI updates immediately.
-              // (Otherwise you often need a manual browser reload to see user metadata and tasks.)
+              // (Otherwise you often need a manual browser reload to see user metadata refresh.)
               await Promise.all([ getUserUIResult()]);
 
               fireToast(

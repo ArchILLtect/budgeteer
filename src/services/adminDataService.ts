@@ -66,8 +66,6 @@ function mapWithConcurrency<T, R>(items: T[], concurrency: number, fn: (item: T)
 }*/
 
 export type AdminSnapshot = {
-  //lists: ListUI[];
-  //tasks: TaskUI[];
   userProfiles: UserProfileUI[];
   meta?: {
     userProfilesEmailMode?: "full" | "safe";
@@ -119,7 +117,6 @@ async function fetchAllUserProfiles(limit = 200): Promise<{ userProfiles: UserPr
 export async function fetchAdminSnapshot(opts?: {
   listPageLimit?: number;
   userProfilePageLimit?: number;
-  tasksPerListPageLimit?: number;
 }): Promise<AdminSnapshot> {
   // const lists = await fetchAllTaskLists(opts?.listPageLimit ?? 200);
   const userProfilesRes = await fetchAllUserProfiles(opts?.userProfilePageLimit ?? 200);

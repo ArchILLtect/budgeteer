@@ -162,7 +162,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
               ) : null}
 
               <Text fontSize="sm">
-                Demo mode: one click creates a temporary demo user, signs you in, and seeds data.
+                Demo mode: one click creates a temporary demo account, signs you in, and seeds sample data.
               </Text>
               <Text fontSize="sm">
                 No signup. No email. Takes ~5 seconds.

@@ -59,7 +59,7 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
           >
             <Text fontSize="xl" fontWeight="700" mb={3}>Try Demo (No Signup)</Text>
             <Text fontSize="sm">
-              Demo mode: one click creates a temporary demo user, signs you in, and seeds data.
+              Demo mode creates a temporary demo account, signs you in, and seeds sample data.
             </Text>
             <Text fontSize="sm">
               No signup. No email. Takes ~5 seconds.
@@ -90,7 +90,6 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
         <Box p={3} bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" w="100%">
           <Text fontSize="sm" color="yellow.800">
             New here? You can try out the app with a temporary demo account — no signup required.
-            **Coming Soon**
           </Text>
         </Box>
       ) : null}

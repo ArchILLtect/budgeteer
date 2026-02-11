@@ -22,7 +22,7 @@ export default function Navigation({ user, userUI }: NavigationProps) {
   /* Omitted until we have a better need for this in the UI,
   // and to avoid unnecessary re-renders of the Navigation component when updates change
   const { loading } = 
-  const refreshing = loading && (lists.length > 0 || tasks.length > 0);
+  const refreshing = loading && hasLoadedData;
   */
 
   const authKey = user?.username ?? user?.userId;
