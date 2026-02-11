@@ -58,19 +58,22 @@ export default function Navigation({ user, userUI }: NavigationProps) {
     >
       <Flex justifyContent="space-between" alignItems="center" width="100%">
         <RouterLink to="/">{() => <Heading size="lg">{"Budgeteer"}</Heading>}</RouterLink>
-          <Tooltip content="What’s new" showArrow>
-            <Button
-              size="sm"
-              variant="ghost"
-              fontWeight="600"
-              color={"blue.600"}
-              onClick={() => {
-                requestOpenWelcomeModal();
-              }}
-            >
-              What’s new
-            </Button>
-          </Tooltip>
+          {signedIn ? (
+            <Tooltip content="What’s new" showArrow>
+              <Button
+                size="sm"
+                variant="ghost"
+                fontWeight="600"
+                color={"blue.600"}
+                onClick={() => {
+                  requestOpenWelcomeModal();
+                }}
+              >
+                What’s new
+              </Button>
+            </Tooltip>
+          ) : null}
+
           <HStack gap={3}>
             {/*{refreshing ? (
               <HStack gap={2} color="gray.600">
