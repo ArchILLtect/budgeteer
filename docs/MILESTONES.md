@@ -55,14 +55,16 @@ Use this as the running “ship list” for Milestone 1. Keep it honest and conc
 - [ ] Remove/rename any leftover non-Budgeteer terminology in the UI
 
 **C) Storage + user switching (no state leakage)**
-- [ ] All persisted keys follow `budgeteer:*` and user-scoped keys use the `budgeteer:u:<scope>:` prefix
+- [x] All persisted keys follow `budgeteer:*` and user-scoped keys use the `budgeteer:u:<scope>:` prefix
+- [x] Main persisted budget state is user-scoped (no shared `budgeteer:budgetStore` across users)
 - [ ] Switching users does not reuse the previous user’s cached UI metadata
 - [ ] Switching users does not reuse the previous user’s local settings / tips / demo preferences
 - [ ] “Clear caches”/reset pathways are discoverable and work as expected
+- [x] “Clear caches” clears user-scoped persisted stores + tip/demo/welcome prefs
 
 **D) Regression guardrails**
 - [ ] No console warnings/errors during normal navigation
-- [ ] `npm run check` stays green for Milestone 1 changes
+- [x] `npm run check` stays green for Milestone 1 changes
 
 **Milestone 1 manual test script (quick)**
 - [ ] Sign in as User A → visit Planner/Tracker/Accounts/Imports/Settings → sign out
