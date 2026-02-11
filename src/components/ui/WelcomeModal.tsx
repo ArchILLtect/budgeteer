@@ -24,7 +24,7 @@ const WELCOME_MODAL_VERSION = 1 as const;
 const WHATS_NEW: Array<{ title: string; body: string }> = [
   {
     title: "Sample data vs Demo Mode",
-    body: "New accounts can be seeded with sample tasks/lists without being treated as a demo account.",
+    body: "New accounts can be seeded with sample data without being treated as a demo account.",
   },
   {
     title: "Graduation flow",
