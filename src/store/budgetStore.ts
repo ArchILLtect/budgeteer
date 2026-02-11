@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { calculateTotalTaxes, calculateNetIncome } from '../utils/calcUtils';
 import { getStrongTransactionKey } from '../utils/storeHelpers.ts';
 import dayjs from 'dayjs';
+import { createUserScopedZustandStorage } from "../services/userScopedStorage";
 
 // TODO: Allow users to change overtime threshold and tax rates
 
@@ -1316,6 +1317,7 @@ export const useBudgetStore = create(
 
         {
             name: 'budgeteer:budgetStore', // key in localStorage
+            storage: createUserScopedZustandStorage(),
             partialize: (state: any) => {
                 // Intentionally strip transient flags and UI modal/progress from persistence
                 const clone = { ...state };

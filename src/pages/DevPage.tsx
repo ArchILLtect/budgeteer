@@ -5,6 +5,7 @@ import { fireToast } from "../hooks/useFireToast";
 import { clearCurrentUserPersistedCaches } from "../store/clearUserCaches";
 import { getUserUIResult } from "../services/authService";
 import { Tip } from "../components/ui/Tip";
+import { getUserStorageScopeKey, makeUserScopedKey } from "../services/userScopedStorage";
 
 export function DevPage() {
 
@@ -50,7 +51,8 @@ export function DevPage() {
               size="sm"
               variant="outline"
               onClick={() => {
-                const key = "budgeteer:budgetStore";
+                const baseKey = "zustand:budgeteer:budgetStore";
+                const key = makeUserScopedKey(baseKey);
                 const raw = localStorage.getItem(key);
 
                 if (!raw) {
@@ -69,6 +71,7 @@ export function DevPage() {
                   const extraKeys = stateKeys.filter((k) => !allowedKeys.includes(k));
 
                   console.log(`[dev] ${key} persist envelope`, {
+                    scope: getUserStorageScopeKey() ?? null,
                     version: envelope?.version,
                     stateKeys,
                     extraKeys,

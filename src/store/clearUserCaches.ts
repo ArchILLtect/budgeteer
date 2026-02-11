@@ -1,5 +1,13 @@
 import { useUpdatesStore } from "./updatesStore";
+import { useLocalSettingsStore } from "./localSettingsStore";
+import { useBudgetStore } from "./budgetStore";
 import { clearUserUIInMemoryCache } from "../services/authService";
+import { useUserUICacheStore } from "../services/userUICacheStore";
+import { clearUserScopedKeysByPrefix, userScopedRemoveItem } from "../services/userScopedStorage";
+import { DEMO_MODE_OPT_IN_KEY } from "../services/demoModeOptIn";
+import { DEMO_TOUR_SEEN_KEY } from "../services/demoTour";
+import { SEED_DEMO_PREF_KEY } from "../services/seedDemoPreference";
+import { WELCOME_MODAL_PREF_KEY } from "../services/welcomeModalPreference";
 
 let resetInProgress = false;
 let lastResetAtMs = 0;
@@ -28,7 +36,18 @@ export async function clearCurrentUserPersistedCaches(): Promise<void> {
   try {
     await Promise.all([
       useUpdatesStore.persist.clearStorage(),
+      useLocalSettingsStore.persist.clearStorage(),
+      useBudgetStore.persist.clearStorage(),
+      useUserUICacheStore.persist.clearStorage(),
     ]);
+
+    // Clear per-user localStorage keys that are not part of a zustand store.
+    clearUserScopedKeysByPrefix("tip:");
+    userScopedRemoveItem(DEMO_MODE_OPT_IN_KEY);
+    userScopedRemoveItem(DEMO_TOUR_SEEN_KEY);
+    userScopedRemoveItem(SEED_DEMO_PREF_KEY);
+    userScopedRemoveItem(WELCOME_MODAL_PREF_KEY);
+    userScopedRemoveItem("welcomeModalLastShownAtMs");
   } catch {
     // ignore
   } finally {

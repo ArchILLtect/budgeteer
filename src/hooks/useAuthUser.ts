@@ -7,6 +7,7 @@ import { resetUserSessionState } from "../store/clearUserCaches";
 import { setUserStorageScopeKey } from "../services/userScopedStorage";
 import { useUserUICacheStore } from "../services/userUICacheStore";
 import { requestOpenWelcomeModal } from "../services/welcomeModalPreference";
+import { useBudgetStore } from "../store/budgetStore";
 //import { clearDemoSessionActive } from "../services/demoSession";
 
 function isNotSignedInError(err: unknown): boolean {
@@ -48,6 +49,34 @@ export function useAuthUser(): {
     //   Doing so can overwrite the newly-selected scope with defaults before rehydrate.
     // - On sign-out, we do reset in-memory state so the UI doesn't retain authed data.
     if (!authKey) {
+      // Clear any authed state from in-memory stores so signed-out screens (or the next
+      // login) can't briefly show previous-user data.
+      try {
+        useBudgetStore.setState({
+          user: null,
+          isDemoUser: false,
+          accounts: {},
+          accountMappings: {},
+          pendingSavingsByAccount: {},
+          savingsReviewQueue: [],
+          importHistory: [],
+          importManifests: {},
+          monthlyPlans: {},
+          monthlyActuals: {},
+          savingsLogs: {},
+          lastIngestionTelemetry: null,
+          sessionExpired: false,
+          hasInitialized: false,
+          isSavingsModalOpen: false,
+          isConfirmModalOpen: false,
+          isLoadingModalOpen: false,
+          isProgressOpen: false,
+          resolveSavingsPromise: null,
+        } as any);
+      } catch {
+        // ignore
+      }
+
       resetUserSessionState();
     }
 
@@ -57,6 +86,7 @@ export function useAuthUser(): {
     try {
       // void <store>.persist.rehydrate();
       void useUserUICacheStore.persist.rehydrate();
+      void useBudgetStore.persist.rehydrate();
     } catch {
       // ignore
     }
