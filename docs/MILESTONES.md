@@ -48,8 +48,8 @@ Use this as the running “ship list” for Milestone 1. Keep it honest and conc
 - [x] 404/unknown routes land on a sensible Budgeteer page
 
 **B) Copy + terminology**
-- [ ] Planner copy reads as Budgeteer (titles, buttons, empty states)
-- [ ] Tracker copy reads as Budgeteer (titles, buttons, empty states)
+- [x] Planner copy reads as Budgeteer (titles, buttons, empty states)
+- [x] Tracker copy reads as Budgeteer (titles, buttons, empty states)
 - [x] Accounts + Imports copy reads as Budgeteer (titles, buttons, empty states)
 - [x] Settings copy reads as Budgeteer (titles, sections, helper text)
 - [ ] Remove/rename any leftover non-Budgeteer terminology in the UI
