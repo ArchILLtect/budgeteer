@@ -96,7 +96,7 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`
-              : 'No Actual Income Yet'}
+              : 'No actual income yet'}
           </Heading>
         )}
       </Flex>

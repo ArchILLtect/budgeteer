@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useBudgetStore } from '../../store/budgetStore'
 import {
-  Box, Flex, Heading, Stack, Input, Button, HStack,
+  Box, Flex, Heading, Stack, Input, Button, HStack, Text,
   IconButton, Stat, StatGroup, StatLabel, Checkbox,
 } from '@chakra-ui/react'
 import { MdAdd, MdDelete, MdInfo } from "react-icons/md";
@@ -87,7 +87,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
   }, [overiddenExpenseTotal]);
 
   const handleRemove = (id: string) => {
-    if (window.confirm('Are you sure you want to remove this expense?')) {
+    if (window.confirm('Remove this expense?')) {
       removeExpense(id)
     }
   }
@@ -119,6 +119,11 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
           ariaLabel="Toggle expense details"
         >
           <Stack gap={3}>
+            {expenses.length === 0 ? (
+              <Text fontSize="sm" color="gray.600">
+                No expenses yet. Add one to start tracking.
+              </Text>
+            ) : null}
             {expenses.map((expense: Expense) => (
               <HStack key={expense.id}>
                 <Input

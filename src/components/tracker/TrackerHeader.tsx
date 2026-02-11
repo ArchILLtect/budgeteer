@@ -35,7 +35,9 @@ export default function TrackerHeader() {
     };
 
     const handleTempButton = () => {
-        window.alert('This feature coming soon!\n\nFor now you must edit the scenario in the Budget Planner and then "Remove Plan" and re-"Set Plan"')
+        window.alert(
+            'Coming soon!\n\nFor now, edit the scenario in Planner, then remove and re-set the plan for this month.'
+        )
     }
 
     return (
@@ -66,7 +68,7 @@ export default function TrackerHeader() {
             {!plan ? (
                 <Center mt={1}>
                     <Button colorScheme="teal" size="xs" onClick={onOpen}>
-                        Set Plan
+                        Set plan
                     </Button>
                 </Center>
             ) : (
@@ -75,10 +77,10 @@ export default function TrackerHeader() {
                         Plan: {plan.scenarioName || 'Unnamed'}
                     </Text>
                     <Button size="xs" variant="outline" colorScheme="blue" onClick={() => handleTempButton()}>
-                        Edit Plan/Actual
+                        Edit plan/actuals
                     </Button>
                     <Button size="xs" variant="outline" colorScheme="red" onClick={handleRemove}>
-                        Remove Plan
+                        Remove plan
                     </Button>
                 </Center>
             )}

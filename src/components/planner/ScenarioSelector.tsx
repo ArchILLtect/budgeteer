@@ -44,12 +44,12 @@ export default function ScenarioSelector({ isOpen, onOpen, onClose }: ScenarioSe
                 }
               }}
             >
-              Delete
+              Delete scenario
             </Button>
           )}
 
           {/* Add */}
-          <Button alignContent="top" onClick={onOpen} bg={"green.300"}>
+          <Button alignContent="top" onClick={onOpen} bg={"green.300"} aria-label="Add scenario">
             <Flex as="kbd" fontWeight={900} bgSize="cover" fontSize={"4xl"} alignContent="center" mb={1} color={"black"}>+</Flex>
           </Button>
 

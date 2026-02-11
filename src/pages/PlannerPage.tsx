@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Heading, Center, Text } from '@chakra-ui/react'
+import { Box, Heading, Center, Text, VStack } from '@chakra-ui/react'
 import ScenarioSelector from '../components/planner/ScenarioSelector';
 import IncomeCalculator from '../components/planner/IncomeCalculator';
 import ExpenseTracker from '../components/planner/ExpenseTracker';
@@ -20,7 +20,14 @@ function BudgetPlannerPage() {
     <Box bg="gray.200" p={4}>
       <Box p={4} maxW="80%" mx="auto" borderWidth={1} borderRadius="lg" boxShadow="md" background={"white"}>
         <Center mb={4}>
-          <Heading size="md" fontWeight={700} onMouseEnter={preloadExpensePie}>Budget Planner</Heading>
+          <VStack gap={1}>
+            <Heading size="md" fontWeight={700} onMouseEnter={preloadExpensePie}>
+              Planner
+            </Heading>
+            <Text fontSize="sm" color="gray.600">
+              Build a monthly plan for income, expenses, and savings.
+            </Text>
+          </VStack>
         </Center>
         <ScenarioSelector isOpen={isOpen} onOpen={() => setIsOpen(true)} onClose={() => setIsOpen(false)} />
         <hr style={{marginTop: 15 + "px", marginBottom: 15 + "px"}}/>
@@ -29,7 +36,9 @@ function BudgetPlannerPage() {
         <Suspense fallback={<InlineSpinner />}>
           <ExpensePie />
         </Suspense>
-        <Text mt={4} fontSize="sm" color="gray.600">*All values are editable. Changes will be reflected in the monthly tracker.</Text>
+        <Text mt={4} fontSize="sm" color="gray.600">
+          All values are editable. Changes will be reflected in the Tracker.
+        </Text>
       </Box>
     </Box>
   )
