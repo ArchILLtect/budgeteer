@@ -44,8 +44,8 @@ Use this as the running “ship list” for Milestone 1. Keep it honest and conc
 - [x] Routes in `src/App.tsx` match sidebar/header links (no dead links)
 - [ ] Public routes behave correctly (Home/About/Planner/Tracker/Settings/Login)
 - [ ] Protected routes behave correctly (Accounts/Imports/Profile, and Dev in DEV only)
-- [ ] Auth redirect after login lands on a Budgeteer route (not legacy)
-- [ ] 404/unknown routes land on a sensible Budgeteer page
+- [x] Auth redirect after login lands on a Budgeteer route (not legacy)
+- [x] 404/unknown routes land on a sensible Budgeteer page
 
 **B) Copy + terminology**
 - [ ] Planner copy reads as Budgeteer (titles, buttons, empty states)
