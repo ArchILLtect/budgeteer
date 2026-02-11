@@ -5,16 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
 import { Tip } from "../components/ui/Tip";
 import { useDefaultLandingRoute } from "../store/localSettingsStore";
-
-function sanitizeRedirect(raw: string | null, fallback: string): string {
-  if (!raw) return fallback;
-  if (!raw.startsWith("/")) return fallback;
-  if (raw.startsWith("//")) return fallback;
-  if (raw.includes("://")) return fallback;
-  // Avoid loops / confusing flows.
-  if (raw === "/login") return fallback;
-  return raw;
-}
+import { sanitizeRedirectPath } from "../routes/redirectUtils";
 
 export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLoading: boolean }) {
   const navigate = useNavigate();
@@ -23,7 +14,7 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
 
   const redirectTarget = useMemo(() => {
     const params = new URLSearchParams(location.search);
-    return sanitizeRedirect(params.get("redirect"), defaultLandingRoute);
+    return sanitizeRedirectPath(params.get("redirect"), defaultLandingRoute, { disallowLogin: true });
   }, [defaultLandingRoute, location.search]);
 
   const intent = useMemo(() => {

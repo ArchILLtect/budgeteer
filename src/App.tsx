@@ -17,6 +17,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import ImportHistoryPage from './pages/ImportHistoryPage';
 import TrackerPage from './pages/TrackerPage';
 import { DevPage } from './pages/DevPage';
+import { useDefaultLandingRoute } from './store/localSettingsStore';
 
 // TODO(P3): Add lazy loading for pages and components, especially ones that pull in a lot of dependencies (e.g. the login page with Amplify UI).
 
@@ -56,6 +57,7 @@ function maybeClearCachesBeforeFirstAuthedRender(user?: { username?: string; use
 function App() {
 
   const { user, signedIn, loading: authLoading, signOutWithCleanup } = useAuthUser();
+  const defaultLandingRoute = useDefaultLandingRoute();
 
     useLayoutEffect(() => {
       maybeClearCachesBeforeFirstAuthedRender(user);
@@ -83,7 +85,7 @@ function App() {
           </Route>
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to={signedIn ? defaultLandingRoute : "/"} replace />} />
         </Route>
     </Routes>
   );
