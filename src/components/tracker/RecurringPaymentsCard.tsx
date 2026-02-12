@@ -82,7 +82,7 @@ export default function RecurringPaymentsCard({ account }: RecurringPaymentsCard
               <Table.Cell borderRightWidth="2px" borderRightColor="gray.200"><Text color="gray.700" fontWeight={'bold'}>Total</Text></Table.Cell>
               <Table.Cell colSpan={3}></Table.Cell>
               <Table.Cell borderRightWidth="2px" borderRightColor="gray.200"><Text color="gray.700" fontWeight={'bold'}>{totalRecurring.toLocaleString()}</Text></Table.Cell>
-              <Table.Cell><Button size="xs" colorScheme="red" variant="outline" onClick={() => {/* TODO: implement bulk clear in store if desired */}}>Clear All TXs</Button></Table.Cell>
+              <Table.Cell><Button size="xs" colorScheme="red" variant="outline" onClick={() => {/* TODO: implement bulk clear in store if desired */}}>Clear all transactions</Button></Table.Cell>
             </Table.Row>
           )
         }

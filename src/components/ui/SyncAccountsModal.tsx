@@ -207,7 +207,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         // accounts' transactions intact. For now, users can apply all then undo from the history tab if needed. 
           render: ({ onClose }) => (
             <Box p={3} bg='gray.800' color='white' borderRadius='md' boxShadow='md'>
-              <Text fontSize='sm' mb={1}>Imported {result.stats.newCount} new tx in {accountNumber}</Text>
+              <Text fontSize='sm' mb={1}>Imported {result.stats.newCount} new transactions in {accountNumber}</Text>
               <Button size='xs' colorScheme='red' variant='outline' onClick={() => { useBudgetStore.getState().undoStagedImport(accountNumber, sessionId); onClose(); }}>Undo</Button>
             </Box>
           )*/
