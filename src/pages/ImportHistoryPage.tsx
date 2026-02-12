@@ -8,33 +8,28 @@ import { Tooltip } from '../components/ui/Tooltip';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import type {
+  ImportHistoryEntry,
+  ImportSessionRuntime,
+} from "../store/slices/importLogic";
 dayjs.extend(relativeTime);
 // Runtime computation centralized in store (getImportSessionRuntime)
 
-type ImportSessionRuntime = {
-  stagedNow: number; // how many transactions currently staged (not yet applied)
-  appliedCount: number; // how many transactions have been applied
-  removed: number; // how many transactions have been removed (undone) since import
-  expiresAt: number | null; // timestamp when undo window expires, or null if expired
-  status: Status;
-  canUndo: boolean; // whether undo action is currently available
-};
-
-type ImportHistoryEntry = {
-  sessionId: string;
-  accountNumber: string;
-  newCount: number; // how many transactions were included in this import session
-  savingsCount?: number; // how many transactions had savings impact (optional, may be 0 or undefined)
-  importedAt: number; // timestamp when import occurred
-  hash: string; // hash of the imported file for reference
-};
+type Status = ImportSessionRuntime["status"] | "?";
 
 type ImportHistoryRow = {
   entry: ImportHistoryEntry;
-  runtime: ImportSessionRuntime;
+  runtime:
+    | ImportSessionRuntime
+    | {
+        stagedNow: number;
+        appliedCount: number;
+        removed: number;
+        expiresAt: number | null;
+        status: "?";
+        canUndo: false;
+      };
 };
-
-type Status = 'active' | 'expired' | 'applied' | 'partial-applied' | 'undone' | 'partial-undone' | '?';
 
 type event = React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>;
 
@@ -60,8 +55,10 @@ export default function ImportHistoryPage() {
   // We intentionally include nowTick to force a periodic refresh (every minute) of runtime-derived fields
   // like status (active -> expired) without extra logic; it's used as a time invalidation key.
   const rows = useMemo(() => {
-    return importHistory.map((entry: ImportHistoryEntry) => {
-      const runtime = getImportSessionRuntime(entry.accountNumber, entry.sessionId) || { stagedNow:0, appliedCount:0, removed:0, status:'?', canUndo:false };
+    return importHistory.map((entry) => {
+      const runtime =
+        getImportSessionRuntime(entry.accountNumber, entry.sessionId) ||
+        { stagedNow: 0, appliedCount: 0, removed: 0, expiresAt: null, status: '?', canUndo: false };
       return { entry, runtime };
     }).filter(r => {
       if (filterAccount && r.entry.accountNumber !== filterAccount) return false;
