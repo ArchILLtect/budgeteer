@@ -39,6 +39,17 @@ export type ImportSlice = {
   processPendingSavingsForAccount: (accountNumber: string, months: string[]) => void;
   markTransactionsBudgetApplied: (accountNumber: string, months: string[]) => void;
 
+  processPendingSavingsForImportSession: (
+    accountNumber: string,
+    sessionId: string,
+    months: string[]
+  ) => void;
+  markImportSessionBudgetApplied: (
+    accountNumber: string,
+    sessionId: string,
+    months: string[]
+  ) => void;
+
   recordImportHistory: (entry: ImportHistoryEntry) => void;
   pruneImportHistory: (maxEntries?: number, maxAgeDays?: number) => void;
   expireOldStagedTransactions: (maxAgeDays?: number) => void;
@@ -163,6 +174,33 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
       };
     }),
 
+  markImportSessionBudgetApplied: (accountNumber, sessionId, months) =>
+    set((state: any) => {
+      const acct = state.accounts[accountNumber];
+      if (!acct?.transactions) return {};
+      if (!sessionId) return {};
+      const monthSet = months ? new Set(months) : null; // null means all
+      let changed = false;
+      const updated = acct.transactions.map((tx: any) => {
+        if (tx.importSessionId !== sessionId) return tx;
+        if (tx.staged && !tx.budgetApplied) {
+          const txMonth = tx.date?.slice(0, 7);
+          if (!monthSet || monthSet.has(txMonth)) {
+            changed = true;
+            return { ...tx, staged: false, budgetApplied: true };
+          }
+        }
+        return tx;
+      });
+      if (!changed) return {};
+      return {
+        accounts: {
+          ...state.accounts,
+          [accountNumber]: { ...acct, transactions: updated },
+        },
+      };
+    }),
+
   processPendingSavingsForAccount: (accountNumber, months) =>
     set((state: any) => {
       const pending = state.pendingSavingsByAccount[accountNumber] || [];
@@ -171,6 +209,34 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
       const toQueue = monthSet ? pending.filter((e: any) => monthSet.has(e.month)) : pending;
       if (!toQueue.length) return {};
       const remaining = monthSet ? pending.filter((e: any) => !monthSet.has(e.month)) : [];
+      return {
+        pendingSavingsByAccount: {
+          ...state.pendingSavingsByAccount,
+          [accountNumber]: remaining,
+        },
+        savingsReviewQueue: [
+          ...(state.savingsReviewQueue || []),
+          ...toQueue,
+        ],
+        isSavingsModalOpen: true,
+      };
+    }),
+
+  processPendingSavingsForImportSession: (accountNumber, sessionId, months) =>
+    set((state: any) => {
+      if (!sessionId) return {};
+      const pending = state.pendingSavingsByAccount[accountNumber] || [];
+      if (!pending.length) return {};
+      const monthSet = months ? new Set(months) : null;
+      const toQueue = pending.filter((e: any) => {
+        if (e.importSessionId !== sessionId) return false;
+        return monthSet ? monthSet.has(e.month) : true;
+      });
+      if (!toQueue.length) return {};
+      const remaining = pending.filter((e: any) => {
+        if (e.importSessionId !== sessionId) return true;
+        return monthSet ? !monthSet.has(e.month) : false;
+      });
       return {
         pendingSavingsByAccount: {
           ...state.pendingSavingsByAccount,

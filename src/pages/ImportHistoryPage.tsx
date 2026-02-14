@@ -39,8 +39,8 @@ export default function ImportHistoryPage() {
   // undo window minutes available if needed, but not directly used here
   const getImportSessionRuntime = useBudgetStore(s => s.getImportSessionRuntime);
   const undoStagedImport = useBudgetStore(s => s.undoStagedImport);
-  const markTransactionsBudgetApplied = useBudgetStore((s: any) => s.markTransactionsBudgetApplied);
-  const processPendingSavingsForAccount = useBudgetStore((s: any) => s.processPendingSavingsForAccount);
+  const markImportSessionBudgetApplied = useBudgetStore((s: any) => s.markImportSessionBudgetApplied);
+  const processPendingSavingsForImportSession = useBudgetStore((s: any) => s.processPendingSavingsForImportSession);
 
   const [filterAccount, setFilterAccount] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<Status | ''>('');
@@ -110,8 +110,8 @@ export default function ImportHistoryPage() {
           }
         });
         if (months.size) {
-          markTransactionsBudgetApplied(entry.accountNumber, [...months]);
-          processPendingSavingsForAccount(entry.accountNumber, [...months]);
+          markImportSessionBudgetApplied(entry.accountNumber, entry.sessionId, [...months]);
+          processPendingSavingsForImportSession(entry.accountNumber, entry.sessionId, [...months]);
           appliedSessions++;
         }
       }
@@ -290,8 +290,8 @@ export default function ImportHistoryPage() {
                           });
 
                           const monthList = [...months];
-                          markTransactionsBudgetApplied(entry.accountNumber, monthList);
-                          processPendingSavingsForAccount(entry.accountNumber, monthList);
+                          markImportSessionBudgetApplied(entry.accountNumber, entry.sessionId, monthList);
+                          processPendingSavingsForImportSession(entry.accountNumber, entry.sessionId, monthList);
                           fireToast("success", "Session applied", `Import session ${entry.sessionId.slice(0,8)} has been applied.`);
                         }}
                       >
