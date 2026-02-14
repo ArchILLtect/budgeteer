@@ -1,7 +1,11 @@
-import { useBudgetStore } from '../store/budgetStore';
 import { getUniqueTransactions, normalizeTransactionAmount } from './storeHelpers';
 import dayjs from 'dayjs';
 import { fireToast } from '../hooks/useFireToast';
+
+type BudgetStoreLike = {
+    getState: () => any;
+    setState: (partial: any, replace?: any) => void;
+};
 
 type Transaction = {
     id: string;
@@ -135,301 +139,18 @@ export function getUniqueOrigins(txs: Transaction[]) {
     });
     return Array.from(unique).sort((a: any, b: unknown) => a.localeCompare(b));
 }
-/*
 export const applyOneMonth = async (
-    monthKey,
-    acct,
-    showToast = true,
-    ignoreBeforeDate = null
-) => {
-    const store = useBudgetStore.getState();
-
-    // Ensure the month exists in monthlyActuals
-    if (!store.monthlyActuals[monthKey]) {
-        useBudgetStore.setState((state) => ({
-            monthlyActuals: {
-                ...state.monthlyActuals,
-                [monthKey]: {
-                    actualExpenses: [],
-                    actualFixedIncomeSources: [],
-                    actualTotalNetIncome: 0,
-                    customSavings: 0,
-                },
-            },
-        }));
-    }
-
-    const existing = store.monthlyActuals[monthKey] || {};
-    const expenses = existing.actualExpenses || [];
-    const income = (existing.actualFixedIncomeSources || []).filter(
-        (i) => i.id !== 'main'
-    );
-    const savings = store.savingsLogs[monthKey] || [];
-
-    const monthRows = acct.transactions.filter((tx) => tx.date?.startsWith(monthKey));
-
-    const newExpenses = getUniqueTransactions(
-        expenses,
-        monthRows.filter((tx) => tx.type === 'expense')
-    );
-
-    const newIncome = getUniqueTransactions(
-        income,
-        monthRows.filter((tx) => tx.type === 'income')
-    );
-
-    const combinedIncome = [...income, ...newIncome];
-    const newTotalNetIncome = combinedIncome.reduce(
-        (sum, tx) => sum + normalizeTransactionAmount(tx),
-        0
-    );
-
-    useBudgetStore.getState().updateMonthlyActuals(monthKey, {
-        actualFixedIncomeSources: combinedIncome,
-        actualTotalNetIncome: newTotalNetIncome,
-    });
-
-    const newSavings = getUniqueTransactions(
-        savings,
-        monthRows.filter((tx) => tx.type === 'savings'),
-        getSavingsKey
-    );
-
-    newExpenses.forEach((e) =>
-        store.addActualExpense(monthKey, { ...e, amount: normalizeTransactionAmount(e) })
-    );
-
-    if (newSavings.length > 0) {
-        let reviewEntries = newSavings.map((s) => ({
-            id: s.id,
-            date: s.date,
-            name: s.name,
-            amount: normalizeTransactionAmount(s),
-            month: monthKey,
-        }));
-
-        if (ignoreBeforeDate) {
-            const cutoff = dayjs(ignoreBeforeDate);
-            const [toIgnore, toKeep] = partition(reviewEntries, (entry) =>
-                dayjs(entry.date).isBefore(cutoff, 'day')
-            );
-
-            // Group logs by month
-            const logsByMonth = {};
-            toIgnore.forEach((entry) => {
-                console.log(entry);
-                if (!logsByMonth[entry.month]) logsByMonth[entry.month] = [];
-                logsByMonth[entry.month].push({
-                    goalId: null,
-                    date: entry.date,
-                    amount: entry.amount,
-                    name: entry.name,
-                });
-            });
-
-            // Single update per month
-            Object.entries(logsByMonth).forEach(([month, logs]) => {
-                store.addMultipleSavingsLogs(month, logs);
-            });
-
-            await new Promise(requestAnimationFrame);
-
-            reviewEntries = toKeep;
-
-            if (reviewEntries.length === 0)
-                return {
-                    e: newExpenses.length,
-                    i: newIncome.length,
-                    s: newSavings.length,
-                };
-        }
-
-        // Set the queue and open modal
-        store.setSavingsReviewQueue(reviewEntries);
-        // Open modal for manual review
-        store.setSavingsModalOpen(true);
-
-        // Return a Promise that resolves only after modal confirm
-        await new Promise((resolve) => {
-            useBudgetStore.setState({ resolveSavingsPromise: resolve });
-        });
-    }
-
-    if (showToast) {
-        toast({
-            title: 'Budget updated',
-            description: `Applied ${newExpenses.length} expenses, ${newIncome.length} income, ${newSavings.length} savings`,
-            status: 'success',
-            duration: 3000,
-        });
-    }
-
-    return { e: newExpenses.length, i: newIncome.length, s: newSavings.length };
-};*/
-/*
-export const applyOneMonth2 = async (
-    monthKey,
-    acct,
-    showToast = true,
-    ignoreBeforeDate = null
-) => {
-    const store = useBudgetStore.getState();
-
-    // Ensure month exists
-    if (!store.monthlyActuals[monthKey]) {
-        useBudgetStore.setState((state) => ({
-            monthlyActuals: {
-                ...state.monthlyActuals,
-                [monthKey]: {
-                    actualExpenses: [],
-                    actualFixedIncomeSources: [],
-                    actualTotalNetIncome: 0,
-                    customSavings: 0,
-                },
-            },
-        }));
-    }
-
-    const existing = store.monthlyActuals[monthKey] || {};
-    const expenses = existing.actualExpenses || [];
-    const income = (existing.actualFixedIncomeSources || []).filter(
-        (i) => i.id !== 'main'
-    );
-    const savings = store.savingsLogs[monthKey] || [];
-
-    // Filter rows for this month
-    const monthRows = acct.transactions.filter((tx) => tx.date?.startsWith(monthKey));
-
-    let newExpenses = [];
-    let newIncome = [];
-    let newSavings = [];
-
-    // Process in chunks to avoid blocking
-    const chunkSize = 500;
-    for (let i = 0; i < monthRows.length; i += chunkSize) {
-        const chunk = monthRows.slice(i, i + chunkSize);
-
-        newExpenses.push(
-            ...getUniqueTransactions(
-                expenses,
-                chunk.filter((tx) => tx.type === 'expense')
-            )
-        );
-
-        newIncome.push(
-            ...getUniqueTransactions(
-                income,
-                chunk.filter((tx) => tx.type === 'income')
-            )
-        );
-
-        newSavings.push(
-            ...getUniqueTransactions(
-                savings,
-                chunk.filter((tx) => tx.type === 'savings'),
-                getSavingsKey
-            )
-        );
-
-        // Let the browser catch up
-        await new Promise(requestAnimationFrame);
-    }
-
-    const combinedIncome = [...income, ...newIncome];
-    const newTotalNetIncome = combinedIncome.reduce(
-        (sum, tx) => sum + normalizeTransactionAmount(tx),
-        0
-    );
-
-    store.updateMonthlyActuals(monthKey, {
-        actualFixedIncomeSources: combinedIncome,
-        actualTotalNetIncome: newTotalNetIncome,
-    });
-
-    // Add expenses
-    newExpenses.forEach((e) =>
-        store.addActualExpense(monthKey, { ...e, amount: normalizeTransactionAmount(e) })
-    );
-
-    // Savings handling
-    if (newSavings.length > 0) {
-        let reviewEntries = newSavings.map((s) => ({
-            id: s.id,
-            date: s.date,
-            name: s.name,
-            amount: normalizeTransactionAmount(s),
-            month: monthKey,
-        }));
-
-        if (ignoreBeforeDate) {
-            const cutoff = dayjs(ignoreBeforeDate);
-            const [toIgnore, toKeep] = partition(reviewEntries, (entry) =>
-                dayjs(entry.date).isBefore(cutoff, 'day')
-            );
-
-            // Batch ignored entries by month
-            const logsByMonth = {};
-            toIgnore.forEach((entry) => {
-                if (!logsByMonth[entry.month]) logsByMonth[entry.month] = [];
-                logsByMonth[entry.month].push({
-                    goalId: null,
-                    date: entry.date,
-                    amount: entry.amount,
-                    name: entry.name,
-                });
-            });
-
-            Object.entries(logsByMonth).forEach(([month, logs]) => {
-                store.addMultipleSavingsLogs(month, logs);
-            });
-
-            reviewEntries = toKeep;
-
-            if (reviewEntries.length === 0) {
-                return {
-                    e: newExpenses.length,
-                    i: newIncome.length,
-                    s: newSavings.length,
-                };
-            }
-        }
-
-        // Open modal and wait for user to review/link savings logs
-        if (typeof store.awaitSavingsLink === 'function') {
-            await store.awaitSavingsLink(reviewEntries);
-        } else {
-            // Fallback: directly resolve without blocking if action missing
-            // to avoid hanging the apply flow in unexpected states
-            useBudgetStore.setState({
-                savingsReviewQueue: reviewEntries,
-                isSavingsModalOpen: true,
-            });
-        }
-    }
-
-    if (showToast) {
-        toast({
-            title: 'Budget updated',
-            description: `Applied ${newExpenses.length} expenses, ${newIncome.length} income, ${newSavings.length} savings`,
-            status: 'success',
-            duration: 3000,
-        });
-    }
-
-    return { e: newExpenses.length, i: newIncome.length, s: newSavings.length };
-};
-*/
-export const applyOneMonth = async (
+    budgetStore: BudgetStoreLike,
     monthKey: string,
     acct: { accountNumber: string; transactions: Transaction[] },
     showToast = true,
     ignoreBeforeDate = null
 ): Promise<ApplyOneMonthResult> => {
-    const store = useBudgetStore.getState() as any;
+    const store = budgetStore.getState() as any;
 
     // Ensure month exists
     if (!store.monthlyActuals[monthKey]) {
-        useBudgetStore.setState((state: any) => ({
+        budgetStore.setState((state: any) => ({
             monthlyActuals: {
                 ...state.monthlyActuals,
                 [monthKey]: {
@@ -536,7 +257,7 @@ export const applyOneMonth = async (
 
             // 🔻 SINGLE Zustand update for all months
             if (Object.keys(logsByMonth).length) {
-                useBudgetStore.setState((state: any) => {
+                budgetStore.setState((state: any) => {
                     const next = { ...state.savingsLogs };
                     for (const [month, logs] of Object.entries(logsByMonth)) {
                         const current = next[month] || [];
@@ -564,7 +285,7 @@ export const applyOneMonth = async (
         store.setSavingsModalOpen(true);
 
         await new Promise((resolve: any) => {
-            useBudgetStore.setState({ resolveSavingsPromise: resolve });
+            budgetStore.setState({ resolveSavingsPromise: resolve });
         });
     }
 

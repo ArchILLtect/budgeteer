@@ -31,7 +31,9 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   const transactionsThisMonth = acct.transactions.filter((tx: any) => tx.date?.startsWith(selectedMonth));
   const transactionsThisYear = acct.transactions.filter((tx: any) => tx.date?.startsWith(selectedYearFromStore));
   const monthsForYear = months?.filter(m => m.startsWith(yearFromSelected)) || [];
-  const { openProgress, updateProgress, closeProgress } = useBudgetStore.getState();
+  const openProgress = useBudgetStore(s => s.openProgress);
+  const updateProgress = useBudgetStore(s => s.updateProgress);
+  const closeProgress = useBudgetStore(s => s.closeProgress);
   const markTransactionsBudgetApplied = useBudgetStore(s => s.markTransactionsBudgetApplied);
   const processPendingSavingsForAccount = useBudgetStore(s => s.processPendingSavingsForAccount);
 
@@ -53,14 +55,15 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       openProgress('Applying Transactions', targets.length);
       let processed = 0;
 
-      const ignoreBeforeEnabledForThisRun = ignoreBeforeEnabled && ignoreBeforeDate ? true : false;
+      const ignoreBeforeDateForThisRun = ignoreBeforeEnabled && ignoreBeforeDate ? ignoreBeforeDate : null;
 
       for (const m of targets) {
         const counts = await applyOneMonth(
+          useBudgetStore,
           m,
           acct,
           false,
-          ignoreBeforeEnabledForThisRun as any // pass date or null
+          ignoreBeforeDateForThisRun as any
         );
         total.e += counts.e;
         total.i += counts.i;

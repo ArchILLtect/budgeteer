@@ -25,14 +25,14 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
   const updateSource = useBudgetStore((s) => s.updateIncomeSource)
   const addSource = useBudgetStore((s) => s.addIncomeSource)
   const setFilingStatus = useBudgetStore((s) => s.setFilingStatus)
-  const grossTotal = useBudgetStore.getState().getTotalGrossIncome();
+  const grossTotal = useBudgetStore((s) => s.getTotalGrossIncome());
   const monthlyActuals = useBudgetStore((s) => s.monthlyActuals[selectedMonth]);
   const overiddenIncomeTotal = useBudgetStore(
     (s) => s.monthlyActuals[selectedMonth]?.overiddenIncomeTotal
   );
 
   const activeSource = useMemo(() => sources.find((s) => s.id === selectedId) || sources[0] || {}, [sources, selectedId])
-  const { net, breakdown } = useBudgetStore.getState().getTotalNetIncome();
+  const { net, breakdown } = useBudgetStore((s) => s.getTotalNetIncome());
 
   const isTracker = origin === 'Tracker';
   // TODO: Connect filing status with tax rate calcs

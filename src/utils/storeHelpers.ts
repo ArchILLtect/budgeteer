@@ -1,18 +1,7 @@
-import { useBudgetStore } from '../store/budgetStore';
-import { getCurrentUser } from "aws-amplify/auth";
 // Strong ingestion key builder (accountNumber|date|signedAmount|normalized desc[|bal:balance])
 // Imported here to provide a gradual migration path away from the legacy key used
 // for persisted historical transactions. We keep both for a stabilization window.
 import { buildTxKey } from '../ingest/buildTxKey';
-
-export const applySessionRefresh = async () => {
-    const user = await getCurrentUser();
-    if (user) {
-        const store = useBudgetStore.getState();
-        store.setUser(user);
-        store.setSessionExpired(false);
-    }
-};
 
 export const getAvailableMonths = (account: any) => {
     if (!account?.transactions?.length) return [];
