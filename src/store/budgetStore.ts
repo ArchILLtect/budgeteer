@@ -5,43 +5,11 @@ import { getStrongTransactionKey } from '../utils/storeHelpers.ts';
 import dayjs from 'dayjs';
 import { createUserScopedZustandStorage } from "../services/userScopedStorage";
 import { createImportSlice } from "./slices/importSlice";
+import { calcActualIncomeTotal, ensureMonthlyActual } from "./slices/plannerLogic.ts";
 
 // TODO: Allow users to change overtime threshold and tax rates
 
 const currentMonth = dayjs().format('YYYY-MM'); // e.g. "2025-07"
-
-function roundToCents(value: number): number {
-    return Math.round((Number(value) || 0) * 100) / 100;
-}
-
-function calcActualIncomeTotal(actualFixedIncomeSources: any[] | undefined): number {
-    if (!Array.isArray(actualFixedIncomeSources)) return 0;
-    return roundToCents(
-        actualFixedIncomeSources.reduce((sum: number, source: any) => {
-            return sum + (Number(source?.amount) || 0);
-        }, 0)
-    );
-}
-
-function ensureMonthlyActual(existing?: any): MonthlyActual {
-    if (existing) {
-        return {
-            actualExpenses: Array.isArray(existing.actualExpenses) ? existing.actualExpenses : [],
-            actualTotalNetIncome: Number(existing.actualTotalNetIncome) || 0,
-            actualFixedIncomeSources: Array.isArray(existing.actualFixedIncomeSources)
-                ? existing.actualFixedIncomeSources
-                : [],
-            overiddenExpenseTotal: existing.overiddenExpenseTotal,
-            overiddenIncomeTotal: existing.overiddenIncomeTotal,
-        };
-    }
-
-    return {
-        actualExpenses: [],
-        actualTotalNetIncome: 0,
-        actualFixedIncomeSources: [],
-    };
-}
 
 type Expense = {
   id: string;
