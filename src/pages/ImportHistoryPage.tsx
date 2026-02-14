@@ -35,12 +35,13 @@ type event = React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectE
 
 export default function ImportHistoryPage() {
   const importHistory = useBudgetStore(s => s.importHistory);
-  const accounts = useBudgetStore((s: any) => s.accounts);
+  type Tx = { date: string; importSessionId?: string; staged?: boolean };
+  const accounts = useBudgetStore((s) => s.accounts as Record<string, { transactions?: Tx[] }>);
   // undo window minutes available if needed, but not directly used here
   const getImportSessionRuntime = useBudgetStore(s => s.getImportSessionRuntime);
   const undoStagedImport = useBudgetStore(s => s.undoStagedImport);
-  const markImportSessionBudgetApplied = useBudgetStore((s: any) => s.markImportSessionBudgetApplied);
-  const processPendingSavingsForImportSession = useBudgetStore((s: any) => s.processPendingSavingsForImportSession);
+  const markImportSessionBudgetApplied = useBudgetStore((s) => s.markImportSessionBudgetApplied as (accountNumber: string, sessionId: string, months: string[]) => void);
+  const processPendingSavingsForImportSession = useBudgetStore((s) => s.processPendingSavingsForImportSession as (accountNumber: string, sessionId: string, months: string[]) => void);
 
   const [filterAccount, setFilterAccount] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<Status | ''>('');
@@ -100,10 +101,9 @@ export default function ImportHistoryPage() {
     let appliedSessions = 0;
     selectedEntries.forEach(({ entry, runtime }) => {
       if (runtime.status === 'active' && runtime.stagedNow > 0) {
-        type Tx = { date: string; importSessionId?: string; staged?: boolean };
         const acct = accounts[entry.accountNumber];
         if (!acct?.transactions) return;
-        const months = new Set();
+        const months = new Set<string>();
         acct.transactions.forEach((tx: Tx) => {
           if (tx.importSessionId === entry.sessionId && tx.staged) {
             months.add(tx.date.slice(0,7));
@@ -283,7 +283,7 @@ export default function ImportHistoryPage() {
                           if (!acct?.transactions) return;
 
                           const months = new Set<string>();
-                          acct.transactions.forEach((tx: any) => {
+                          acct.transactions.forEach((tx: Tx) => {
                             if (tx.importSessionId === entry.sessionId && tx.staged) {
                               months.add(tx.date.slice(0, 7));
                             }

@@ -115,8 +115,8 @@ Progress notes:
 - [x] Add/expand unit tests for staged import → apply to budget → undo flows
 - [x] Add tests for import history retention/pruning behavior (if present)
 - [x] Add tests for cross-slice invariants (e.g., applying staged updates monthly actuals deterministically)
-- [ ] Fix Import History “Apply selected session” to be session-scoped (do not apply other sessions’ staged txns)
-- [ ] Add regression tests for overlapping sessions in the same month (apply/undo/savings stay session-correct)
+- [x] Fix Import History “Apply selected session” to be session-scoped (do not apply other sessions’ staged txns)
+- [x] Add regression tests for overlapping sessions in the same month (apply/undo/savings stay session-correct)
 
 **D) Docs + verification**
 - [x] Update `docs/ARCHITECTURE.md` to reflect the new store slice layout
