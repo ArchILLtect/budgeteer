@@ -1,5 +1,5 @@
 import { Button, RadioGroup, Stack, Input, Text, Box, Stat, SimpleGrid, Tag, Dialog } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { useBudgetStore } from "../../store/budgetStore";
 import { runIngestion } from "../../ingest/runIngestion";
@@ -24,8 +24,10 @@ type SyncAccountsModalProps = {
 
 export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModalProps) {
   const accountMappings = useBudgetStore((s: any) => s.accountMappings);
+  const accounts = useBudgetStore((s: any) => s.accounts);
   const setAccountMapping = useBudgetStore((s: any) => s.setAccountMapping);
-  // addOrUpdateAccount retained via direct getState usage in applyAllPatches
+  const addOrUpdateAccount = useBudgetStore((s: any) => s.addOrUpdateAccount);
+  const registerImportManifest = useBudgetStore((s: any) => s.registerImportManifest);
 
   const [sourceType, setSourceType] = useState("csv");
   const [csvFile, setCsvFile] = useState<any>(null);
@@ -45,6 +47,28 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
 
   const fileTypes = ["csv", "ofx"];
   const isDemo = useBudgetStore((s) => s.isDemoUser);
+
+  // Keep latest store values available to async callbacks without reach-through reads.
+  const accountMappingsRef = useRef(accountMappings);
+  const accountsRef = useRef(accounts);
+  const registerImportManifestRef = useRef(registerImportManifest);
+  const addOrUpdateAccountRef = useRef(addOrUpdateAccount);
+
+  useEffect(() => {
+    accountMappingsRef.current = accountMappings;
+  }, [accountMappings]);
+
+  useEffect(() => {
+    accountsRef.current = accounts;
+  }, [accounts]);
+
+  useEffect(() => {
+    registerImportManifestRef.current = registerImportManifest;
+  }, [registerImportManifest]);
+
+  useEffect(() => {
+    addOrUpdateAccountRef.current = addOrUpdateAccount;
+  }, [addOrUpdateAccount]);
 
   const resetState = () => {
     setSourceType("csv");
@@ -84,7 +108,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           );
 
           const unmapped = Array.from(accountNumbers).filter(
-            (num) => !accountMappings[num]
+            (num) => !accountMappingsRef.current?.[num]
           );
 
           if (unmapped.length > 0) {
@@ -94,8 +118,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
             return;
           }
 
-          const mappings: any = useBudgetStore.getState().accountMappings;
-          importCsvData(data, mappings);
+          importCsvData(data);
         },
         error: (err) => {
           fireToast("error", "CSV Parse Failed", err.message || "An error occurred while parsing the CSV file.");
@@ -144,12 +167,12 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           Category: r.Category || r.category,
           __line: idx + 1,
         }));
-        const existing: any[] = useBudgetStore.getState().accounts[acctNumber]?.transactions || [];
+        const existing: any[] = accountsRef.current?.[acctNumber]?.transactions || [];
         const r = await runIngestion({
           parsedRows: { rows: adaptedRows, errors: [] },
           accountNumber: acctNumber,
           existingTxns: existing,
-          registerManifest: useBudgetStore.getState().registerImportManifest as any, // pass through manifest for potential short-circuiting; can be optimized further by exposing a "dry run" mode in runIngestion that skips manifest updates and other side effects
+          registerManifest: registerImportManifestRef.current as any, // pass through manifest for potential short-circuiting; can be optimized further by exposing a "dry run" mode in runIngestion that skips manifest updates and other side effects
         });
         results.push({ accountNumber: acctNumber, result: r });
         aggregate.newCount += r.stats.newCount;
@@ -198,11 +221,12 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           addPendingSavingsQueue(accountNumber, result.savingsQueue);
         }
         // Update account metadata (label/institution) if newly mapped
-  const mapping: any = useBudgetStore.getState().accountMappings?.[accountNumber];
+        const mapping: any = accountMappingsRef.current?.[accountNumber];
         if (mapping) {
-          useBudgetStore.getState().addOrUpdateAccount(accountNumber, {
+          const existingId = accountsRef.current?.[accountNumber]?.id;
+          addOrUpdateAccountRef.current(accountNumber, {
             accountNumber,
-            id: useBudgetStore.getState().accounts[accountNumber]?.id || crypto.randomUUID(),
+            id: existingId || crypto.randomUUID(),
             label: mapping.label || accountNumber,
             institution: mapping.institution || 'Unknown',
             lastSync: new Date().toISOString(),
@@ -218,7 +242,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           render: ({ onClose }) => (
             <Box p={3} bg='gray.800' color='white' borderRadius='md' boxShadow='md'>
               <Text fontSize='sm' mb={1}>Imported {result.stats.newCount} new transactions in {accountNumber}</Text>
-              <Button size='xs' colorScheme='red' variant='outline' onClick={() => { useBudgetStore.getState().undoStagedImport(accountNumber, sessionId); onClose(); }}>Undo</Button>
+              <Button size='xs' colorScheme='red' variant='outline'>Undo</Button>
             </Box>
           )*/
       });
@@ -262,14 +286,14 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                       ];
                       // 2) use current mapping state; if unmapped, jump to mapping step
                       const accountNumbers = [...new Set(sample.map(r => r.AccountNumber?.trim()).filter(Boolean))];
-                      const mappings = useBudgetStore.getState().accountMappings;
+                      const mappings = accountMappingsRef.current;
                       const unmapped = accountNumbers.filter(n => !mappings[n]);
                       if (unmapped.length) {
                         setPendingMappings(unmapped);
                         setPendingData(sample);
                         setStep("mapping");
                       } else {
-                        importCsvData(sample, mappings);   // reuse your existing pipeline
+                        importCsvData(sample);   // reuse your existing pipeline
                       }
                     }}>
                       Load Sample CSV (Demo)
@@ -345,19 +369,21 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 colorScheme="teal"
                 onClick={() => {
                 // Save new mappings
+                const additions: Record<string, { label: string; institution: string }> = {};
                 pendingMappings.forEach((num) => {
                   const info = accountInputs[num] || {};
-                  setAccountMapping(num, {
+                  additions[num] = {
                     label: info.label || num,
                     institution: info.institution || "Unknown",
-                  });
+                  };
+                  setAccountMapping(num, additions[num]);
                 });
 
-                // Immediately grab the fresh state
-                const updatedMappings = useBudgetStore.getState().accountMappings;
+                // Continue using a locally-computed next mapping snapshot for this import pass.
+                // (Avoids store reach-through reads while keeping behavior equivalent.)
+                accountMappingsRef.current = { ...accountMappingsRef.current, ...additions };
 
-                // Pass it to importCsvData
-                importCsvData(pendingData, updatedMappings);
+                importCsvData(pendingData);
               }}
               >
                 Save & Continue Import
