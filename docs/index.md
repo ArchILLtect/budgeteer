@@ -10,6 +10,7 @@ For process & quality checklist see: `../CONTRIBUTING.md` (contribution workflow
 -   **Cloud Sync Migration Plan (Amplify-native):** [migration-plan](./developer/migration-plan.md)
 -   **Ingestion Architecture (Current):** [ingestion-architecture](./developer/ingestion-architecture.md)
 -   **Ingestion Plan (next refactor):** [ingestion-plan](./developer/ingestion-plan.md)
+-   **Tracker-Facing Ingestion Contract:** [tracker-ingestion-contract](./developer/tracker-ingestion-contract.md)
 -   **Ingestion Refactor Plan / Status:** [ingestion-refactor-plan](./legacy/ingestion-refactor-plan.md)
 -   **Category Rules & Savings Queue Guide:** [category-rules-and-savings-queue](./developer/category-rules-and-savings-queue.md)
 -   **Contribution Guide:** [CONTRIBUTING](../CONTRIBUTING.md)

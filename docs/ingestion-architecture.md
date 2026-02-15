@@ -200,6 +200,9 @@ Store‑managed metadata:
 - All long‑term identifiers are opaque (`accountId`, fingerprint)
 - localStorage caching contains **derived data only**
 
+Explicit MVP policy:
+- No backend persistence of raw provenance (“Tier B”) until post-MVP. This includes full original CSV rows and any stored copy of the uploaded CSV.
+
 Optional future enhancement:
 - “Privacy Mode” to truncate or sanitize merchant descriptions
 

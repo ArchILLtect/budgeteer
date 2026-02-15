@@ -11,6 +11,7 @@ Scope of this plan:
 Non-goals (for now):
 - Any UI redesign beyond wiring existing screens to correct semantics.
 - Account fingerprinting / cloud sync changes (tracked separately; see `migration-plan.md`).
+- Persisting raw provenance (“Tier B”) such as raw CSV files or full original rows to the backend. This is explicitly deferred until post-MVP.
 
 ---
 

@@ -249,6 +249,9 @@ Notes:
 - [ ] TODO(postmvp): Evaluate double-entry ledger redesign only if transfer/reconciliation bugs dominate
 - [ ] TODO(postmvp): Add OFX import + cloud sync integration
 - [ ] TODO(postmvp): Add Plaid-based syncing (replace stub in src/utils/plaidService.js)
+- [ ] TODO(postmvp): (Optional) Add Tier B (raw provenance) persistence for diagnostic/archive purposes
+  - MUST be opt-in and explicit; default remains Tier A-only cloud sync
+  - define retention/TTL + access policy; avoid shipping raw bank exports by default
 ---
 
 <a id="archive"></a>
