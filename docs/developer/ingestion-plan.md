@@ -33,9 +33,9 @@ Key properties we want to preserve:
 
 ---
 
-## 2) Known Correctness Gap (Worth Fixing Now)
+## 2) Known Correctness Gap (Resolved)
 
-Today, Import History operates on **selected sessions**, but the store’s apply helper is **month-scoped**.
+This was previously a correctness gap: Import History operates on **selected sessions**, but the store’s apply helper was **month-scoped**.
 
 Example failure mode:
 - Import session `s1` and `s2` both have staged txns in month `2026-02`.
@@ -45,9 +45,11 @@ Example failure mode:
 
 This violates the user’s intent (“apply just the selected session”) and makes apply/undo reasoning brittle.
 
+Status: fixed via session-scoped apply + savings processing APIs, plus regression tests for overlapping sessions.
+
 ---
 
-## 3) 80/20 Fix (Milestone 2): Session-Scoped Apply + Savings Processing
+## 3) 80/20 Fix (Milestone 2): Session-Scoped Apply + Savings Processing (Done)
 
 ### 3.1 API additions (store)
 

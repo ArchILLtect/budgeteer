@@ -44,7 +44,7 @@ Actionable TODOs must use one of:
 - [x] TODO(P1): Routing cleanup — align defaults to actual Budgeteer routes
 - [x] TODO(P1): Storage cleanup — align localStorage keys to `budgeteer:*`
 - [x] TODO(P1): Rename misnamed exports/symbols
-- [ ] TODO(P1): Update README + contributing docs (see “Docs” P1 below)
+- [x] TODO(P1): Update README + contributing docs (see “Docs” P1 below)
 
 UI bugfixes (P1):
 
@@ -279,7 +279,7 @@ Notes:
 
 ---
 
-- [ ] TODO(P2): Import History “Apply selected session” must be session-scoped (do not apply other sessions in same month)
+- [x] TODO(P2): Import History “Apply selected session” must be session-scoped (do not apply other sessions in same month)
   - add session-scoped store APIs (apply + pending savings) and wire Import History to use them
   - add regression tests for overlapping sessions
   - tracking doc: `docs/developer/ingestion-plan.md`
@@ -290,11 +290,11 @@ Notes:
   - tests cover analyze/commit determinism + idempotency
   - tracking doc: `docs/developer/ingestion-plan.md`
 
-- [ ] TODO(P4): Proposed ingestion upgrades
+- [x] TODO(P4): Proposed ingestion upgrades (done)
   - enable PapaParse worker mode for streaming parse (large files)
-  - add streaming backpressure/batching for classify/infer stages
+  - add streaming backpressure/yielding for classify/infer stages
   - add memory/perf guardrails for huge imports
-  - improve error panel scalability (virtualized list + export warning)
+  - improve error panel scalability (render cap + export warning)
 
 ### UX polish + clarity
 
