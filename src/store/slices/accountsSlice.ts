@@ -12,6 +12,7 @@ export type AccountsSlice = {
   accounts: { [accountNumber: string]: Account };
 
   clearAllAccounts: () => void;
+  clearAllAccountMappings: () => void;
   addOrUpdateAccount: (accountNumber: string, data: Partial<Account>) => void;
   addTransactionsToAccount: (accountNumber: string, transactions: Transaction[]) => void;
   setAccountMapping: (accountNumber: string, mapping: AccountMapping) => void;
@@ -25,6 +26,8 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
   accounts: {},
 
   clearAllAccounts: () => set(() => ({ accounts: {} })),
+
+  clearAllAccountMappings: () => set(() => ({ accountMappings: {} })),
 
   addOrUpdateAccount: (accountNumber, data) =>
     set((state: AccountsSlice) => ({

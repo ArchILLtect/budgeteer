@@ -77,6 +77,7 @@ export type ImportSlice = {
   lastIngestionTelemetry: unknown;
 
   setLastIngestionTelemetry: (telemetry: unknown) => void;
+  clearAllImportData: () => void;
   registerImportManifest: (hash: string, accountNumber: string, meta?: ImportManifestMeta) => void;
 
   commitImportPlan: (plan: ImportPlan) => void;
@@ -138,6 +139,15 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
   lastIngestionTelemetry: null,
 
   setLastIngestionTelemetry: (telemetry) => set(() => ({ lastIngestionTelemetry: telemetry })),
+
+  clearAllImportData: () =>
+    set(() => ({
+      pendingSavingsByAccount: {},
+      savingsReviewQueue: [],
+      importHistory: [],
+      importManifests: {},
+      lastIngestionTelemetry: null,
+    })),
 
   registerImportManifest: (hash, accountNumber, meta) =>
     set((state) => {
