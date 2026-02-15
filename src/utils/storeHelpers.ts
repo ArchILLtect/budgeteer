@@ -47,17 +47,36 @@ export const getMonthlyTotals = (account: AccountLike, month: BudgetMonthKey): M
     };
 
     txs.forEach((tx) => {
-        const amt = typeof tx.amount === 'number' ? tx.amount : parseFloat(String(tx.amount ?? 0)) || 0;
+        // Prefer signed `rawAmount` if present. Many UI surfaces store/display `amount` as absolute,
+        // so relying on `amount` alone can incorrectly treat expenses as positive.
+        const base =
+            typeof tx.rawAmount === 'number'
+                ? tx.rawAmount
+                : typeof tx.amount === 'number'
+                  ? tx.amount
+                  : parseFloat(String(tx.amount ?? 0)) || 0;
+
+        // Normalize by type so totals have consistent sign semantics:
+        // - income: positive
+        // - expense: negative
+        // - savings: tracked as positive magnitude (and subtracted from net)
+        const signedByType =
+            tx.type === 'income'
+                ? Math.abs(base)
+                : tx.type === 'savings'
+                  ? Math.abs(base)
+                  : -Math.abs(base);
+
         switch (tx.type) {
             case 'income':
-                totals.income += amt;
+                totals.income += signedByType;
                 break;
             case 'savings':
-                totals.savings += amt;
+                totals.savings += signedByType;
                 break;
             case 'expense':
             default:
-                totals.expenses += amt;
+                totals.expenses += signedByType;
                 break;
         }
     });
