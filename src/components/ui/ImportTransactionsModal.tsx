@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Button, Box, VStack, HStack, Input, Text, Stat, Alert, Badge, Dialog, Separator, StatGroup, Field } from '@chakra-ui/react';
+import { Button, Box, VStack, HStack, Input, Text, Stat, Alert, Badge, Dialog, Separator, Field } from '@chakra-ui/react';
 import { useBudgetStore } from '../../store/budgetStore';
 import { analyzeImport } from '../../ingest/analyzeImport';
 import { parseCsv } from '../../ingest/parseCsv';
@@ -416,12 +416,12 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
             {result && (
               <Box borderWidth={1} borderRadius="md" p={3} bg="gray.50">
                 <HStack gap={6} flexWrap="wrap">
-                  <StatGroup><Stat.Label>New</Stat.Label><Stat.ValueText>{result.stats.newCount}</Stat.ValueText></StatGroup>
-                  <StatGroup><Stat.Label>Total Dupes</Stat.Label><Stat.ValueText>{result.stats.dupesExisting + result.stats.dupesIntraFile}</Stat.ValueText></StatGroup>
-                  <StatGroup><Stat.Label>Existing</Stat.Label><Stat.ValueText>{result.stats.dupesExisting}</Stat.ValueText></StatGroup>
-                  <StatGroup><Stat.Label>Intra-file</Stat.Label><Stat.ValueText>{result.stats.dupesIntraFile}</Stat.ValueText></StatGroup>
-                  <StatGroup><Stat.Label>Errors</Stat.Label><Stat.ValueText>{result.errors.length}</Stat.ValueText></StatGroup>
-                  <StatGroup><Stat.Label>Hash</Stat.Label><Stat.ValueText fontSize="sm">{result.stats.hash}</Stat.ValueText></StatGroup>
+                  <Stat.Root minW="90px"><Stat.Label>New</Stat.Label><Stat.ValueText>{result.stats.newCount}</Stat.ValueText></Stat.Root>
+                  <Stat.Root minW="120px"><Stat.Label>Total Dupes</Stat.Label><Stat.ValueText>{result.stats.dupesExisting + result.stats.dupesIntraFile}</Stat.ValueText></Stat.Root>
+                  <Stat.Root minW="90px"><Stat.Label>Existing</Stat.Label><Stat.ValueText>{result.stats.dupesExisting}</Stat.ValueText></Stat.Root>
+                  <Stat.Root minW="90px"><Stat.Label>Intra-file</Stat.Label><Stat.ValueText>{result.stats.dupesIntraFile}</Stat.ValueText></Stat.Root>
+                  <Stat.Root minW="90px"><Stat.Label>Errors</Stat.Label><Stat.ValueText>{result.errors.length}</Stat.ValueText></Stat.Root>
+                  <Stat.Root minW="160px"><Stat.Label>Hash</Stat.Label><Stat.ValueText fontSize="sm">{result.stats.hash}</Stat.ValueText></Stat.Root>
                 </HStack>
                 <Separator my={3} />
                 {/* Ingestion metrics panel */}

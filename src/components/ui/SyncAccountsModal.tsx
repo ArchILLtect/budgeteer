@@ -27,19 +27,22 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const setAccountMapping = useBudgetStore((s: any) => s.setAccountMapping);
   const addOrUpdateAccount = useBudgetStore((s: any) => s.addOrUpdateAccount);
   const commitImportPlan = useBudgetStore((s: any) => s.commitImportPlan);
+  const streamingAutoByteThreshold = useBudgetStore((s: any) => s.streamingAutoByteThreshold);
 
   const [sourceType, setSourceType] = useState("csv");
   const [csvFile, setCsvFile] = useState<any>(null);
   const [ofxFile, setOfxFile] = useState<any>(null);
-  const [step, setStep] = useState("import"); // "import" | "mapping"
+  const [step, setStep] = useState<'select' | 'mapping' | 'accounts' | 'transactions'>('select');
   const [pendingMappings, setPendingMappings] = useState<string[]>([]);
   const [pendingData, setPendingData] = useState<any[]>([]); // original parsed rows awaiting mapping
+  const [foundAccounts, setFoundAccounts] = useState<string[]>([]);
   const [accountInputs, setAccountInputs] = useState<any>({});
   const [ingesting, setIngesting] = useState(false);
   const [ingestionResults, setIngestionResults] = useState<Array<{ accountNumber: string; plan: ImportPlan }>>([]); // [{ accountNumber, plan }]
   const [telemetry, setTelemetry] = useState<any>(null); // aggregate
   const [metricsAccount, setMetricsAccount] = useState('');
   const setLastIngestionTelemetry = useBudgetStore(s => s.setLastIngestionTelemetry);
+  const [dryRunStarted, setDryRunStarted] = useState(false);
 
   const fileTypes = ["csv", "ofx"];
   const isDemo = useBudgetStore((s) => s.isDemoUser);
@@ -65,10 +68,15 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     setSourceType("csv");
     setCsvFile(null);
     setOfxFile(null);
-    setStep("import");
+    setStep('select');
     setPendingMappings([]);
     setPendingData([]);
+    setFoundAccounts([]);
     setAccountInputs({});
+    setIngestionResults([]);
+    setTelemetry(null);
+    setMetricsAccount('');
+    setDryRunStarted(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +89,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     }
   };
 
-  const handleImport = () => {
+  const handleStartAccounts = () => {
     if (!csvFile && !ofxFile) {
       fireToast("warning", "File Required" , `Please select a ${sourceType.toUpperCase()} file before importing.`);
       return;
@@ -95,9 +103,18 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         complete: (results) => {
           const data = results.data;
 
+          if (!Array.isArray(data) || data.length === 0) {
+            fireToast('warning', 'No rows found', 'The CSV appears to be empty.');
+            return;
+          }
+
           const accountNumbers = new Set(
             data.map((row: any) => row.AccountNumber?.trim()).filter(Boolean)
           );
+
+          const accountsList = Array.from(accountNumbers);
+          setFoundAccounts(accountsList);
+          setPendingData(data);
 
           const unmapped = Array.from(accountNumbers).filter(
             (num) => !accountMappingsRef.current?.[num]
@@ -105,12 +122,13 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
 
           if (unmapped.length > 0) {
             setPendingMappings(unmapped);
-            setPendingData(data);
             setStep("mapping"); // switch view instead of opening new modal
             return;
           }
 
-          importCsvData(data);
+          // All accounts already mapped -> create/update accounts only, then proceed to transactions step.
+          createOrUpdateAccounts(accountsList);
+          setStep('accounts');
         },
         error: (err) => {
           fireToast("error", "CSV Parse Failed", err.message || "An error occurred while parsing the CSV file.");
@@ -121,6 +139,46 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
       fireToast("warning", "OFX File Import Coming Soon", "Please use CSV for now.");
     }
   };
+
+  const createOrUpdateAccounts = (accountNumbers: string[]) => {
+    const now = new Date().toISOString();
+    for (const accountNumber of accountNumbers) {
+      const mapping: any = accountMappingsRef.current?.[accountNumber];
+      const existingId = accountsRef.current?.[accountNumber]?.id;
+      addOrUpdateAccountRef.current(accountNumber, {
+        accountNumber,
+        id: existingId || crypto.randomUUID(),
+        label: mapping?.label || accountNumber,
+        institution: mapping?.institution || 'Unknown',
+        lastSync: now,
+      });
+    }
+  };
+
+  const beginTransactionsStep = () => {
+    setStep('transactions');
+  };
+
+  const runDryRun = async () => {
+    if (!pendingData.length) {
+      fireToast('warning', 'No data loaded', 'Please select a CSV first.');
+      return;
+    }
+    setDryRunStarted(true);
+    await importCsvData(pendingData);
+  };
+
+  const isLargeFile = (csvFile?.size || 0) > (streamingAutoByteThreshold || 500_000);
+  const shouldAutoRunDryRun = !isLargeFile;
+
+  useEffect(() => {
+    if (step !== 'transactions') return;
+    if (dryRunStarted) return;
+    if (!shouldAutoRunDryRun) return;
+    // Auto-run dry run for small files; large files require explicit click.
+    void runDryRun();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, dryRunStarted, shouldAutoRunDryRun]);
 
   // Ingestion migration implementation
   const importCsvData: any = async (data: any[]) => {
@@ -237,16 +295,34 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={() => { onClose(); resetState(); }} size="lg">
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) {
+          onClose();
+          resetState();
+        }
+      }}
+      size="lg"
+    >
       <Dialog.Backdrop />
       <Dialog.Positioner>
         <Dialog.Content>
           <Dialog.Header>
-            {step === "import" ? "Sync Your Accounts" : "Map Account Numbers"}
+            {step === 'select'
+              ? 'Step 1: Select CSV'
+              : step === 'mapping'
+                ? 'Step 1: Map Account Numbers'
+                : step === 'accounts'
+                  ? 'Step 1 Complete: Accounts Ready'
+                  : 'Step 2: Import Transactions'}
           </Dialog.Header>
           <Dialog.Body>
-            {step === "import" && (
+            {step === 'select' && (
               <Stack gap={4}>
+                <Text fontSize="sm" color="gray.600">
+                  First we’ll detect accounts and collect labels/institutions. Then we’ll import transactions from the same CSV.
+                </Text>
                 {isDemo && (
                   <>
                     <Button size="sm" variant="outline" onClick={() => {
@@ -260,12 +336,14 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                       const accountNumbers = [...new Set(sample.map(r => r.AccountNumber?.trim()).filter(Boolean))];
                       const mappings = accountMappingsRef.current;
                       const unmapped = accountNumbers.filter(n => !mappings[n]);
+                      setFoundAccounts(accountNumbers);
+                      setPendingData(sample);
                       if (unmapped.length) {
                         setPendingMappings(unmapped);
-                        setPendingData(sample);
                         setStep("mapping");
                       } else {
-                        importCsvData(sample);   // reuse your existing pipeline
+                        createOrUpdateAccounts(accountNumbers);
+                        setStep('accounts');
                       }
                     }}>
                       Load Sample CSV (Demo)
@@ -273,7 +351,15 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                     <Text fontSize="sm" color="gray.500" alignContent={'center'}>-- OR --</Text>
                   </>
                 )}
-                <RadioGroup.Root value={sourceType} onValueChange={() => setSourceType}>
+                <RadioGroup.Root
+                  value={sourceType}
+                  onValueChange={(details) => {
+                    if (!details.value) return;
+                    setSourceType(details.value);
+                    setCsvFile(null);
+                    setOfxFile(null);
+                  }}
+                >
                   <Stack direction="column">
                     <RadioGroup.Item value="csv">CSV File</RadioGroup.Item>
                     <RadioGroup.Item value="ofx">OFX File (Coming Soon)</RadioGroup.Item>
@@ -294,7 +380,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
               </Stack>
             )}
 
-            {step === "mapping" && (
+            {step === 'mapping' && (
               <Stack gap={4}>
                 <Text mb={2}>We found account numbers that aren't yet mapped. Please assign a label and institution.</Text>
                 {pendingMappings.map((num) => (
@@ -322,21 +408,55 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 ))}
               </Stack>
             )}
+
+            {step === 'accounts' && (
+              <Stack gap={3}>
+                <Text fontSize="sm" color="gray.600">
+                  Accounts are set up. Next we’ll analyze and import transactions from the same CSV.
+                </Text>
+                <Box maxH='160px' overflow='auto' borderWidth='1px' borderRadius='md' p={2} fontSize='sm'>
+                  {foundAccounts.map((acctNum) => {
+                    const mapping: any = accountMappingsRef.current?.[acctNum];
+                    return (
+                      <Box key={acctNum} mb={2}>
+                        <Text fontWeight='bold'>{acctNum}</Text>
+                        <Text color='gray.600'>
+                          {mapping?.label || acctNum} • {mapping?.institution || 'Unknown'}
+                        </Text>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Stack>
+            )}
+
+            {step === 'transactions' && (
+              <Stack gap={3}>
+                {isLargeFile && !dryRunStarted && (
+                  <Box borderWidth='1px' borderRadius='md' p={3}>
+                    <Text fontSize='sm' fontWeight='bold'>Large import detected</Text>
+                    <Text fontSize='sm' color='gray.600'>
+                      This file looks large, so analysis won’t start until you click “Run Dry Run”.
+                    </Text>
+                  </Box>
+                )}
+              </Stack>
+            )}
           </Dialog.Body>
           <Dialog.CloseTrigger asChild>
             <Button position="absolute" top={2} right={2} size="sm" variant="ghost">X</Button>
           </Dialog.CloseTrigger>
           <Dialog.Footer>
-            {step === "import" ? (
+            {step === 'select' ? (
               <>
                 <Button onClick={() => { onClose(); resetState(); }} variant="ghost" mr={3}>
                   Cancel
                 </Button>
-                <Button onClick={handleImport} colorScheme="teal" loading={ingesting} disabled={!fileTypes.includes(sourceType)}>
-                  {ingestionResults.length ? 'Re-Import' : 'Import'}
+                <Button onClick={handleStartAccounts} colorScheme="teal" loading={ingesting} disabled={!fileTypes.includes(sourceType)}>
+                  Continue
                 </Button>
               </>
-            ) : (
+            ) : step === 'mapping' ? (
               <Button
                 colorScheme="teal"
                 onClick={() => {
@@ -355,17 +475,40 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 // (Avoids store reach-through reads while keeping behavior equivalent.)
                 accountMappingsRef.current = { ...accountMappingsRef.current, ...additions };
 
-                importCsvData(pendingData);
+                createOrUpdateAccounts(foundAccounts);
+                setStep('accounts');
               }}
               >
-                Save & Continue Import
+                Save & Continue
               </Button>
-            )}
-            {step === 'import' && ingestionResults.length > 0 && !ingesting && (
-              <Button ml={3} colorScheme='purple' onClick={applyAllPlans}>Apply All ({telemetry?.newCount || 0} new)</Button>
+            ) : step === 'accounts' ? (
+              <>
+                <Button onClick={() => { onClose(); resetState(); }} variant="ghost" mr={3}>
+                  Cancel Import
+                </Button>
+                <Button colorScheme='teal' onClick={beginTransactionsStep}>
+                  Continue to Transactions
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  colorScheme='teal'
+                  onClick={runDryRun}
+                  loading={ingesting}
+                  disabled={ingesting || (!pendingData.length)}
+                >
+                  {dryRunStarted ? 'Re-Run Dry Run' : 'Run Dry Run'}
+                </Button>
+                {ingestionResults.length > 0 && !ingesting && (
+                  <Button ml={3} colorScheme='purple' onClick={applyAllPlans}>
+                    Apply All ({telemetry?.newCount || 0} new)
+                  </Button>
+                )}
+              </>
             )}
           </Dialog.Footer>
-          {step === 'import' && ingestionResults.length > 0 && (
+          {step === 'transactions' && ingestionResults.length > 0 && (
             <Box px={6} pb={4}>
               <Text fontSize='sm' fontWeight='bold' mb={2}>Dry Run Summary</Text>
               <SimpleGrid columns={{ base: 2, md: 4 }} gap={3} mb={3} fontSize='xs'>
