@@ -1,10 +1,5 @@
 import type { ImportSession, Transaction } from "../types";
 
-export type CsvParseError = {
-  line: number;
-  message: string;
-};
-
 export type IngestionError =
   | {
       type: "parse";

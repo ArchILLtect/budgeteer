@@ -1,7 +1,9 @@
 import dayjs from 'dayjs';
 
+import type { TransactionType } from "../types";
+
 // Parse signed monetary string: handles ($1.04), -1.04, 1.04-, $ prefixes, commas.
-function parseSignedAmount(rawVal: any): { raw: number; abs: number } | null {
+function parseSignedAmount(rawVal: unknown): { raw: number; abs: number } | null {
     if (rawVal === null || rawVal === undefined) return null;
     let s = String(rawVal).trim();
     if (!s) return null;
@@ -44,11 +46,18 @@ function parseSignedAmount(rawVal: any): { raw: number; abs: number } | null {
     return { raw: sign * num, abs: Math.abs(sign * num) };
 }
 
-export function normalizeRow(raw: any) {
-    if (!raw) return null;
+type RawRowLike = Record<string, unknown> & { __line?: number };
+
+function isTransactionType(value: string): value is TransactionType {
+    return value === 'income' || value === 'expense' || value === 'savings';
+}
+
+export function normalizeRow(raw: unknown) {
+    if (!raw || typeof raw !== 'object') return null;
+    const row = raw as RawRowLike;
 
     // 1. Date (supports bank "Posted Date" m/d/YYYY)
-    const dateRaw = (raw.date || raw.Date || raw['Posted Date'] || '').toString().trim();
+    const dateRaw = (row.date || row.Date || row['Posted Date'] || '').toString().trim();
     if (!dateRaw) return null;
 
     let parsed = dayjs(dateRaw);
@@ -67,10 +76,10 @@ export function normalizeRow(raw: any) {
 
     // 2. Description
     const descriptionRaw = (
-        raw.description ||
-        raw.Description ||
-        raw.memo ||
-        raw.Memo ||
+        row.description ||
+        row.Description ||
+        row.memo ||
+        row.Memo ||
         ''
     )
         .toString()
@@ -78,21 +87,19 @@ export function normalizeRow(raw: any) {
     if (!descriptionRaw) return null;
 
     // 3. Amount (signed + absolute)
-    const amountField = raw.amount ?? raw.Amount ?? raw.amt ?? raw.Amt ?? '';
+    const amountField = row.amount ?? row.Amount ?? row.amt ?? row.Amt ?? '';
     const amtParsed = parseSignedAmount(amountField);
     if (!amtParsed) return null;
 
     // 4. Category promotion
-    const rawCategory = (raw.category || raw.Category || raw.CATEGORY || '')
+    const rawCategory = (row.category || row.Category || row.CATEGORY || '')
         .toString()
         .trim();
     const category = rawCategory || undefined;
 
     // 5. Optional type (may be overridden by classifier except savings)
-    const typeCandidate = (raw.type || raw.Type || '').toString().toLowerCase().trim();
-    const type = ['income', 'expense', 'savings'].includes(typeCandidate)
-        ? typeCandidate
-        : null;
+    const typeCandidate = (row.type || row.Type || '').toString().toLowerCase().trim();
+    const type = isTransactionType(typeCandidate) ? typeCandidate : undefined;
 
     return {
         id: crypto.randomUUID(),
@@ -102,6 +109,6 @@ export function normalizeRow(raw: any) {
         rawAmount: amtParsed.raw, // signed (critical)
         type, // may be null → classifier sets
         category,
-        original: raw,
+        original: row,
     };
 }

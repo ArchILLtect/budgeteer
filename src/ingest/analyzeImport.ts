@@ -10,7 +10,6 @@ import {
   inferCategoryPerTx,
 } from "./inferCategory";
 import type {
-  CsvParseError,
   DuplicateSample,
   ImportPlan,
   IngestionError,
@@ -18,6 +17,7 @@ import type {
   SavingsQueueEntry,
 } from "./importPlan";
 import { parseCsv } from "./parseCsv";
+import type { CsvParseError } from "./parseCsv";
 import { normalizeRow } from "./normalizeRow";
 
 export type AnalyzeImportProps = {

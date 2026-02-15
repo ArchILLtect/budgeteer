@@ -119,7 +119,18 @@ export function useAuthUser(): {
     try {
       // void <store>.persist.rehydrate();
       void useUserUICacheStore.persist.rehydrate();
-      void useBudgetStore.persist.rehydrate();
+      const budgetRehydrate = useBudgetStore.persist.rehydrate();
+      void Promise.resolve(budgetRehydrate)
+        .then(() => {
+          try {
+            useBudgetStore.getState().runImportMaintenance?.();
+          } catch {
+            // ignore
+          }
+        })
+        .catch(() => {
+          // ignore
+        });
       void useLocalSettingsStore.persist.rehydrate();
       void useUpdatesStore.persist.rehydrate();
     } catch {

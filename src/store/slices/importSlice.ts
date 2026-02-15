@@ -99,6 +99,7 @@ export type ImportSlice = {
   recordImportHistory: (entry: ImportHistoryEntry) => void;
   pruneImportHistory: (maxEntries?: number, maxAgeDays?: number) => void;
   expireOldStagedTransactions: (maxAgeDays?: number) => void;
+  runImportMaintenance: () => void;
   undoStagedImport: (accountNumber: string, sessionId: string) => void;
 
   getImportSessionRuntime: (
@@ -305,8 +306,10 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
   recordImportHistory: (entry) =>
     set((state) => {
       const maxEntries = state.importHistoryMaxEntries || 30;
+      const withEntry = recordImportHistory(state.importHistory, entry, maxEntries);
+      const maxAgeDays = state.importHistoryMaxAgeDays || 30;
       return {
-        importHistory: recordImportHistory(state.importHistory, entry, maxEntries),
+        importHistory: pruneImportHistory(withEntry, maxEntries, maxAgeDays, Date.now()),
       };
     }),
 
@@ -328,6 +331,17 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
     set((state) =>
       expireOldStagedTransactions(state, maxAgeDays, Date.now())
     ),
+
+  runImportMaintenance: () =>
+    set((state) => {
+      const maxEntries = state.importHistoryMaxEntries || 30;
+      const maxAgeDays = state.importHistoryMaxAgeDays || 30;
+      const pruned = pruneImportHistory(state.importHistory, maxEntries, maxAgeDays, Date.now());
+      const historyPatch = pruned.length === state.importHistory.length ? {} : { importHistory: pruned };
+
+      const expirePatch = expireOldStagedTransactions(state, state.stagedAutoExpireDays || 30, Date.now());
+      return { ...historyPatch, ...expirePatch };
+    }),
 
   undoStagedImport: (accountNumber, sessionId) =>
     set((state) => undoStagedImport(state, accountNumber, sessionId, Date.now())),

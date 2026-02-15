@@ -7,8 +7,14 @@
  *  - Header names flexible: date/Date, description/Description/memo, amount/Amount/amt, type/Type.
  * TODO Phase 5: Replace with PapaParse worker-based streaming & better error capture.
  */
+export type CsvParseError = { line: number; message: string };
+
+// Target row shape for Budgeteer imports (matches `/samples`).
+// Values are parsed as strings; downstream normalization handles coercion.
+export type CsvRow = { [key: string]: string | number; __line: number };
+
 export function parseCsv(text: string) {
-    const errors: { line: number; message: string }[] = [];
+    const errors: CsvParseError[] = [];
     if (!text) return { rows: [], errors };
     const lines = text.split(/\r?\n/);
     // Identify header (first non-empty line)
@@ -21,7 +27,7 @@ export function parseCsv(text: string) {
     }
     if (headerLineIndex === -1) return { rows: [], errors };
     const headers = splitLine(lines[headerLineIndex]).map((h) => h.trim());
-    const rows: any[] = [];
+    const rows: CsvRow[] = [];
 
     for (let i = headerLineIndex + 1; i < lines.length; i++) {
         const rawLine = lines[i];
@@ -29,13 +35,15 @@ export function parseCsv(text: string) {
         try {
             const cols = splitLine(rawLine);
             if (!cols.length) continue;
-            const obj: any = {};
+            const obj: Record<string, string> = {};
             headers.forEach((h, idx) => {
                 const cell = cols[idx] ?? '';
                 obj[h] = cell.replace(/^"(.*)"$/, '$1');
             });
-            obj.__line = i + 1; // natural line numbering (1-based)
-            rows.push(obj);
+            rows.push({
+                ...obj,
+                __line: i + 1, // natural line numbering (1-based)
+            });
         } catch (e: any) {
             errors.push({
                 line: i + 1,
