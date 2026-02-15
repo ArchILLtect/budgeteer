@@ -17,6 +17,7 @@ type ApplyOneMonthResult = {
     e: number; // new expenses applied
     i: number; // new income applied
     s: number; // new savings applied
+    reviewEntries?: SavingsReviewEntry[];
 };
 
 type SavingsReviewEntry = {
@@ -50,10 +51,6 @@ type BudgetStoreStateForApply = {
 
     updateMonthlyActuals: (monthKey: string, patch: Partial<MonthlyActuals>) => void;
     addActualExpense: (monthKey: string, tx: Transaction) => void;
-    setSavingsReviewQueue: (entries: SavingsReviewEntry[]) => void;
-    setSavingsModalOpen: (open: boolean) => void;
-
-    resolveSavingsPromise?: ((result: unknown) => void) | null;
 };
 
 type BudgetStoreLike = {
@@ -187,6 +184,7 @@ export const applyOneMonth = async (
     ignoreBeforeDate: string | null = null
 ): Promise<ApplyOneMonthResult> => {
     const store = budgetStore.getState() as BudgetStoreStateForApply;
+    let savingsReviewEntries: SavingsReviewEntry[] = [];
 
     // Ensure month exists
     if (!store.monthlyActuals[monthKey]) {
@@ -320,20 +318,13 @@ export const applyOneMonth = async (
             await new Promise(requestAnimationFrame);
 
             if (reviewEntries.length === 0) {
-                return {
-                    e: newExpenses.length,
-                    i: newIncome.length,
-                    s: newSavings.length,
-                };
+                savingsReviewEntries = [];
+            } else {
+                savingsReviewEntries = reviewEntries;
             }
+        } else {
+            savingsReviewEntries = reviewEntries;
         }
-
-        store.setSavingsReviewQueue(reviewEntries);
-        store.setSavingsModalOpen(true);
-
-        await new Promise<unknown>((resolve) => {
-            budgetStore.setState({ resolveSavingsPromise: resolve });
-        });
     }
 
     if (showToast) {
@@ -344,7 +335,12 @@ export const applyOneMonth = async (
         );
     }
 
-    return { e: newExpenses.length, i: newIncome.length, s: newSavings.length } as ApplyOneMonthResult;
+    return {
+        e: newExpenses.length,
+        i: newIncome.length,
+        s: newSavings.length,
+        reviewEntries: savingsReviewEntries,
+    } as ApplyOneMonthResult;
 };
 
 const partition = <T>(array: T[], predicate: (elem: T) => boolean): [T[], T[]] =>

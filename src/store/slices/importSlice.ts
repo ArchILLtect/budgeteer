@@ -88,6 +88,7 @@ export type ImportSlice = {
   setSavingsReviewQueue: (entries: unknown[]) => void;
   clearSavingsReviewQueue: () => void;
   processPendingSavingsForAccount: (accountNumber: string, months: string[]) => void;
+  clearPendingSavingsForAccountMonths: (accountNumber: string, months: string[]) => void;
   markTransactionsBudgetApplied: (accountNumber: string, months: string[]) => void;
 
   processPendingSavingsForImportSession: (
@@ -454,6 +455,28 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
           ...toQueue,
         ],
         isSavingsModalOpen: true,
+      };
+    }),
+
+  clearPendingSavingsForAccountMonths: (accountNumber, months) =>
+    set((state) => {
+      const pending = (state.pendingSavingsByAccount?.[accountNumber] || []) as PendingSavingsQueueEntry[];
+      if (!pending.length) return {};
+      const monthSet = months && months.length ? new Set(months) : null;
+      if (!monthSet) return {};
+
+      const remaining = pending.filter((e) => {
+        const m = e.month;
+        return m ? !monthSet.has(m) : true;
+      });
+
+      if (remaining.length === pending.length) return {};
+
+      return {
+        pendingSavingsByAccount: {
+          ...state.pendingSavingsByAccount,
+          [accountNumber]: remaining,
+        },
       };
     }),
 
