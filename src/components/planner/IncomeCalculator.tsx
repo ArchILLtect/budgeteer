@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useBudgetStore } from '../../store/budgetStore'
 import { Box, Flex, Heading, HStack, Tabs, Stack, Text, Stat,
     StatGroup, RadioGroup, Button, Icon, 
@@ -8,6 +8,7 @@ import IncomeSourceForm from '../../components/forms/IncomeSourceForm'
 import { MdInfo } from "react-icons/md";
 import { Tooltip } from "../ui/Tooltip";
 import { AppCollapsible } from '../ui/AppCollapsible'
+import { calculateTotalTaxes } from '../../utils/calcUtils'
 
 type IncomeCalculatorProps = {
   origin?: 'Planner' | 'Tracker';
@@ -16,7 +17,9 @@ type IncomeCalculatorProps = {
 
 export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: IncomeCalculatorProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const { scenarios, currentScenario, updateScenario } = useBudgetStore();
+  const scenarios = useBudgetStore((s: any) => s.scenarios)
+  const currentScenario = useBudgetStore((s: any) => s.currentScenario)
+  const updateScenario = useBudgetStore((s: any) => s.updateScenario)
   const sources = useBudgetStore((s) => s.incomeSources)
   const showIncomeInputs = useBudgetStore((s) => s.showIncomeInputs)
   const setShowIncomeInputs = useBudgetStore((s) => s.setShowIncomeInputs)
@@ -31,8 +34,14 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
     (s) => s.monthlyActuals[selectedMonth]?.overiddenIncomeTotal
   );
 
-  const activeSource = useMemo(() => sources.find((s) => s.id === selectedId) || sources[0] || {}, [sources, selectedId])
-  const { net, breakdown } = useBudgetStore((s) => s.getTotalNetIncome());
+  // Avoid selecting an object from Zustand (unstable snapshot -> infinite loop warnings).
+  // Compute derived totals from primitives instead.
+  const effectiveFilingStatus = scenarios?.[currentScenario]?.filingStatus ?? 'single'
+  const breakdown = useMemo(
+    () => calculateTotalTaxes(grossTotal, effectiveFilingStatus),
+    [grossTotal, effectiveFilingStatus]
+  )
+  const net = useMemo(() => grossTotal - breakdown.total, [grossTotal, breakdown.total])
 
   const isTracker = origin === 'Tracker';
   // TODO: Connect filing status with tax rate calcs
@@ -63,19 +72,6 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
     // Intentional: temporary feature placeholder
     window.alert('This feature coming soon')
   }
-
-  // Update the active source's net when total changes, guarded to avoid loops
-  const activeSourceId = activeSource?.id
-  const activeSourceNetIncome = activeSource?.netIncome
-  useEffect(() => {
-    if (!activeSourceId) return
-    const nextNet = Number(net) || 0
-    const currentNet = Number(activeSourceNetIncome) || 0
-    if (currentNet !== nextNet) {
-      updateSource(activeSourceId, { netIncome: nextNet })
-    }
-    // IMPORTANT: depend only on the specific fields, not the whole source object/array
-  }, [activeSourceId, activeSourceNetIncome, net, updateSource])
 
   return (
     <Box borderWidth="1px" borderRadius="lg" p={4} mb={6}>
