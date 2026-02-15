@@ -17,14 +17,14 @@ Non-goals (for now):
 
 ## 1) Current Flow (Baseline)
 
-- UI parses CSV (or streams) and calls `runIngestion(...)`.
-- `runIngestion` returns:
-  - a patch function `patch(state) => partialState`
-  - `acceptedTxns` preview list
+- UI parses CSV (or streams) and calls `analyzeImport(...)`.
+- `analyzeImport` returns an `ImportPlan` (serializable):
+  - `accepted` (staged transactions)
+  - preview-friendly `acceptedPreview`
   - `savingsQueue`
-  - `errors` + `stats` + `importSessionId`
-- UI applies the patch via `useBudgetStore.setState(patch)`.
-- Store records `importHistory` and queues savings entries to be reviewed after Apply-to-Budget.
+  - `errors` + `stats` + `session`
+- UI commits via the store action `commitImportPlan(plan)`.
+- Store records `importHistory`, updates import manifests, and queues savings entries to be reviewed after Apply-to-Budget.
 
 Key properties we want to preserve:
 - Determinism + idempotency via strong key (`buildTxKey`).

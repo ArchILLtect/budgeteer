@@ -61,13 +61,14 @@ Budgeting domain state
 
 - `src/store/budgetStore.ts`: persisted root store composed from slice modules.
 - `src/store/slices/*`: domain slice modules (planner/import/settings/accounts).
-- `src/pages/Planner.tsx`, `src/pages/BudgetTrackerPage.tsx`: primary budgeting views.
+- `src/pages/PlannerPage.tsx`, `src/pages/TrackerPage.tsx`: primary budgeting views.
 - `src/pages/SettingsPage.tsx`: import/staging policy settings.
 - `src/pages/ImportHistoryPage.tsx`: import session history + staged/apply/undo controls.
 
 CSV ingestion pipeline (current implementation)
 
-- `src/ingest/runIngestion.ts`: orchestrator (parse → normalize → classify → infer → dedupe → patch).
+- `src/ingest/analyzeImport.ts`: orchestrator (parse → normalize → classify → infer → dedupe → ImportPlan).
+- Import slice `commitImportPlan(plan)`: single commit entrypoint (merge + history + savings + manifests).
 - `src/ingest/parseCsv.ts`: simple in-memory CSV parse.
 - `src/ingest/parseCsvStreaming.ts`: PapaParse chunked parse (Phase 5 style).
 - `src/ingest/buildTxKey.ts`: “strong key” for idempotent dedupe.

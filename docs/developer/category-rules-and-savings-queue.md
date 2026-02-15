@@ -112,7 +112,7 @@ Before submitting a PR that alters rules or queue logic:
 | ------------------------- | ----------------------------------------------------- |
 | Keyword / regex rules     | `src/ingest/categoryRules.js`                         |
 | Inference engine          | `src/ingest/inferCategory.js`                         |
-| Ingestion orchestrator    | `src/ingest/runIngestion.js`                          |
+| Ingestion orchestrator    | `src/ingest/analyzeImport.ts`                         |
 | Strong key builder        | `src/ingest/buildTxKey.js`                            |
 | Savings queue modal logic | `src/components/SavingsReviewModal.jsx` (and related) |
 | Tests (inference)         | `src/ingest/__tests__/categoryInference.test.js`      |

@@ -75,18 +75,18 @@ On each import:
 ### UI Entry Points
 
 - Import Transactions (single account)
-  - `src/components/ImportTransactionsModal.jsx`
+  - `src/components/ui/ImportTransactionsModal.tsx`
 - Sync Accounts (multi‑account CSV)
-  - `src/components/SyncAccountsModal.jsx`
+  - `src/components/ui/SyncAccountsModal.tsx`
 
 Both flows:
 
 1. Parse or stream‑parse CSV rows
 2. Derive account metadata (fingerprint, last4, type)
-3. Call the pure orchestrator (`runIngestion`)
+3. Call the pure orchestrator (`analyzeImport`) to produce an `ImportPlan`
 4. Show dry‑run preview (counts / telemetry / errors)
 5. On confirm:
-   - apply returned patch locally
+  - commit the plan via `commitImportPlan(plan)`
    - enqueue backend sync (planned)
 6. Record import history + defer savings review
 
@@ -94,7 +94,7 @@ Both flows:
 
 ## 4) Core Orchestrator
 
-### `src/ingest/runIngestion.ts`
+### `src/ingest/analyzeImport.ts`
 
 **Inputs**
 
@@ -104,14 +104,14 @@ Both flows:
 
 **Outputs**
 
-- `patch(state) => partialState`
-- `acceptedTransactions`
-- `savingsQueue`
-- `stats`
-- `errors`
+- `ImportPlan` (serializable):
+  - `accepted` (staged)
+  - `savingsQueue`
+  - `stats`
+  - `errors`
 
-> The orchestrator does **not** know about account numbers or fingerprints.
-> It operates strictly on `accountId`.
+> The orchestrator does **not** mutate the store.
+> Store mutation happens only via the Import slice commit action.
 
 ---
 

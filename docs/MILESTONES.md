@@ -109,14 +109,14 @@ Progress notes:
 - [x] Define core domain types: `Account`, `Transaction`, `ImportSession`, `BudgetMonthKey`
 - [x] Replace `any` in import/staging/apply/undo codepaths with concrete types
 - [x] Make transaction identity/strong-key inputs typed and explicit
-- [ ] Tighten ingestion outputs (`runIngestion` return shape) where UI consumes it
+- [x] ~~Tighten ingestion outputs (`runIngestion` return shape) where UI consumes it~~ (done: removed legacy wrapper; UI commits via `commitImportPlan(plan)`)
 
 Progress notes:
 - We are intentionally pausing broader type hardening here to avoid “type the entire app” churn.
 - Remaining `any` hotspots are mostly:
 	- Root store wiring in `src/store/budgetStore.ts` (set/get/store + persist typing)
 	- Planner domain slice (`src/store/slices/plannerSlice.ts`) and supporting planner UI models
-	- Ingestion orchestrator `src/ingest/runIngestion.ts` (still contains `any` in its internal shapes)
+	- Ingestion orchestrator `src/ingest/analyzeImport.ts` (core path typed; non-core callers may still have `any` at UI edges)
 	- Non-core utilities (`src/utils/analysisUtils.ts`, `src/utils/calcUtils.ts`, `src/utils/demoUtils.ts`)
 - Plan: revisit once Milestone 4A (ImportPlan + commit) is implemented and at least manually testable in-browser.
 
@@ -174,11 +174,11 @@ Acceptance:
 ### Milestone 4 checklist
 
 **A) ImportPlan + commit boundary**
-- [ ] Implement `analyzeImport(...) -> ImportPlan` (serializable plan, no patch closures)
-- [ ] Implement `commitImportPlan(plan)` store action (single entrypoint to merge + record history + queue savings)
-- [ ] Migrate import UIs to commit via store action (no `useBudgetStore.setState(patch)` from components)
-- [ ] Add deterministic unit tests for analyze vs commit (idempotency, error surfaces, and plan stability)
-- [ ] After ImportPlan is manually testable in-browser, complete the deferred type-hardening follow-ups in `TODO.md` (root store typing, `runIngestion` shape tightening, planner `any` cluster)
+- [x] ~~Implement `analyzeImport(...) -> ImportPlan` (serializable plan, no patch closures)~~ (done)
+- [x] ~~Implement `commitImportPlan(plan)` store action (single entrypoint to merge + record history + queue savings)~~ (done)
+- [x] ~~Migrate import UIs to commit via store action (no `useBudgetStore.setState(patch)` from components)~~ (done: ImportTransactionsModal + SyncAccountsModal)
+- [x] ~~Add deterministic unit tests for analyze vs commit (idempotency, error surfaces, and plan stability)~~ (done: `analyzeImport` tests + commit boundary test)
+- [ ] After ImportPlan is manually testable in-browser, complete the deferred type-hardening follow-ups in `TODO.md` (root store typing, planner `any` cluster)
 
 **B) Proposed ingestion upgrades (from plan)**
 - [ ] Streaming parse worker mode (PapaParse worker) for large files

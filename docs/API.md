@@ -88,15 +88,16 @@ Budgeteer also has internal “API-like” surfaces you should treat as stable b
 ### 2.1 Ingestion orchestrator
 
 Entry point:
-- `src/ingest/runIngestion.ts`
+- `src/ingest/analyzeImport.ts`
+- Store commit boundary: `commitImportPlan(plan)` (Import slice)
 
 Purpose:
-- Turn CSV text or parsed rows into:
-  - accepted transactions
-  - a patch that can be applied to the store
+- Turn CSV text or parsed rows into an **ImportPlan** (serializable data):
+  - accepted transactions (staged)
   - stats + telemetry
   - structured errors
-  - `savingsQueue` entries (deferred to post-apply linking)
+  - `savingsQueue` entries (deferred until Apply-to-Budget)
+- Commit that plan via a single store action (no patch functions in UI)
 
 Key properties:
 - Deterministic

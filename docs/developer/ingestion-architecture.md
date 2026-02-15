@@ -13,10 +13,12 @@ For the historical refactor checklist and phase log, see `../legacy/ingestion-re
 Ingestion turns a CSV (or parsed rows) into:
 
 - a deterministic set of **accepted transactions** (new, non-duplicate)
-- a **patch function** that merges those transactions into the Zustand store atomically
+- an **ImportPlan** (serializable data) that contains accepted txns, stats, errors, and savingsQueue
 - structured **stats + telemetry** (timings, dupes, inference sources)
 - structured **errors** (parse/normalize/duplicate)
 - a **savingsQueue** for savings-type transactions (deferred until “Apply to Budget”)
+
+Store mutation is handled by a single explicit boundary: `commitImportPlan(plan)`.
 
 The ingestion orchestrator is designed to be **pure** (no store access) and **idempotent** (re-importing the same data yields 0 new transactions).
 
@@ -26,20 +28,20 @@ The ingestion orchestrator is designed to be **pure** (no store access) and **id
 
 ### UI entry points
 
-- Import Transactions (single account): `src/components/ImportTransactionsModal.jsx`
-- Sync Accounts (multi-account CSV): `src/components/SyncAccountsModal.jsx`
+- Import Transactions (single account): `src/components/ui/ImportTransactionsModal.tsx`
+- Sync Accounts (multi-account CSV): `src/components/ui/SyncAccountsModal.tsx`
 
 Both flows do:
 
 1. parse or stream-parse CSV rows
-2. call the pure orchestrator (`runIngestion`)
+2. call the pure orchestrator (`analyzeImport`) to build an `ImportPlan`
 3. show a dry-run preview (counts/telemetry/errors)
-4. on confirm/apply: apply the returned patch to the store
+4. on confirm/apply: commit the plan via `commitImportPlan(plan)`
 5. record import history and defer savings review entries
 
 ### Core orchestrator
 
-- `src/ingest/runIngestion.js` (pure)
+- `src/ingest/analyzeImport.ts` (pure)
 
 Inputs:
 
@@ -49,11 +51,11 @@ Inputs:
 
 Outputs:
 
-- `patch(state) => partialState`
-- `acceptedTxns` (preview-friendly)
-- `savingsQueue`
-- `stats` (counts + timings)
-- `errors`
+- `ImportPlan` with:
+   - `accepted` / `acceptedPreview`
+   - `savingsQueue`
+   - `stats` (counts + timings)
+   - `errors`
 
 ---
 
@@ -87,9 +89,9 @@ Pipeline stages (high level):
    - Format:
      - `accountNumber|YYYY-MM-DD|signedAmount|normalized description[|bal:balance]`
 
-7. **Patch Build**
-   - `src/ingest/buildPatch.js`
-   - Produces a function suitable for `useBudgetStore.setState(patch)`
+7. **Commit (store boundary)**
+   - `commitImportPlan(plan)` (Import slice)
+   - De-dupes at commit time, merges into account transactions, records import history, queues savings, updates import manifests
 
 ---
 
