@@ -50,6 +50,7 @@ UI bugfixes (P1):
 
 - [x] TODO(P1): Planner — fix “Include savings in …” radio button not working
 - [ ] TODO(P1): Tracker — fix “Total Override” checkbox not working
+- [ ] TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”
 
 Income Details (Tracker) (P1):
 
