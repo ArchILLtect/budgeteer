@@ -63,6 +63,56 @@ type BudgetStoreLike = {
 
 type formatDateOptions = 'shortMonthAndDay' | 'shortMonth' | 'longMonth' | 'year' | 'monthNumber';
 
+type VendorExtractOptions = {
+    knownVendors?: string[];
+    vendorAliases?: Record<string, string>;
+    enableHeuristics?: boolean;
+};
+
+function getDefaultKnownVendors(): string[] {
+    return [
+        'prime video',
+        'netlify',
+        'bluehost',
+        'openai',
+        'aws',
+        'patreon',
+        'crunchyroll',
+        'walgreens',
+        'wal-mart',
+        'wal-sams',
+        'woodmans',
+        'credit one bank',
+        'capital petroleum',
+        'cenex',
+        'grubhub',
+    ];
+}
+
+function matchKnownVendor(raw: string, options?: Pick<VendorExtractOptions, 'knownVendors' | 'vendorAliases'>): string | null {
+    const knownVendors = options?.knownVendors ?? getDefaultKnownVendors();
+    const vendorAliases = options?.vendorAliases;
+    const lowered = raw.toLowerCase();
+
+    for (const vendor of knownVendors) {
+        if (lowered.includes(vendor)) return vendorAliases?.[vendor] ?? vendor;
+    }
+
+    return null;
+}
+
+function extractVendorHeuristicOnly(raw: string): string {
+    const lowered = raw.toLowerCase();
+
+    const dateMatch = lowered.match(/\d{2}\/\d{2}\/\d{2}/); // mm/dd/yy
+    if (dateMatch) {
+        const split = lowered.split(dateMatch[0]);
+        if (split[1]) return split[1].trim().split(/\s+/).slice(0, 3).join(' ');
+    }
+
+    return lowered.slice(0, 32);
+}
+
 export function formatDate(dateString: string | undefined, format: formatDateOptions = 'shortMonthAndDay') {
     if (typeof dateString !== 'string' || !dateString) return '';
     let newDate;
@@ -135,30 +185,19 @@ export function formatToYYYYMM(monthNumber: number, yearNumber: number) {
     return `${yearPart}-${formattedMonth}`;
 }
 
-export function extractVendorDescription(raw: string) {
-    const knownVendors = [
-        'prime video',
-        'netlify',
-        'bluehost',
-        'openai',
-        'aws',
-        'patreon',
-        'crunchyroll',
-        'walgreens',
-        'wal-mart',
-        'wal-sams',
-        'woodmans',
-        'credit one bank',
-        'capital petroleum',
-        'cenex',
-        'grubhub',
-    ];
+export function extractVendorDescription(raw: string, options?: VendorExtractOptions) {
+    const knownVendors = options?.knownVendors ?? getDefaultKnownVendors();
+    const vendorAliases = options?.vendorAliases;
+    const enableHeuristics = options?.enableHeuristics ?? true;
     const lowered = raw.toLowerCase();
 
     // Return a known vendor if matched
     for (const vendor of knownVendors) {
-        if (lowered.includes(vendor)) return vendor;
+        if (lowered.includes(vendor)) return vendorAliases?.[vendor] ?? vendor;
     }
+
+    // If heuristics are disabled, just return the (normalized) description.
+    if (!enableHeuristics) return lowered.trim();
 
     // Fallback: get last part after date
     const dateMatch = lowered.match(/\d{2}\/\d{2}\/\d{2}/); // mm/dd/yy
@@ -168,6 +207,78 @@ export function extractVendorDescription(raw: string) {
     }
 
     return lowered.slice(0, 32); // safe fallback
+}
+
+function normalizeDisplayText(value: unknown) {
+    return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function clampDisplayText(value: string, maxLen: number) {
+    if (!value) return '';
+    if (value.length <= maxLen) return value;
+    return value.slice(0, maxLen).trim();
+}
+
+type ExpenseNameOptions = {
+    // Default: false. When true, always extract a vendor-like name (known vendor match + heuristics).
+    // When false, only known vendor matches are extracted and everything else uses sanitized raw description.
+    alwaysExtractVendorName?: boolean;
+    // Future: user-configurable known vendor matching + display aliases.
+    knownVendors?: string[];
+    vendorAliases?: Record<string, string>;
+    rawMaxLen?: number;
+
+    expenseNameOverrides?: { match: string; displayName: string }[];
+    incomeNameOverrides?: { match: string; displayName: string }[];
+};
+
+function getNonEmptyExpenseName(tx: Transaction, options?: ExpenseNameOptions) {
+    const rawDesc = normalizeDisplayText(tx.description);
+    const rawName = normalizeDisplayText(tx.name);
+    const rawPreferred = rawDesc || rawName;
+    if (!rawPreferred) return '(no description)';
+
+    const known = matchKnownVendor(rawPreferred, {
+        knownVendors: options?.knownVendors,
+        vendorAliases: options?.vendorAliases,
+    });
+    if (known) {
+        const base = normalizeDisplayText(known);
+        return applyExactNameOverrides(base, options?.expenseNameOverrides);
+    }
+
+    if (options?.alwaysExtractVendorName) {
+        const extracted = normalizeDisplayText(extractVendorHeuristicOnly(rawPreferred));
+        const base = extracted || '(no description)';
+        return applyExactNameOverrides(base, options?.expenseNameOverrides);
+    }
+
+    const maxLen = options?.rawMaxLen ?? 80;
+    const base = clampDisplayText(rawPreferred, maxLen) || '(no description)';
+    return applyExactNameOverrides(base, options?.expenseNameOverrides);
+}
+
+function applyExactNameOverrides(value: string, rules: { match: string; displayName: string }[] | undefined) {
+    const current = normalizeDisplayText(value);
+    if (!current) return value;
+    const list = Array.isArray(rules) ? rules : [];
+    for (const r of list) {
+        const match = normalizeDisplayText(r?.match);
+        if (!match) continue;
+        if (current === match) {
+            const next = normalizeDisplayText(r?.displayName);
+            return next || current;
+        }
+    }
+    return current;
+}
+
+function getNonEmptyIncomeDescription(tx: Transaction, options?: ExpenseNameOptions) {
+    const raw = normalizeDisplayText(tx.description) || normalizeDisplayText(tx.name);
+    if (!raw) return '(no description)';
+    const maxLen = options?.rawMaxLen ?? 80;
+    const base = clampDisplayText(raw, maxLen) || '(no description)';
+    return applyExactNameOverrides(base, options?.incomeNameOverrides);
 }
 
 export function getUniqueOrigins<T extends { origin?: string }>(txs: T[]) {
@@ -184,7 +295,8 @@ export const applyOneMonth = async (
     monthKey: string,
     acct: { accountNumber: string; transactions: Transaction[] },
     showToast = true,
-    ignoreBeforeDate: string | null = null
+    ignoreBeforeDate: string | null = null,
+    options?: ExpenseNameOptions
 ): Promise<ApplyOneMonthResult> => {
     const store = budgetStore.getState() as BudgetStoreStateForApply;
     let savingsReviewEntries: SavingsReviewEntry[] = [];
@@ -259,20 +371,28 @@ export const applyOneMonth = async (
     }
 
     const combinedIncome = [...income, ...newIncome];
+    const combinedIncomeWithOverrides = combinedIncome.map((src) => ({
+        ...src,
+        description: getNonEmptyIncomeDescription(src, options),
+    }));
     const newTotalNetIncome = combinedIncome.reduce(
         (sum, tx) => sum + normalizeTransactionAmount(tx),
         0
     );
 
     store.updateMonthlyActuals(monthKey, {
-        actualFixedIncomeSources: combinedIncome,
+        actualFixedIncomeSources: combinedIncomeWithOverrides,
         actualTotalNetIncome: newTotalNetIncome,
     });
 
     // Add expenses
-    newExpenses.forEach((e) =>
-        store.addActualExpense(monthKey, { ...e, amount: normalizeTransactionAmount(e) })
-    );
+    newExpenses.forEach((e) => {
+        store.addActualExpense(monthKey, {
+            ...e,
+            name: getNonEmptyExpenseName(e, options),
+            amount: normalizeTransactionAmount(e),
+        });
+    });
 
     // Savings handling
     if (newSavings.length > 0) {
