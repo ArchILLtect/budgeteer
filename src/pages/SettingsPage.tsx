@@ -138,7 +138,7 @@ export default function SettingsPage() {
   return (
     <Box p={6} mb={20}>
       {/*<VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">*/}
-      <Box p={4} maxW="80%" mx="auto" borderWidth={1} borderRadius="lg" boxShadow="md" background={"white"}>
+      <Box p={4} maxW="80%" mx="auto" borderWidth={1} borderColor="border" borderRadius="lg" boxShadow="md" bg="bg.panel">
         <Heading size="2xl">Settings</Heading>
 
         <Tip storageKey="tip:settings-local" title="Tip">
@@ -158,7 +158,7 @@ export default function SettingsPage() {
 
         <Box pt={6} w="100%"> {/* Navigation */}
           <Heading size="lg">Navigation</Heading>
-          <Text color="gray.600" fontSize="sm">
+          <Text color="fg.muted" fontSize="sm">
             Customize your sidebar and default landing page.
           </Text>
 
@@ -199,7 +199,7 @@ export default function SettingsPage() {
 
         <Box pt={6} w="100%"> {/* Demo */}
           <Heading size="lg">{isDemoIdentity ? "Demo Data" : "Sample data"}</Heading>
-          <Text color="gray.600" fontSize="sm">
+          <Text color="fg.muted" fontSize="sm">
             {isDemoIdentity
               ? "Manage demo-marked sample data. These actions only affect data marked as demo."
               : "Your account can start with sample data (marked as demo). You can remove it at any time."}
@@ -208,14 +208,14 @@ export default function SettingsPage() {
           {!isDemoIdentity ? (
             <Box pt={3}>
               <Heading size="sm">Remove sample data</Heading>
-              <Text color="gray.600" fontSize="sm">
+              <Text color="fg.muted" fontSize="sm">
                 This deletes demo-marked sample data and permanently disables future sample-data seeding for this account on this device.
               </Text>
-              <Text color="gray.600" fontSize="sm">
+              <Text color="fg.muted" fontSize="sm">
                 This cannot be undone from within the app. If you want “temporary demo” data later, you can create your own test entries and
                 prefix them with something like “Demo:”.
               </Text>
-              <Text color="gray.600" fontSize="sm">
+              <Text color="fg.muted" fontSize="sm">
                 Note: this also hides the Demo Mode onboarding controls (since sample-data seeding is disabled).
               </Text>
 
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                 </Button>
 
                 {seedOptedOut ? (
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="fg.muted">
                     Sample-data seeding is disabled for this user.
                   </Text>
                 ) : null}
@@ -310,7 +310,7 @@ export default function SettingsPage() {
           {isDemoIdentity ? (
             <Box pt={3}>
               <Heading size="sm">Demo tour</Heading>
-              <Text color="gray.600" fontSize="sm">
+              <Text color="fg.muted" fontSize="sm">
                 If you hid the demo tour, you can re-enable it here.
               </Text>
               <HStack pt={2} gap={3} align="center" flexWrap="wrap">
@@ -326,7 +326,7 @@ export default function SettingsPage() {
                   Reset demo tour
                 </Button>
                 {!demoTourDisabled ? (
-                  <Text fontSize="sm" color="gray.600">
+                  <Text fontSize="sm" color="fg.muted">
                     Demo tour is currently enabled.
                   </Text>
                 ) : null}
@@ -366,7 +366,7 @@ export default function SettingsPage() {
 
               <Box pt={4}>
                 <Heading size="sm">Add more demo data</Heading>
-                <Text color="gray.600" fontSize="sm">
+                <Text color="fg.muted" fontSize="sm">
                   These actions only create demo-marked sample data.
                 </Text>
               </Box>
@@ -486,13 +486,13 @@ export default function SettingsPage() {
 
         <Box pt={6} w="100%"> {/* Onboarding */}
           <Heading size="lg">Onboarding</Heading>
-          <Text color="gray.600" fontSize="sm">
+          <Text color="fg.muted" fontSize="sm">
             Control the welcome modal and (optionally) enable Demo Mode for this account on this device.
           </Text>
 
           <Box pt={3}>
             <Heading size="sm">Welcome modal</Heading>
-            <Text color="gray.600" fontSize="sm">
+            <Text color="fg.muted" fontSize="sm">
               If you previously chose “Never show again”, you can re-enable the welcome modal here.
             </Text>
             <HStack pt={2} gap={3} align="center" flexWrap="wrap">
@@ -521,7 +521,7 @@ export default function SettingsPage() {
           {!isDemoIdentity && !seedOptedOut ? (
             <Box pt={4}>
               <Heading size="sm">Demo Mode (optional)</Heading>
-              <Text color="gray.600" fontSize="sm">
+              <Text color="fg.muted" fontSize="sm">
                 {isDemoSession
                   ? "This is a demo session. Sign out to exit demo mode."
                   : isDemoOptIn
@@ -593,7 +593,7 @@ export default function SettingsPage() {
 
         <Box pt={6} w="100%"> {/* Tips */}
           <Heading size="lg">Tips</Heading>
-          <Text color="gray.600" fontSize="sm">
+          <Text color="fg.muted" fontSize="sm">
             Tips can be dismissed and are remembered per user.
           </Text>
 
@@ -611,7 +611,7 @@ export default function SettingsPage() {
           </HStack>
         </Box>
       </Box>
-      <Box p={4} maxW="80%" mx="auto" mt={3} borderWidth={1} borderRadius="lg" boxShadow="md" background={"white"}>
+      <Box p={4} maxW="80%" mx="auto" mt={3} borderWidth={1} borderColor="border" borderRadius="lg" boxShadow="md" bg="bg.panel">
         <AppCollapsible title="⚠️ Warning: Experimental Features Below" mb={6} defaultOpen={false}>
           <Box w={"100%"}>
             <Heading size='md' mb={4}>Import & Staging Settings</Heading>
@@ -620,14 +620,14 @@ export default function SettingsPage() {
               Please proceed with caution and consider backing up your data before making changes.
             </Text>
 
-            <Box mb={6} p={3} borderWidth={1} borderRadius='md' bg='gray.50'>
+            <Box mb={6} p={3} borderWidth={1} borderColor="border" borderRadius='md' bg='bg.subtle'>
               <Flex wrap='wrap' gap={2} mb={1}>
                 <Badge colorScheme='teal'>Undo {local.importUndoWindowMinutes}m</Badge>
                 <Badge colorScheme='purple'>History {local.importHistoryMaxEntries} max</Badge>
                 <Badge colorScheme='purple'>History {local.importHistoryMaxAgeDays}d age</Badge>
                 <Badge colorScheme='orange'>Auto-expire {local.stagedAutoExpireDays}d</Badge>
               </Flex>
-              <Text fontSize='xs' color='gray.600'>{policySummary}</Text>
+              <Text fontSize='xs' color='fg.muted'>{policySummary}</Text>
             </Box>
             <VStack align='stretch' gap={5} separator={<Separator />}>
               <Field.Root>
@@ -640,7 +640,7 @@ export default function SettingsPage() {
                 >
                   <NumberInput.Input min={1} max={720} />
                 </NumberInput.Root>
-                <Text fontSize='xs' color='gray.500'>How long after import sessions can be undone.</Text>
+                <Text fontSize='xs' color='fg.muted'>How long after import sessions can be undone.</Text>
               </Field.Root>
               <Field.Root>
                 <Field.Label>Streaming Auto Line Threshold</Field.Label>
@@ -652,7 +652,7 @@ export default function SettingsPage() {
                   >
                     <NumberInput.Input min={500} max={200000} step={100} />
                   </NumberInput.Root>
-                  <Text fontSize='xs' color='gray.500'>If a CSV exceeds this many lines, streaming parser auto-enables.</Text>
+                    <Text fontSize='xs' color='fg.muted'>If a CSV exceeds this many lines, streaming parser auto-enables.</Text>
               </Field.Root>
               <Field.Root>
                 <Field.Label>Streaming Auto Size Threshold (KB)</Field.Label>
@@ -668,7 +668,7 @@ export default function SettingsPage() {
                   >
                     <NumberInput.Input min={50} max={20480} step={50} />
                   </NumberInput.Root>
-                  <Text fontSize='xs' color='gray.500'>If file size exceeds this value, streaming parser auto-enables.</Text>
+                    <Text fontSize='xs' color='fg.muted'>If file size exceeds this value, streaming parser auto-enables.</Text>
               </Field.Root>
               <Field.Root>
                 <Field.Label>Import History Max Entries</Field.Label>

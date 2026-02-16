@@ -17,11 +17,6 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
     return sanitizeRedirectPath(params.get("redirect"), defaultLandingRoute, { disallowLogin: true });
   }, [defaultLandingRoute, location.search]);
 
-  const intent = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    return params.get("intent");
-  }, [location.search]);
-
   useEffect(() => {
     if (!signedIn) return;
     navigate(redirectTarget, { replace: true });
@@ -30,8 +25,8 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
   if (authLoading) return <BasicSpinner />;
 
   return (
-    <VStack align="start" gap={4} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm" w="100%">
-      <VStack p={4} align="start" bg="gray.50" rounded="md" boxShadow="sm" w="100%" h="87.5vh" gap={3}>
+    <VStack align="start" gap={4} minH="100%" p={4} bg="bg" rounded="md" boxShadow="sm" w="100%">
+      <VStack p={4} align="start" bg="bg.panel" borderWidth="1px" borderColor="border" rounded="md" boxShadow="sm" w="100%" h="87.5vh" gap={3}>
         <Heading size="2xl">Login</Heading>
 
         <Tip storageKey="tip:login-redirect" title="Tip">
@@ -42,9 +37,9 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
         {!signedIn ? (
           <Box
             p={3}
-            bg={intent === "demo" ? "purple.50" : "gray.50"}
+            bg="bg.subtle"
             borderWidth="1px"
-            borderColor={intent === "demo" ? "purple.200" : "gray.200"}
+            borderColor="border"
             rounded="md"
             w="100%"
           >
@@ -78,8 +73,8 @@ export function LoginPage({ signedIn, authLoading }: { signedIn: boolean; authLo
       </VStack>
 
       {!signedIn ? (
-        <Box p={3} bg="yellow.50" borderWidth="1px" borderColor="yellow.200" rounded="md" w="100%">
-          <Text fontSize="sm" color="yellow.800">
+        <Box p={3} bg="bg.subtle" borderWidth="1px" borderColor="border" rounded="md" w="100%">
+          <Text fontSize="sm" color="fg.muted">
             New here? You can try out the app with a temporary demo account — no signup required.
           </Text>
         </Box>

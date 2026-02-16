@@ -37,14 +37,14 @@ export function ProfilePage({ user }: ProfilePageProps) {
 
   if (!showSignedIn) {
     return (
-      <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+      <VStack align="start" gap={2} minH="100%" p={4} bg="bg" rounded="md" boxShadow="sm">
         <Heading size="md">Profile</Heading>
         <Text>No user is currently logged in.</Text>
       </VStack>
     );
   } else {
     return (
-      <VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+      <VStack align="start" gap={2} minH="100%" p={4} bg="bg" rounded="md" boxShadow="sm">
         <Heading size="2xl">Profile</Heading>
         <Tip storageKey="tip:profile-userui" title="Tip">
           Email/role come from your auth attributes and may be cached briefly. If they look stale, a refresh will

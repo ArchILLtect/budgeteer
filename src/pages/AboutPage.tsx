@@ -2,10 +2,10 @@ import { Badge, Box, Button, Heading, HStack, Text, VStack, Image } from "@chakr
 
 export function AboutPage() {
   return (
-    <VStack align="stretch" gap={6} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">
+    <VStack align="stretch" gap={6} minH="100%" p={4} rounded="md" boxShadow="sm" bg="bg">
       <VStack align="start" gap={2}>
         <Heading size="2xl">About Budgeteer</Heading>
-        <Text color="gray.600">
+        <Text color="fg.muted">
           Budgeteer is a privacy-aware personal finance app built for planning-first budgeting, safe CSV imports, and
           clear monthly tracking.
         </Text>
@@ -15,7 +15,7 @@ export function AboutPage() {
         <Heading size="xl" mb={2}>
           Mission
         </Heading>
-        <Text color="gray.700">
+        <Text color="fg.muted">
           Make budgeting feel intentional and understandable: plan ahead with scenarios, import transactions safely
           (preview → stage → apply/undo), and keep the math deterministic and explainable.
         </Text>
@@ -25,7 +25,7 @@ export function AboutPage() {
         <Heading size="xl" mb={2}>
           App features
         </Heading>
-        <VStack align="start" gap={2} color="gray.700">
+        <VStack align="start" gap={2} color="fg.muted">
           <Text>• Planner: scenarios for income, expenses, and savings allocation.</Text>
           <Text>• Tracker: planned vs actual by month, with honest totals and clear comparisons.</Text>
           <Text>• Accounts: CSV import with preview, staging, apply-to-budget, and a time-window undo.</Text>
@@ -53,7 +53,7 @@ export function AboutPage() {
           <Badge variant="outline">ESLint</Badge>
         </HStack>
 
-        <Box mt={3} color="gray.700">
+        <Box mt={3} color="fg.muted">
           <Text>
             Advisor tools used during development (for design review, refactors, and debugging guidance):
           </Text>
@@ -155,7 +155,7 @@ export function AboutPage() {
         <Heading size="xl" mb={2}>
           What’s next
         </Heading>
-        <VStack align="start" gap={2} color="gray.700">
+        <VStack align="start" gap={2} color="fg.muted">
           <Text>
             Near-term work focuses on tightening the product surface (copy/routes/UX correctness), hardening types, and
             polishing Planner + Tracker without changing the core architecture.

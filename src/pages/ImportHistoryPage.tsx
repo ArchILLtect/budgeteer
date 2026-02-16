@@ -151,7 +151,7 @@ export default function ImportHistoryPage() {
     <Box p={6}>
       <Flex mb={4} align="center" gap={4} wrap="wrap">
         <Heading size='md'>Import History</Heading>
-        <Text fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color="fg.muted">
           Review recent import sessions, apply staged transactions, and undo within the undo window.
         </Text>
         <Spacer />
@@ -193,7 +193,7 @@ export default function ImportHistoryPage() {
           </>
         ) : (
           <HStack gap={2}>
-            <Text fontSize='xs' color='gray.500'>Quick Select:</Text>
+            <Text fontSize='xs' color='fg.muted'>Quick Select:</Text>
             <Button size='xs' variant='ghost' onClick={() => selectByStatus('active')}>Active</Button>
             <Button size='xs' variant='ghost' onClick={() => selectByStatus('expired')}>Expired</Button>
             <Button size='xs' variant='ghost' onClick={() => selectByStatus('undone')}>Undone</Button>
@@ -354,7 +354,7 @@ export default function ImportHistoryPage() {
             {rows.length === 0 && (
               <Table.Row>
                 <Table.Cell colSpan={12}>
-                  <Text fontSize="sm" color="gray.500" textAlign="center" py={6}>
+                  <Text fontSize="sm" color="fg.muted" textAlign="center" py={6}>
                     No import sessions match filters.
                   </Text>
                 </Table.Cell>

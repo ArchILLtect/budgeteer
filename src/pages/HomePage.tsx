@@ -64,11 +64,11 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
     <VStack align="stretch" gap={6} minH="100%" p={4}>
       <Box
         p={8}
-        bg="white"
+        bg="bg.panel"
         rounded="md"
         boxShadow="sm"
         borderWidth="1px"
-        borderColor="gray.200"
+        borderColor="border"
       >
         <VStack align="start" gap={4}>
           <Box
@@ -76,7 +76,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
             h={{ base: "120px", md: "140px" }}
             rounded="lg"
             borderWidth="1px"
-            borderColor="gray.100"
+            borderColor="border"
             overflow="hidden"
             dangerouslySetInnerHTML={{ __html: homeBannerSvg }}
           />
@@ -103,7 +103,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
           <Tip storageKey="tip:home-imports" title="Tip">
             Imports are previewed and staged first, so you can apply them (or undo them) safely.
           </Tip>
-          <Text color="gray.600" fontSize="lg" maxW="2xl">
+          <Text color="fg.muted" fontSize="lg" maxW="2xl">
             Budgeteer is a privacy-aware budgeting app built around a planning-first workflow and deterministic CSV imports.
             No bank credential linking—just user-controlled data, clear rules, and explainable totals.
           </Text>
@@ -149,7 +149,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
           </HStack>
 
           {!signedIn ? (
-            <Box pt={2} color="gray.600">
+            <Box pt={2} color="fg.muted">
               {demoError ? (
                 <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" rounded="md" mb={3}>
                   <Text fontWeight="600" color="red.800">
@@ -188,38 +188,38 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
       ) : null}
 
       <HStack gap={4} align="stretch" flexWrap="wrap">
-        <Box flex="1" minW="280px" p={5} bg="white" rounded="md" boxShadow="sm">
+        <Box flex="1" minW="280px" p={5} bg="bg.panel" rounded="md" boxShadow="sm" borderWidth="1px" borderColor="border">
           <Heading size="md" mb={2}>
             Planning-first
           </Heading>
-          <Text color="gray.600">
+          <Text color="fg.muted">
             Build scenarios, model income and expenses, and keep the math explainable.
           </Text>
         </Box>
 
-        <Box flex="1" minW="280px" p={5} bg="white" rounded="md" boxShadow="sm">
+        <Box flex="1" minW="280px" p={5} bg="bg.panel" rounded="md" boxShadow="sm" borderWidth="1px" borderColor="border">
           <Heading size="md" mb={2}>
             Safe imports
           </Heading>
-          <Text color="gray.600">
+          <Text color="fg.muted">
             Preview first, then stage transactions so apply/undo is deliberate and reversible.
           </Text>
         </Box>
 
-        <Box flex="1" minW="280px" p={5} bg="white" rounded="md" boxShadow="sm">
+        <Box flex="1" minW="280px" p={5} bg="bg.panel" rounded="md" boxShadow="sm" borderWidth="1px" borderColor="border">
           <Heading size="md" mb={2}>
             Deterministic ingestion
           </Heading>
-          <Text color="gray.600">
+          <Text color="fg.muted">
             Strong transaction keys make re-imports idempotent and duplicates explainable.
           </Text>
         </Box>
 
-        <Box flex="1" minW="280px" p={5} bg="white" rounded="md" boxShadow="sm">
+        <Box flex="1" minW="280px" p={5} bg="bg.panel" rounded="md" boxShadow="sm" borderWidth="1px" borderColor="border">
           <Heading size="md" mb={2}>
             Privacy-aware by design
           </Heading>
-          <Text color="gray.600">
+          <Text color="fg.muted">
             No bank credential scraping. Import only what you control, and keep storage user-scoped.
           </Text>
         </Box>

@@ -3,7 +3,6 @@ import { Suspense, lazy } from 'react';
 import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from "../store/budgetStore";
 import AccountCard from '../components/accounts/AccountCard';
-import { config } from '../config/theme';
 // Dev harness can still be imported manually when needed
 // import IngestionDevHarness from '../../dev/IngestionDevHarness';
 const SyncAccountsModal = lazy(() => import('../components/ui/SyncAccountsModal'));
@@ -18,7 +17,7 @@ export default function AccountsTracker() {
   const resetMonthlyActuals = useBudgetStore((s: any) => s.resetMonthlyActuals);
   const resetSavingsLogs = useBudgetStore((s: any) => s.resetSavingsLogs);
   const syncModal = useDisclosure();
-  const bg = config.theme?.semanticTokens?.colors?.bg.value?.toLocaleString('base'); // use semantic token for background color
+  const bg = "bg";
   const isDev = import.meta.env.DEV;
   
 
@@ -26,7 +25,7 @@ export default function AccountsTracker() {
     <>
       <VStack gap={2} mb={4}>
         <Heading size="lg">Accounts</Heading>
-        <Text fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color="fg.muted">
           Import a CSV in two steps: set up accounts, then import transactions.
         </Text>
         <Center>
@@ -74,7 +73,7 @@ export default function AccountsTracker() {
         </Box>
       ) : (
         <Box mx={4} borderWidth="1px" borderRadius="lg" p={4}>
-          <Text fontSize="sm" color="gray.600">
+          <Text fontSize="sm" color="fg.muted">
             No accounts yet. Click “Import CSV” to get started.
           </Text>
         </Box>
