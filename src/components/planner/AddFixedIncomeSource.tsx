@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useBudgetStore } from '../../store/budgetStore'
 import { Box, Flex, Stack, Input, Button, HStack, IconButton, Checkbox } from '@chakra-ui/react'
 import { MdAdd, MdDelete, MdInfo } from "react-icons/md";
@@ -28,6 +28,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
 
   const [overrideEnabled, setOverrideEnabled] = useState(overiddenIncomeTotal >= 1);
   const isTracker = origin === 'Tracker';
+  const lastSyncedMonthRef = useRef<string>(selectedMonth);
 
   const addSource = isTracker
   ? (entry: Omit<any, 'id'>) => addActualIncomeSource(selectedMonth, entry)
@@ -63,10 +64,19 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
     }
   }
 
-  // ✅ SYNC toggle state on load (in case store updates later)
+  // Sync toggle state when the month changes. Avoid overriding the user's toggle
+  // within the same month when the override total is still 0.
   useEffect(() => {
-    setOverrideEnabled(overiddenIncomeTotal >= 1);
-  }, [overiddenIncomeTotal]);
+    if (lastSyncedMonthRef.current !== selectedMonth) {
+      lastSyncedMonthRef.current = selectedMonth;
+      setOverrideEnabled(overiddenIncomeTotal >= 1);
+      return;
+    }
+
+    if (!overrideEnabled && overiddenIncomeTotal >= 1) {
+      setOverrideEnabled(true);
+    }
+  }, [selectedMonth, overiddenIncomeTotal, overrideEnabled]);
 
   return (
     <Box borderWidth="1px" borderRadius="lg" p={4} mt={6}>

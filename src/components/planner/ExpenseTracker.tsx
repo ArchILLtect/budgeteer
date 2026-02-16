@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useBudgetStore } from '../../store/budgetStore'
 import {
   Box, Flex, Heading, Stack, Input, Button, HStack, Text,
@@ -44,6 +44,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
 
   const [overrideEnabled, setOverrideEnabled] = useState(overiddenExpenseTotal >= 1);
   const isTracker = origin === 'Tracker';
+  const lastSyncedMonthRef = useRef<string>(selectedMonth);
   const trackerExpenses = actualraw?.actualExpenses || [];
   const expenses = isTracker ? trackerExpenses : plannerExpenses;
   const addExpense = isTracker
@@ -81,10 +82,19 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
   //   }
   // }, [expenses, incomeSources, currentScenario, saveScenario]);
 
-  // ✅ SYNC toggle state on load (in case store updates later)
+  // Sync toggle state when the month changes. Avoid overriding the user's toggle
+  // within the same month when the override total is still 0.
   useEffect(() => {
-    setOverrideEnabled(overiddenExpenseTotal >= 1);
-  }, [overiddenExpenseTotal]);
+    if (lastSyncedMonthRef.current !== selectedMonth) {
+      lastSyncedMonthRef.current = selectedMonth;
+      setOverrideEnabled(overiddenExpenseTotal >= 1);
+      return;
+    }
+
+    if (!overrideEnabled && overiddenExpenseTotal >= 1) {
+      setOverrideEnabled(true);
+    }
+  }, [selectedMonth, overiddenExpenseTotal, overrideEnabled]);
 
   const handleRemove = (id: string) => {
     if (window.confirm('Remove this expense?')) {
