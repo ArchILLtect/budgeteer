@@ -220,6 +220,7 @@ export default function ImportHistoryPage() {
                   checked={rows.length > 0 && rows.every(r => !!selected[r.entry.sessionId])}
                   onCheckedChange={(details) => toggleAllVisible(!!details.checked)}
                 >
+                  <Checkbox.HiddenInput />
                   <Checkbox.Control />
                 </Checkbox.Root>
               </Table.ColumnHeader>
@@ -253,6 +254,7 @@ export default function ImportHistoryPage() {
                         setSelected((s) => ({ ...s, [entry.sessionId]: !!details.checked }))
                       }
                     >
+                      <Checkbox.HiddenInput />
                       <Checkbox.Control />
                     </Checkbox.Root>
                   </Table.Cell>
