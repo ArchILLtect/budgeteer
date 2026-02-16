@@ -79,8 +79,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
   }, [selectedMonth, overiddenIncomeTotal, overrideEnabled]);
 
   return (
-    <Box borderWidth="1px" borderRadius="lg" p={4} mt={6}>
-
+    <Box p={2} mt={3}>
         <Stack gap={3}>
         {sources.map((source: any) => (
             <HStack key={source.id}>
@@ -148,6 +147,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
                       } as React.ChangeEvent<HTMLInputElement>)
                     }
                   >
+                    <Checkbox.HiddenInput />
                     <Checkbox.Control />
                     <Checkbox.Label whiteSpace={'nowrap'}>
                       Total Override

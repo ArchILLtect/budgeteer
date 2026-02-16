@@ -109,10 +109,18 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
     }
   }
 
+  const handleTempButton = () => {
+    // Intentional: temporary feature placeholder
+    window.alert('This feature coming soon')
+  }
+
   return (
     <Box borderWidth="1px" borderRadius="lg" p={4} mt={6}>
       <Flex justifyContent="space-between" alignItems="center" borderWidth={1} p={3} borderRadius="lg">
         <Heading size="md">Expenses (Monthly)</Heading>
+        {!isTracker &&
+          <Button variant={'outline'} colorScheme="blue" onClick={() => handleTempButton()}>Use Fixed Expense Total</Button>
+        }
         <Heading size="md">${displayedTotalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Heading>
       </Flex>
       <Flex justifyContent={'end'} my={2}>
@@ -121,138 +129,141 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
         </Button>
       </Flex>
 
-      <Stack gap={3}>
-        <AppCollapsible
-          mb={"4px"}
-          defaultOpen={showExpenseInputs}
-          title={"Expense Details"}
-          ariaLabel="Toggle expense details"
-        >
-          <Stack gap={3}>
-            {expenses.length === 0 ? (
-              <Text fontSize="sm" color="gray.600">
-                No expenses yet. Add one to start tracking.
-              </Text>
-            ) : null}
-            {expenses.map((expense: Expense) => (
-              <HStack key={expense.id}>
-                <Input
-                  value={expense?.name}
-                  aria-invalid={!expense?.name?.trim()}
-                  _invalid={{ borderColor: "red.500" }}
-                  disabled={expense?.name === "Rent"}
-                  onChange={(e) =>
-                    updateExpense(expense.id, { name: e.target.value })
-                  }
-                  placeholder="Expense name"
-                />
-                <Input
-                  type="number"
-                  value={expense.amount}
-                  aria-invalid={expense.amount <= 0}
-                  _invalid={{ borderColor: "red.500" }}
-                  onChange={(e) =>
-                    updateExpense(expense.id, { amount: parseFloat(e.target.value) || 0 })
-                  }
-                  placeholder="Amount"
-                />
-                {expense.id !== 'rent' && !expense.isSavings && (
-                  <IconButton
-                    aria-label="Remove expense"
-                    onClick={() => handleRemove(expense.id)}
+      <Box p={2} mt={3}>
+        <Stack gap={3}>
+          <AppCollapsible
+            mb={"4px"}
+            defaultOpen={showExpenseInputs}
+            title={"Expense Details"}
+            ariaLabel="Toggle expense details"
+          >
+            <Stack gap={3}>
+              {expenses.length === 0 ? (
+                <Text fontSize="sm" color="gray.600">
+                  No expenses yet. Add one to start tracking.
+                </Text>
+              ) : null}
+              {expenses.map((expense: Expense) => (
+                <HStack key={expense.id}>
+                  <Input
+                    value={expense?.name}
+                    aria-invalid={!expense?.name?.trim()}
+                    _invalid={{ borderColor: "red.500" }}
+                    disabled={expense?.name === "Rent"}
+                    onChange={(e) =>
+                      updateExpense(expense.id, { name: e.target.value })
+                    }
+                    placeholder="Expense name"
+                  />
+                  <Input
+                    type="number"
+                    value={expense.amount}
+                    aria-invalid={expense.amount <= 0}
+                    _invalid={{ borderColor: "red.500" }}
+                    onChange={(e) =>
+                      updateExpense(expense.id, { amount: parseFloat(e.target.value) || 0 })
+                    }
+                    placeholder="Amount"
+                  />
+                  {expense.id !== 'rent' && !expense.isSavings && (
+                    <IconButton
+                      aria-label="Remove expense"
+                      onClick={() => handleRemove(expense.id)}
+                      size="sm"
+                      colorScheme="red"
+                    >
+                      <MdDelete />
+                    </IconButton>
+                  )}
+                </HStack>
+              ))}
+
+              {!isTracker ? (
+                <Box width={'25%'} p={1}>
+                  <Button
+                    onClick={() => addExpense({ name: '', amount: 0 })}
                     size="sm"
-                    colorScheme="red"
                   >
-                    <MdDelete />
-                  </IconButton>
-                )}
-              </HStack>
-            ))}
-
-            {!isTracker ? (
-              <Box width={'25%'} p={1}>
-                <Button
-                  onClick={() => addExpense({ name: '', amount: 0 })}
-                  size="sm"
-                >
-                  <MdAdd />
-                  Add Expense
-                </Button>
-              </Box>
-            ) : (
-            <Flex justifyContent="space-between" alignItems="center">
-              <Box width={'25%'} p={1}>
-                <Button
-                  onClick={() => addExpense({ name: '', amount: 0 })}
-                  size="sm"
-                >
-                  <MdAdd />
-                  Add Expense
-                </Button>
-              </Box>
-              <Flex gap={2} alignItems="center" p={2} borderWidth={1} borderColor={'lightpink'}>
-                <Flex gap={2} alignItems="center" py={'7px'} px={4} borderWidth={1}
-                    borderColor={'gray.200'} borderRadius={'md'}>
-                  <Checkbox.Root
-                    checked={overrideEnabled}
-                    onCheckedChange={(details: any) => setChecked(details.checked === true)}
+                    <MdAdd />
+                    Add Expense
+                  </Button>
+                </Box>
+              ) : (
+              <Flex justifyContent="space-between" alignItems="center">
+                <Box width={'25%'} p={1}>
+                  <Button
+                    onClick={() => addExpense({ name: '', amount: 0 })}
+                    size="sm"
                   >
-                    <Checkbox.Control />
-                    <Checkbox.Label whiteSpace={'nowrap'}>
-                      Total Override
-                    </Checkbox.Label>
-                  </Checkbox.Root>
-                  <Tooltip content="Use this to override the system-calculated total." placement="top">
-                      <MdInfo color="gray.500" />
-                  </Tooltip>
+                    <MdAdd />
+                    Add Expense
+                  </Button>
+                </Box>
+                <Flex gap={2} alignItems="center" p={2} borderWidth={1} borderColor={'lightpink'}>
+                  <Flex gap={2} alignItems="center" py={'7px'} px={4} borderWidth={1}
+                      borderColor={'gray.200'} borderRadius={'md'}>
+                    <Checkbox.Root
+                      checked={overrideEnabled}
+                      onCheckedChange={(details: any) => setChecked(details.checked === true)}
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label whiteSpace={'nowrap'}>
+                        Total Override
+                      </Checkbox.Label>
+                    </Checkbox.Root>
+                    <Tooltip content="Use this to override the system-calculated total." placement="top">
+                        <MdInfo color="gray.500" />
+                    </Tooltip>
+                  </Flex>
+                  <Input
+                    type="number"
+                    value={overrideEnabled ? (overiddenExpenseTotal ?? '') : ''}
+                    disabled={!overrideEnabled}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setOveriddenExpenseTotal(selectedMonth, isNaN(value) ? 0 : value);
+                    }}
+                  />
                 </Flex>
-                <Input
-                  type="number"
-                  value={overrideEnabled ? (overiddenExpenseTotal ?? '') : ''}
-                  disabled={!overrideEnabled}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value);
-                    setOveriddenExpenseTotal(selectedMonth, isNaN(value) ? 0 : value);
-                  }}
-                />
               </Flex>
-            </Flex>
-            )}
-            {!isTracker &&
-              <SavingsPlanner />
-            }
-          </Stack>
-        </AppCollapsible>
-        {!isTracker &&
-          <Box mt={2} px={4} py={3} borderWidth={1} borderRadius="md" bg="gray.50">
-            <StatGroup>
-              <Stat.Root textAlign={'center'}>
-                <StatLabel>Est. Net Income</StatLabel>
-                <Stat.ValueText color="teal.600">${monthlyIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Stat.ValueText>
-              </Stat.Root>
-
-              <Stat.Root textAlign={'center'}>
-                <StatLabel>Total Expenses</StatLabel>
-                <Stat.ValueText color="teal.600">${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Stat.ValueText>
-              </Stat.Root>
-
-              {savingsValue > 0 && (
-                <Stat.Root textAlign={'center'}>
-                  <StatLabel>Total Savings</StatLabel>
-                  <Stat.ValueText color="teal.600">${savingsValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Stat.ValueText>
-                </Stat.Root>
               )}
+              {!isTracker &&
+                <SavingsPlanner />
+              }
+            </Stack>
+          </AppCollapsible>
+          {!isTracker &&
+            <Box mt={2} px={4} py={3} borderWidth={1} borderRadius="md" bg="gray.50">
+              <StatGroup>
+                <Stat.Root textAlign={'center'}>
+                  <StatLabel>Est. Net Income</StatLabel>
+                  <Stat.ValueText color="teal.600">${monthlyIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Stat.ValueText>
+                </Stat.Root>
 
-              <Stat.Root textAlign={'center'}>
-                <StatLabel>Leftover</StatLabel>
-                <Stat.ValueText color={leftover >= 0 ? 'green.600' : 'red.600'} fontSize="2xl">
-                  ${leftover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Stat.ValueText>
-              </Stat.Root>
-            </StatGroup>
-          </Box>
-        }
-      </Stack>
+                <Stat.Root textAlign={'center'}>
+                  <StatLabel>Total Expenses</StatLabel>
+                  <Stat.ValueText color="teal.600">${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Stat.ValueText>
+                </Stat.Root>
+
+                {savingsValue > 0 && (
+                  <Stat.Root textAlign={'center'}>
+                    <StatLabel>Total Savings</StatLabel>
+                    <Stat.ValueText color="teal.600">${savingsValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Stat.ValueText>
+                  </Stat.Root>
+                )}
+
+                <Stat.Root textAlign={'center'}>
+                  <StatLabel>Leftover</StatLabel>
+                  <Stat.ValueText color={leftover >= 0 ? 'green.600' : 'red.600'} fontSize="2xl">
+                    ${leftover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </Stat.ValueText>
+                </Stat.Root>
+              </StatGroup>
+            </Box>
+          }
+        </Stack>
+      </Box>
     </Box>
   )
 }

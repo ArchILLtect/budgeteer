@@ -76,7 +76,7 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
   return (
     <Box borderWidth="1px" borderRadius="lg" p={4} mb={6}>
       <Flex justifyContent="space-between" alignItems="center" borderWidth={1} p={3} borderRadius="lg">
-        <Heading size="md">Monthly Income</Heading>
+        <Heading size="md">Income (Monthly)</Heading>
         {!isTracker &&
           <Button variant={'outline'} colorScheme="blue" onClick={() => handleTempButton()}>Use Fixed Income</Button>
         }
@@ -105,6 +105,7 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
       {/* TODO(P2): Create a new component for this collapsible section--AppCollapsible doesn't support controlled open/close state */}
       <AppCollapsible title="Income Details">
       {isTracker ? (
+        /* TODO(P4) For Tracker, introduce a modal that allows user to either add fixed amount or calculate similar to Budget Planner */
         <AddFixedIncomeSource origin={origin} selectedMonth={selectedMonth} />
       ) : (
         <>
