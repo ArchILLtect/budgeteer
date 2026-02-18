@@ -29,11 +29,13 @@ type Scenario = {
   incomeSources: {
     id: string;
     description?: string;
-    type: "hourly" | "salary";
+    type: "hourly" | "weekly" | "bi-weekly" | "salary";
     hourlyRate?: number;
     hoursPerWeek?: number;
     netIncome?: number;
     grossSalary?: number;
+    weeklySalary?: number;
+    biWeeklySalary?: number;
     state: string;
     createdAt: string;
   }[];
@@ -108,6 +110,11 @@ export type PlannerSlice = {
   removeActualExpense: (month: any, id: any) => void;
   updateMonthlyActuals: (month: any, updates: any) => void;
 
+  applyActualNameOverrides: (rules: {
+    expense: { match: string; displayName: string }[];
+    income: { match: string; displayName: string }[];
+  }) => void;
+
   updateMonthlyIncomeActuals: (month: any, id: any, newData: any) => void;
   addActualIncomeSource: (month: any, expense: any) => void;
   removeActualIncomeSource: (month: any, id: any) => void;
@@ -154,6 +161,8 @@ export const createPlannerSlice: SliceCreator<PlannerSlice> = (set, get) => {
         hoursPerWeek: 40,
         netIncome: 39000,
         grossSalary: 52000,
+        weeklySalary: 1000,
+        biWeeklySalary: 2000,
         state: "WI",
         createdAt: new Date().toISOString(),
       },
@@ -447,6 +456,58 @@ export const createPlannerSlice: SliceCreator<PlannerSlice> = (set, get) => {
           },
         },
       })),
+
+    applyActualNameOverrides: (rules) =>
+      set((state: any) => {
+        const expenseRules = Array.isArray(rules?.expense) ? rules.expense : [];
+        const incomeRules = Array.isArray(rules?.income) ? rules.income : [];
+
+        const normalize = (v: unknown) => String(v ?? "").replace(/\s+/g, " ").trim();
+        const applyExact = (value: unknown, ruleList: { match: string; displayName: string }[]) => {
+          const current = normalize(value);
+          if (!current) return current;
+          for (const r of ruleList) {
+            const match = normalize(r?.match);
+            if (!match) continue;
+            if (current === match) return normalize(r?.displayName);
+          }
+          return current;
+        };
+
+        const nextMonthlyActuals: Record<string, any> = { ...state.monthlyActuals };
+        let changed = false;
+
+        for (const [monthKey, actual] of Object.entries(nextMonthlyActuals)) {
+          if (!actual) continue;
+
+          const existing = ensureMonthlyActual(actual as any);
+          const nextExpenses = (existing.actualExpenses || []).map((e: any) => {
+            const nextName = applyExact(e?.name, expenseRules);
+            return nextName && nextName !== e?.name ? { ...e, name: nextName } : e;
+          });
+
+          const nextIncome = (existing.actualFixedIncomeSources || []).map((src: any) => {
+            const nextDesc = applyExact(src?.description, incomeRules);
+            return nextDesc && nextDesc !== src?.description ? { ...src, description: nextDesc } : src;
+          });
+
+          if (nextExpenses !== existing.actualExpenses || nextIncome !== existing.actualFixedIncomeSources) {
+            // Only mark changed if something inside changed.
+            const expensesChanged = nextExpenses.some((e: any, idx: number) => e !== existing.actualExpenses?.[idx]);
+            const incomeChanged = nextIncome.some((s: any, idx: number) => s !== existing.actualFixedIncomeSources?.[idx]);
+            if (expensesChanged || incomeChanged) {
+              changed = true;
+              nextMonthlyActuals[monthKey] = {
+                ...existing,
+                actualExpenses: nextExpenses,
+                actualFixedIncomeSources: nextIncome,
+              };
+            }
+          }
+        }
+
+        return changed ? { monthlyActuals: nextMonthlyActuals } : {};
+      }),
 
     updateMonthlyIncomeActuals: (month, id, newData) =>
       set((state: any) => {
@@ -744,6 +805,8 @@ export const createPlannerSlice: SliceCreator<PlannerSlice> = (set, get) => {
             hourlyRate: 25,
             hoursPerWeek: 40,
             grossSalary: 0,
+            weeklySalary: 1000,
+            biWeeklySalary: 2000,
             state: "WI",
             createdAt: new Date().toISOString(),
           },

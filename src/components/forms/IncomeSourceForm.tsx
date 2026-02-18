@@ -5,20 +5,24 @@ import { Input, Stack, RadioGroup, Field, HStack, Button, Center, NativeSelect,
 type IncomeSourceFormProps = {
   source: {
     id: string,
-    type: 'hourly' | 'salary',
+    type: 'hourly' | 'weekly' | 'bi-weekly' | 'salary',
     description?: string,
     hourlyRate?: number,
     hoursPerWeek?: number,
     grossSalary?: number,
+    weeklySalary?: number,
+    biWeeklySalary?: number,
     state: string,
   },
   onUpdate: (id: string, updates: Partial<IncomeSourceFormProps['source']>) => void
 }
 
-type IncomeType = "hourly" | "salary";
+type IncomeType = "hourly" | "weekly" | "bi-weekly" | "salary";
 
 const IncomeTypeOptions = [
     { value: "hourly", label: "Hourly" },
+    { value: "weekly", label: "Weekly" },
+    { value: "bi-weekly", label: "Bi-Weekly" },
     { value: "salary", label: "Salary" },
   ];
 
@@ -39,7 +43,7 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
         <RadioGroup.Root
           value={source.type}
           onValueChange={(details: RadioGroupValueChangeDetails) =>
-            onUpdate(source.id, { type: details.value as 'hourly' | 'salary' })
+            onUpdate(source.id, { type: details.value as 'hourly' | 'weekly' | 'bi-weekly' | 'salary' })
           }
         >
           <HStack gap={4}>
@@ -64,7 +68,7 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
             <Input
               type="number"
               placeholder="Enter your hourly rate"
-              value={source.hourlyRate}
+              value={source.hourlyRate ?? 0}
               onChange={(e) =>
                 onUpdate(source.id, { hourlyRate: parseFloat(e.target.value) || 0 })
               }
@@ -76,13 +80,55 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
             <Input
               type="number"
               placeholder="Enter hours per week"
-              value={source.hoursPerWeek}
+              value={source.hoursPerWeek ?? 0}
               onChange={(e) =>
                 onUpdate(source.id, { hoursPerWeek: parseFloat(e.target.value) || 0 })
               }
               bg="bg.panel"
             />
           </Field.Root>
+        </Stack>
+      )}
+
+      {/* Weekly Inputs */}
+      {source.type === 'weekly' && (
+        <Stack gap={3}>
+        <Field.Root>
+          <Field.Label>Weekly Gross Salary</Field.Label>
+          <Input
+            type="number"
+            placeholder="Enter your weekly gross salary"
+            min="0"
+            step="1"
+            max="1000000"
+            value={source.weeklySalary ?? 0}
+            onChange={(e) =>
+              onUpdate(source.id, { weeklySalary: parseFloat(e.target.value) || 0 })
+            }
+            bg="bg.panel"
+          />
+        </Field.Root>
+        </Stack>
+      )}
+
+      {/* Bi-Weekly Inputs */}
+      {source.type === 'bi-weekly' && (
+        <Stack gap={3}>
+        <Field.Root>
+          <Field.Label>Bi-Weekly Gross Salary</Field.Label>
+          <Input
+            type="number"
+            placeholder="Enter your bi-weekly gross salary"
+            min="0"
+            step="1"
+            max="1000000"
+            value={source.biWeeklySalary ?? 0}
+            onChange={(e) =>
+              onUpdate(source.id, { biWeeklySalary: parseFloat(e.target.value) || 0 })
+            }
+            bg="bg.panel"
+          />
+        </Field.Root>
         </Stack>
       )}
 
@@ -96,7 +142,7 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
             min="0"
             step="1"
             max="1000000"
-            value={source.grossSalary}
+            value={source.grossSalary ?? 0}
             onChange={(e) =>
               onUpdate(source.id, { grossSalary: parseFloat(e.target.value) || 0 })
             }

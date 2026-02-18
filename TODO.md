@@ -247,6 +247,12 @@ Notes:
 - [ ] TODO(stretch): Add true offline mode UX (sync badge + queued ops count + retry controls)
 - [ ] TODO(stretch): Add fine-grained conflict UI (pick local vs remote per field)
 - [ ] TODO(stretch): Add automated backups/export (cloud snapshot export)
+- [ ] TODO(stretch): Imports/Tracker — detect recurring income streams from imported transactions and offer “Add as Planner income source(s)” to seed scenario planning (creates new income source tabs)
+  - Suggestions: conservative detector (income-only; require >= 3–4 occurrences; amount consistency; show review list with checkbox per suggestion)
+  - Gotchas: transfers can look like income; biweekly vs monthly math; avoid surprising “estimated monthly” conversions (prefer explicit frequency and show computed estimate)
+- [ ] TODO(stretch): Tracker/Imports — add a row-level action “Promote to Planner income source” (safe MVP alternative to auto-detection)
+  - Place: next to an actual income row in Tracker “Income Details” (and/or in Import session review), so the user can promote a known-good stream with one click
+- [ ] TODO(stretch): Planner — add "weekly" and "bi-weekly" as income types/frequency options in IncomeSourceForm to reduce manual salary conversions
 ---
 
 <a id="postmvp"></a>

@@ -64,6 +64,8 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
       hourlyRate: 0,
       hoursPerWeek: 0,
       grossSalary: 0,
+      weeklySalary: 0,
+      biWeeklySalary: 0,
       state: 'WI',
     }
 

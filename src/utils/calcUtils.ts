@@ -193,6 +193,8 @@ export function calculateTotalTaxes(gross: number, filingStatus: string, year: n
 // Helper module for calculating financial values
 export function calculateNetIncome(incomeSources: any[]) {
     const OT_THRESHOLD = 40;
+    const WEEKS_PER_YEAR = 52;
+    const BIWEEKLY_PERIODS_PER_YEAR = 26;
 
     if (!incomeSources || incomeSources.length === 0) return 0;
 
@@ -200,11 +202,15 @@ export function calculateNetIncome(incomeSources: any[]) {
         if (src.type === 'hourly') {
             const base = Math.min(src.hoursPerWeek || 0, OT_THRESHOLD);
             const ot = Math.max((src.hoursPerWeek || 0) - OT_THRESHOLD, 0);
-            return sum + (base * src.hourlyRate + ot * src.hourlyRate * 1.5) * 52;
+            return sum + (base * (src.hourlyRate || 0) + ot * (src.hourlyRate || 0) * 1.5) * WEEKS_PER_YEAR;
+        } else if (src.type === 'weekly') {
+            return sum + (src.weeklySalary || 0) * WEEKS_PER_YEAR;
+        } else if (src.type === 'bi-weekly') {
+            return sum + (src.biWeeklySalary || 0) * BIWEEKLY_PERIODS_PER_YEAR;
         } else if (src.type === 'salary') {
-            return sum + src.grossSalary;
+            return sum + (src.grossSalary || 0);
         } else if (src.type === 'fixed') {
-            return sum + src.amount;
+            return sum + (src.amount || 0);
         }
         return sum;
     }, 0);
