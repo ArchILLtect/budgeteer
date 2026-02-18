@@ -9,6 +9,7 @@ import { DemoConfirmDialog } from "../components/ui/DemoConfirmDialog";
 import { VisuallyHidden } from "@chakra-ui/react";
 import { BudgeteerLogo } from "../components/icons/BudgeteerLogo";
 import homeBannerSvg from "../assets/home-banner.svg?raw";
+import { SanitizedSvg } from "../components/ui/SanitizedSvg";
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return "/planner";
@@ -78,8 +79,17 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
             borderWidth="1px"
             borderColor="border"
             overflow="hidden"
-            dangerouslySetInnerHTML={{ __html: homeBannerSvg }}
-          />
+          >
+            <SanitizedSvg
+              svg={homeBannerSvg}
+              w="full"
+              h={{ base: "120px", md: "140px" }}
+              rounded="lg"
+              borderWidth="1px"
+              borderColor="border"
+              overflow="hidden"
+            />
+          </Box>
 
           <HStack gap={3} align="center">
             <Badge colorPalette="purple" variant="solid">
