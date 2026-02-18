@@ -23,6 +23,7 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 - Expanded date/time helpers in `src/services/dateTime.ts` (month/day keys and consistent UI labels).
 - Centralized numeric parsing helpers in `src/services/inputNormalization.ts` (`parseFiniteNumber`, `normalizeMoney`).
 - Planner income types: weekly and bi-weekly support in income calculations.
+- Planner income empty-state guidance when no sources exist.
 
 ### Changed
 - Ingestion entrypoints now follow the explicit plan/commit boundary (no UI patch application).
@@ -40,6 +41,7 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 - Tracker income delete confirmation/toast copy (no longer refers to “expense”; includes income name).
 - Savings Goals/Logs numeric input parsing and progress calculations (avoid NaN/invalid progress values).
 - Runtime hardening: persisted Zustand payload parsing and ingestion normalization now validate/ignore malformed values instead of crashing.
+- Settings page name override inputs no longer trigger controlled/uncontrolled warnings.
 
 ### Removed
 - Legacy `runIngestion` wrapper module and remaining patch-closure terminology in non-legacy docs.

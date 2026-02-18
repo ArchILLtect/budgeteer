@@ -139,7 +139,7 @@ Progress notes:
 
 ## Milestone 3 — Planner/Tracker UX polish
 
-Status: In Progress
+Status: Done
 
 Goal:
 - Planner and Tracker feel complete for real use.
@@ -169,12 +169,12 @@ Acceptance:
 
 **C) Planner UX polish (baseline)**
 - [x] ~~Planner — add basic validation/constraints for income/expense inputs (no negative or NaN totals)~~ (done 2026-02-18: centralized money normalization + clamping)
-- [ ] Planner — improve empty states/help text so a new user can complete a first plan without guesswork
+- [x] Planner — improve empty states/help text so a new user can complete a first plan without guesswork (done 2026-02-18: income sources empty-state)
 
 **D) Console/runtime hygiene (must be clean during normal use)**
 - [x] ~~Tracker — fix duplicate React key warning `same key, NaN` from SavingsGoalsTracker list rendering (stable unique keys)~~ (done 2026-02-18)
 - [x] ~~Tracker — fix Chakra `Progress` error: value receives `[object Object],[object Object]` and exceeds max 100~~ (done 2026-02-18)
-- [ ] Settings — fix controlled/uncontrolled input warning (text input has both `value` and `defaultValue`)
+- [x] Settings — fix controlled/uncontrolled input warning (text input has both `value` and `defaultValue`) (done 2026-02-18)
 
 **E) Verification**
 - [x] ~~`npm run check` stays green for Milestone 3 changes~~ (done 2026-02-18)
