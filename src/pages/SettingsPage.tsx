@@ -277,7 +277,7 @@ export default function SettingsPage() {
                 {expenseNameOverridesLocal.map((rule, idx) => (
                   <HStack key={`exp-ovr-${idx}`}>
                     <Input
-                      value={rule.match}
+                      value={rule.match ?? ""}
                       onChange={(e) =>
                         setExpenseNameOverridesLocal((prev) => {
                           const next = prev.slice();
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                       bg="bg.muted"
                     />
                     <Input
-                      value={rule.displayName}
+                      value={rule.displayName ?? ""}
                       onChange={(e) =>
                         setExpenseNameOverridesLocal((prev) => {
                           const next = prev.slice();
@@ -330,7 +330,7 @@ export default function SettingsPage() {
                 {incomeNameOverridesLocal.map((rule, idx) => (
                   <HStack key={`inc-ovr-${idx}`}>
                     <Input
-                      value={rule.match}
+                      value={rule.match ?? ""}
                       onChange={(e) =>
                         setIncomeNameOverridesLocal((prev) => {
                           const next = prev.slice();
@@ -342,7 +342,7 @@ export default function SettingsPage() {
                       bg="bg.muted"
                     />
                     <Input
-                      value={rule.displayName}
+                      value={rule.displayName ?? ""}
                       onChange={(e) =>
                         setIncomeNameOverridesLocal((prev) => {
                           const next = prev.slice();

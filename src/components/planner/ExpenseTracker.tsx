@@ -167,7 +167,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
               {expenses.map((expense: Expense) => (
                 <HStack key={expense.id}>
                   <Input
-                    value={expense?.name}
+                    value={expense?.name ?? ""}
                     aria-invalid={!expense?.name?.trim()}
                     _invalid={{ borderColor: "red.500" }}
                     disabled={expense?.name === "Rent"}

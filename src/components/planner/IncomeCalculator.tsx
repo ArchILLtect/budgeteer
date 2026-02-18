@@ -159,36 +159,47 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
             </RadioGroup.Root>
           </Field.Root>
           
-          <Tabs.Root
-            value={selectedId ?? sources[0]?.id}
-            borderTopRadius="lg"
-            onValueChange={(details) => {
-              const nextId = details.value;
-              if (nextId === "__add__") {
-                handleAddSource();
-                return;
-              }
-              setSelected(nextId);
-            }}
-            variant="enclosed"
-          >
-            <Tabs.List borderTopRadius="lg" borderBottomRadius={"none"} borderX={"1px solid"} borderTop={"1px solid"} borderColor="border" bg={"bg.emphasized"}>
-              {sources.map((source) => (
-                <Tabs.Trigger key={source.id} value={source.id}>
-                  {source.description}
-                </Tabs.Trigger>
-              ))}
+          {sources.length === 0 ? (
+            <Stack gap={2}>
+              <Text fontSize="sm" color="fg.muted">
+                No income sources yet. Add one to estimate gross/net monthly income.
+              </Text>
+              <Button size="sm" variant="outline" alignSelf="flex-start" onClick={handleAddSource}>
+                + Add income source
+              </Button>
+            </Stack>
+          ) : (
+            <Tabs.Root
+              value={selectedId ?? sources[0].id}
+              borderTopRadius="lg"
+              onValueChange={(details) => {
+                const nextId = details.value;
+                if (nextId === "__add__") {
+                  handleAddSource();
+                  return;
+                }
+                setSelected(nextId);
+              }}
+              variant="enclosed"
+            >
+              <Tabs.List borderTopRadius="lg" borderBottomRadius={"none"} borderX={"1px solid"} borderTop={"1px solid"} borderColor="border" bg={"bg.emphasized"}>
+                {sources.map((source) => (
+                  <Tabs.Trigger key={source.id} value={source.id}>
+                    {source.description}
+                  </Tabs.Trigger>
+                ))}
 
-              <Tabs.Trigger value="__add__">+ Add</Tabs.Trigger>
-            </Tabs.List>
-            <Box p={4} borderWidth={1} borderColor="border" borderBottomRadius="lg" borderTopRightRadius={"lg"} bg="bg.subtle">
-            {sources.map((source) => (
-              <Tabs.Content key={source.id} value={source.id} pt={0}>
-                <IncomeSourceForm source={source} onUpdate={updateSource} />
-              </Tabs.Content>
-            ))}
-            </Box>
-          </Tabs.Root>
+                <Tabs.Trigger value="__add__">+ Add</Tabs.Trigger>
+              </Tabs.List>
+              <Box p={4} borderWidth={1} borderColor="border" borderBottomRadius="lg" borderTopRightRadius={"lg"} bg="bg.subtle">
+                {sources.map((source) => (
+                  <Tabs.Content key={source.id} value={source.id} pt={0}>
+                    <IncomeSourceForm source={source} onUpdate={updateSource} />
+                  </Tabs.Content>
+                ))}
+              </Box>
+            </Tabs.Root>
+          )}
           </>
       )}
       </AppCollapsible>
