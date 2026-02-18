@@ -11,6 +11,7 @@ import { maskAccountNumber } from '../utils/maskAccountNumber';
 import { DialogModal } from '../components/ui/DialogModal';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { formatLocalIsoMonthDayTime24 } from "../services/dateTime";
 import type {
   ImportHistoryEntry,
   ImportSessionRuntime,
@@ -266,7 +267,7 @@ export default function ImportHistoryPage() {
                     <Tooltip content={entry.importedAt} disabled={!entry.importedAt}>
                       <Text as="span">
                         {entry.importedAt
-                          ? dayjs(entry.importedAt).fromNow?.() || dayjs(entry.importedAt).format("MMM D HH:mm")
+                            ? dayjs(entry.importedAt).fromNow?.() || formatLocalIsoMonthDayTime24(entry.importedAt)
                           : "-"}
                       </Text>
                     </Tooltip>

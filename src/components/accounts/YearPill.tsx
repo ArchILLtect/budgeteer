@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { Button, ButtonGroup } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { useBudgetStore } from '../../store/budgetStore';
@@ -18,7 +17,7 @@ export function YearPill({ months }: YearPillProps) {
   }, [months]);
 
   const handleYearClick = (y: string) => {
-    const currentMonthNum = dayjs(selectedMonth).format('MM');
+    const currentMonthNum = (selectedMonth || '').slice(5, 7) || '01';
     const sameMonthKey = `${y}-${currentMonthNum}`;
 
     // Prefer same month in that year; else latest available in that year

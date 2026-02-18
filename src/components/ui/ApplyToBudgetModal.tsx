@@ -2,12 +2,12 @@ import { RadioGroup, Stack, Text, Input, Checkbox } from "@chakra-ui/react";
 import { useState } from "react";
 import { applyOneMonth } from "../../utils/accountUtils";
 import { useBudgetStore } from "../../store/budgetStore";
-import dayjs from "dayjs";
 import { waitForIdleAndPaint } from "../../utils/appUtils";
 import { startTransition } from 'react';
 import { fireToast } from "../../hooks/useFireToast";
 import { DialogModal } from "./DialogModal";
 import { useApplyAlwaysExtractVendorName, useExpenseNameOverrides, useIncomeNameOverrides } from "../../store/localSettingsStore";
+import { formatUtcMonthKey, getTodayDateInputValue, getYearFromMonthKey } from "../../services/dateTime";
 
 type ApplyToBudgetModalProps = {
   isOpen: boolean;
@@ -35,14 +35,12 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   const incomeNameOverrides = useIncomeNameOverrides();
   const [scope, setScope] = useState<ApplyScope>("month");
   const [ignoreBeforeEnabled, setIgnoreBeforeEnabled] = useState<boolean>(false);
-  const [ignoreBeforeDate, setIgnoreBeforeDate] = useState(() =>
-    dayjs().format("YYYY-MM-DD") // defaults to today
-  );
+  const [ignoreBeforeDate, setIgnoreBeforeDate] = useState(() => getTodayDateInputValue());
   const setIsLoading = useBudgetStore(s => s.setIsLoading);
   const openLoading = useBudgetStore(s => s.openLoading);
   const closeLoading = useBudgetStore(s => s.closeLoading);
   const selectedMonth = useBudgetStore(s => s.selectedMonth);
-  const selectedYearFromStore = dayjs(selectedMonth).year().toString();
+  const selectedYearFromStore = getYearFromMonthKey(selectedMonth) ?? '';
   const yearFromSelected = (selectedMonth || '').slice(0, 4);
   const transactionsThisMonth = acct.transactions.filter((tx) => tx.date?.startsWith(selectedMonth));
   const transactionsThisYear = acct.transactions.filter((tx) => tx.date?.startsWith(selectedYearFromStore));
@@ -56,7 +54,7 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   const isSavingsModalOpen = useBudgetStore(s => s.isSavingsModalOpen);
 
   const applyTimelineOptions = [
-    { value: "month", label: `Current Month ${dayjs(selectedMonth).format("MMMM YYYY") || 'n/a'} = (${transactionsThisMonth?.length.toLocaleString('en-US')})`, disabled: !selectedMonth || transactionsThisMonth?.length <= 0 },
+    { value: "month", label: `Current Month ${formatUtcMonthKey(selectedMonth, { noneLabel: 'n/a', month: 'long' })} = (${transactionsThisMonth?.length.toLocaleString('en-US')})`, disabled: !selectedMonth || transactionsThisMonth?.length <= 0 },
     { value: "year", label: `Current Year (${selectedYearFromStore || 'year not set'}) = (${transactionsThisYear?.length.toLocaleString('en-US') || 0})`, disabled: !selectedYearFromStore || transactionsThisYear.length <= 0 },
     { value: "all", label: `All Transactions (${acct?.transactions?.length.toLocaleString('en-US') || 0})`, disabled: !months || months?.length <= 0 },
   ];

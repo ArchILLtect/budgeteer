@@ -5,6 +5,7 @@ import { Suspense, lazy } from 'react';
 import InlineSpinner from '../ui/InlineSpinner';
 const ScenarioPlanModal = lazy(() => import('./ScenarioPlanModal'));
 import dayjs from 'dayjs';
+import { formatUtcMonthKey } from '../../services/dateTime';
 
 // TODO: Create an edit plan modal
 // TODO: Switch to using a modal for plan removal confirmation
@@ -18,7 +19,7 @@ export default function TrackerHeader() {
     const { open, onOpen, onClose } = useDisclosure();
 
     const plan = monthlyPlans[selectedMonth];
-    const formatted = dayjs(selectedMonth).format('MMMM YYYY');
+    const formatted = formatUtcMonthKey(selectedMonth, { noneLabel: 'n/a', month: 'long' });
 
     const shiftMonth = (direction: number) => {
         const newDate = dayjs(selectedMonth).add(direction, 'month');

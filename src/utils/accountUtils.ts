@@ -61,8 +61,6 @@ type BudgetStoreLike = {
     setState: (partial: any, replace?: any) => void;
 };
 
-type formatDateOptions = 'shortMonthAndDay' | 'shortMonth' | 'longMonth' | 'year' | 'monthNumber';
-
 type VendorExtractOptions = {
     knownVendors?: string[];
     vendorAliases?: Record<string, string>;
@@ -111,39 +109,6 @@ function extractVendorHeuristicOnly(raw: string): string {
     }
 
     return lowered.slice(0, 32);
-}
-
-export function formatDate(dateString: string | undefined, format: formatDateOptions = 'shortMonthAndDay') {
-    if (typeof dateString !== 'string' || !dateString) return '';
-    let newDate;
-
-    if (format === 'shortMonthAndDay') {
-        const [year, month, day] = dateString.split('-');
-        const date = new Date(+year, +month - 1, +day);
-        newDate = new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: '2-digit',
-        })
-            .format(date)
-            .replace(',', '-');
-    } else if (format === 'shortMonth') {
-        const [year, month] = dateString.split('-');
-        const date = new Date(`${year}-${month}-01T12:00:00`);
-        newDate = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date);
-    } else if (format === 'longMonth') {
-        const [year, month] = dateString.split('-');
-        const date = new Date(`${year}-${month}-01T12:00:00`);
-        newDate = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(date);
-    } else if (format === 'year') {
-        const [year, month] = dateString.split('-');
-        const date = new Date(`${year}-${month}-01T12:00:00`);
-        newDate = new Intl.DateTimeFormat('en-US', { year: 'numeric' }).format(date);
-    } else if (format === 'monthNumber') {
-        const parts = dateString.split('-');
-        const month = parts[1];
-        newDate = month;
-    }
-    return newDate;
 }
 
 export function formatMonthToYYYYMM(monthAbbreviation: string, year: number) {

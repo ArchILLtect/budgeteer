@@ -5,12 +5,19 @@ import {
 import { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import InlineSpinner from '../ui/InlineSpinner';
 import { Tooltip } from "../ui/Tooltip";
-import dayjs from "dayjs";
-import { formatDate, getUniqueOrigins } from "../../utils/accountUtils";
+import {
+  formatLocalIsoDateAtTime,
+  formatLocalIsoMonthDayTime24,
+  formatUtcDayKeyMonthDay,
+  formatUtcMonthKey,
+  getYearFromMonthKey,
+} from '../../services/dateTime';
+import { getUniqueOrigins } from "../../utils/accountUtils";
 import { getMonthlyTotals, getAvailableMonths } from '../../utils/storeHelpers';
 import { maskAccountNumber } from "../../utils/maskAccountNumber";
 import { useBudgetStore } from "../../store/budgetStore";
 import type { Account, Transaction, BudgetMonthKey } from "../../types";
+import { parseFiniteNumber } from "../../services/inputNormalization";
 // Used for DEV only:
 // import { findRecurringTransactions } from "../utils/analysisUtils";
 // import { assessRecurring } from "../dev/analysisDevTools";
@@ -103,9 +110,10 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
 
   // The year that should be visible is whatever year the global selectedMonth is in.
   // If the account doesn’t have that year, fallback to the most recent account year.
-  const selectedYearFromStore = dayjs(selectedMonth).year().toString();
+  const selectedYearFromStore =
+    getYearFromMonthKey(String(selectedMonth)) ?? String(selectedMonth || '').slice(0, 4);
   const hasYear = years.includes(selectedYearFromStore);
-  const currentYear = hasYear ? selectedYearFromStore : (years.at(-1) || selectedYearFromStore);
+  const currentYear = hasYear ? selectedYearFromStore : (years.at(-1) ?? selectedYearFromStore);
 
   // Months just for currentYear, oldest→newest for tabs (or reverse if you prefer)
   const monthsForYear = useMemo(
@@ -133,7 +141,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
             {institution}
           </Text>
           <Text fontSize="sm" color="fg.muted">
-            Imported {acct.importedAt ? dayjs(acct.importedAt).format("MMM D, YYYY @ h:mm A") : "—"}
+            Imported {formatLocalIsoDateAtTime(acct.importedAt)}
           </Text>
         </VStack>
         <Flex alignItems="center" gap={3}>
@@ -213,7 +221,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                             <Text fontSize="9px" color="fg.muted">Savings: {se.savingsCount} | Hash: {se.hash?.slice(0,8)}</Text>
                           )}
                           {se.importedAt && (
-                            <Text fontSize="8px" color="fg.muted">{dayjs(se.importedAt).format('MMM D HH:mm')} • {se.status}</Text>
+                            <Text fontSize="8px" color="fg.muted">{formatLocalIsoMonthDayTime24(se.importedAt)} • {se.status}</Text>
                           )}
                         </Flex>
                       </Menu.Content>
@@ -244,7 +252,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
         <Tabs.List gap={0} bg={"bg.emphasized"} mb={2}>
           {monthsForYear.map((m) => (
             <Tabs.Trigger key={m} value={m} minWidth={1} fontWeight="bold" fontSize={22}>
-              {dayjs(m).format('MMM')}
+              {formatUtcMonthKey(m, { month: 'short' })}
             </Tabs.Trigger>
           ))}
         </Tabs.List>
@@ -275,7 +283,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                           : typeof tx.amount === "number"
                             ? tx.amount
                             : typeof tx.amount === "string"
-                              ? Number.parseFloat(tx.amount)
+                              ? parseFiniteNumber(tx.amount, { fallback: 0 })
                               : 0;
 
                       const stripedBg =
@@ -295,7 +303,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                           bg={rowBg}
                           opacity={tx.staged ? 0.85 : 1}
                         >
-                          <Table.Cell whiteSpace={'nowrap'}>{formatDate(tx.date)}</Table.Cell>
+                          <Table.Cell whiteSpace={'nowrap'}>{formatUtcDayKeyMonthDay(tx.date ?? "")}</Table.Cell>
                           <Table.Cell>{tx.description}</Table.Cell>
                           <Table.Cell color={signedAmount < 0 ? "red.500" : "green.600"}>
                             ${Math.abs(signedAmount).toFixed(2)}
