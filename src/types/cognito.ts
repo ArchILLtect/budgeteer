@@ -1,5 +1,5 @@
 // This is intentionally minimal: only the fields we actually use.
-// Cognito ID token claims can include many more keys.
+// Cognito ID token claims can include more keys.
 export type CognitoClaims = {
     sub: string;
     email?: string;

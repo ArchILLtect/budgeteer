@@ -352,7 +352,7 @@ export function startOfWeekDayKey(dayKey: string, weekStart: number = 1): string
 
   // Normalize weekStart to be within 0-6 and calculate the delta to the start of the week.
   const normalizedWeekStart = ((weekStart % 7) + 7) % 7;
-  // Calculate how many days to subtract to get to the start of the week.
+  // Calculate number of days to subtract to get to the start of the week.
   const delta = (weekday - normalizedWeekStart + 7) % 7;
   return addDaysToDayKey(dayKey, -delta);
 }

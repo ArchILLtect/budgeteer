@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { nanoid } from 'nanoid';
 
-export function seedDemoState(set: (fn: (state: any) => any) => void) {
+export function seedDemoState(set: (fn: () => unknown) => void) {
     const today = dayjs();
     const selectedMonth = today.format('YYYY-MM');
 

@@ -1,15 +1,18 @@
-
-export type PlanTier = {
+export const PlanTier = {
   FREE: "FREE",
   DEMO: "DEMO",
   PRO: "PRO",
-}
+} as const;
 
-export type DefaultVisibility = {
+export type PlanTier = (typeof PlanTier)[keyof typeof PlanTier];
+
+export const DefaultVisibility = {
   PRIVATE: "PRIVATE",
   TEAM: "TEAM",
   PUBLIC: "PUBLIC",
-}
+} as const;
+
+export type DefaultVisibility = (typeof DefaultVisibility)[keyof typeof DefaultVisibility];
 
 // Stable UI-level profile/settings type (do not depend on generated API model types)
 export type UserProfileUI = {

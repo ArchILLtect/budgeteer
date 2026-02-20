@@ -48,7 +48,7 @@ export const getMonthlyTotals = (account: AccountLike, month: BudgetMonthKey): M
     };
 
     txs.forEach((tx) => {
-        // Prefer signed `rawAmount` if present. Many UI surfaces store/display `amount` as absolute,
+        // Prefer signed `rawAmount` if present. Multiple UI surfaces store/display `amount` as absolute,
         // so relying on `amount` alone can incorrectly treat expenses as positive.
         const base =
             typeof tx.rawAmount === 'number'

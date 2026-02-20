@@ -1,5 +1,22 @@
 // Federal brackets – 2025 Single Filer
-export const FEDERAL_BRACKETS: any = {
+type Bracket = { min: number; max: number; rate: number };
+
+type FederalFilingStatus = "single" | "marriedJoint" | "marriedSeparate" | "headOfHousehold";
+type FederalBracketsYear = Record<FederalFilingStatus, Bracket[]>;
+type FederalBracketsTable = Record<number, FederalBracketsYear>;
+
+const FEDERAL_FILING_STATUSES: readonly FederalFilingStatus[] = [
+    "single",
+    "marriedJoint",
+    "marriedSeparate",
+    "headOfHousehold",
+];
+
+function isFederalFilingStatus(value: string): value is FederalFilingStatus {
+    return (FEDERAL_FILING_STATUSES as readonly string[]).includes(value);
+}
+
+export const FEDERAL_BRACKETS: FederalBracketsTable = {
     2024: {
         single: [
             { min: 0, max: 11600, rate: 0.1 },
@@ -79,7 +96,22 @@ export const FEDERAL_BRACKETS: any = {
 };
 
 // Wisconsin brackets – 2024
-export const STATE_BRACKETS: any = {
+type StateFilingStatus = "single" | "marriedJoint" | "marriedSeparate";
+type StateMeta = {
+    standardDeduction: number;
+    stateName: string;
+    filingStatuses: StateFilingStatus[];
+};
+type StateBracketsConfig = { meta: StateMeta } & Record<StateFilingStatus, Bracket[]>;
+type StateBracketsTable = Record<number, Record<string, StateBracketsConfig>>;
+
+const STATE_FILING_STATUSES: readonly StateFilingStatus[] = ["single", "marriedJoint", "marriedSeparate"];
+
+function isStateFilingStatus(value: string): value is StateFilingStatus {
+    return (STATE_FILING_STATUSES as readonly string[]).includes(value);
+}
+
+export const STATE_BRACKETS: StateBracketsTable = {
     2024: {
         WI: {
             meta: {
@@ -134,7 +166,7 @@ export const STATE_BRACKETS: any = {
     },
 };
 
-export function calculateBracketTax(gross: number, brackets: any[]) {
+export function calculateBracketTax(gross: number, brackets: Bracket[]): number {
     let tax = 0;
     for (const bracket of brackets) {
         const taxable = Math.min(gross, bracket.max) - bracket.min;
@@ -164,17 +196,14 @@ export function calculateMedicareTaxes(gross: number) {
 export function calculateTotalTaxes(gross: number, filingStatus: string, year: number = 2025, state = 'WI') {
     // This function calculates total taxes based on gross income and state.
 
-    if (STATE_BRACKETS[year] === undefined) {
-        year = 2024;
-    }
+    const federalYear = FEDERAL_BRACKETS[year] ?? FEDERAL_BRACKETS[2024];
+    const federalBrackets = isFederalFilingStatus(filingStatus) ? federalYear[filingStatus] : federalYear.single;
 
-    const federalBrackets =
-        FEDERAL_BRACKETS[year][filingStatus] || FEDERAL_BRACKETS[year].single || [];
-
-    const stateBrackets =
-        STATE_BRACKETS[year][state]?.[filingStatus] ||
-        STATE_BRACKETS[year][state]?.single ||
-        [];
+    const stateYear = STATE_BRACKETS[year] ?? STATE_BRACKETS[2024];
+    const stateConfig = stateYear?.[state];
+    const stateBrackets = stateConfig
+      ? (isStateFilingStatus(filingStatus) ? stateConfig[filingStatus] : stateConfig.single)
+      : [];
 
     const federalTax = calculateBracketTax(gross, federalBrackets);
     const stateTax = calculateBracketTax(gross, stateBrackets);
@@ -191,7 +220,13 @@ export function calculateTotalTaxes(gross: number, filingStatus: string, year: n
 }
 
 // Helper module for calculating financial values
-export function calculateNetIncome(incomeSources: any[]) {
+type IncomeSourceLike = { type?: unknown; [key: string]: unknown };
+
+function asNumber(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+export function calculateNetIncome(incomeSources: IncomeSourceLike[]) {
     const OT_THRESHOLD = 40;
     const WEEKS_PER_YEAR = 52;
     const BIWEEKLY_PERIODS_PER_YEAR = 26;
@@ -199,18 +234,21 @@ export function calculateNetIncome(incomeSources: any[]) {
     if (!incomeSources || incomeSources.length === 0) return 0;
 
     return incomeSources.reduce((sum, src) => {
-        if (src.type === 'hourly') {
-            const base = Math.min(src.hoursPerWeek || 0, OT_THRESHOLD);
-            const ot = Math.max((src.hoursPerWeek || 0) - OT_THRESHOLD, 0);
-            return sum + (base * (src.hourlyRate || 0) + ot * (src.hourlyRate || 0) * 1.5) * WEEKS_PER_YEAR;
-        } else if (src.type === 'weekly') {
-            return sum + (src.weeklySalary || 0) * WEEKS_PER_YEAR;
-        } else if (src.type === 'bi-weekly') {
-            return sum + (src.biWeeklySalary || 0) * BIWEEKLY_PERIODS_PER_YEAR;
-        } else if (src.type === 'salary') {
-            return sum + (src.grossSalary || 0);
-        } else if (src.type === 'fixed') {
-            return sum + (src.amount || 0);
+        const type = typeof src.type === "string" ? src.type : "";
+        if (type === 'hourly') {
+            const hoursPerWeek = asNumber(src.hoursPerWeek);
+            const hourlyRate = asNumber(src.hourlyRate);
+            const base = Math.min(hoursPerWeek, OT_THRESHOLD);
+            const ot = Math.max(hoursPerWeek - OT_THRESHOLD, 0);
+            return sum + (base * hourlyRate + ot * hourlyRate * 1.5) * WEEKS_PER_YEAR;
+        } else if (type === 'weekly') {
+            return sum + asNumber(src.weeklySalary) * WEEKS_PER_YEAR;
+        } else if (type === 'bi-weekly') {
+            return sum + asNumber(src.biWeeklySalary) * BIWEEKLY_PERIODS_PER_YEAR;
+        } else if (type === 'salary') {
+            return sum + asNumber(src.grossSalary);
+        } else if (type === 'fixed') {
+            return sum + asNumber(src.amount);
         }
         return sum;
     }, 0);

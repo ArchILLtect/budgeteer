@@ -1,11 +1,59 @@
 import { extractVendorDescription } from './accountUtils';
 import { parseFiniteNumber, normalizeMoney } from "../services/inputNormalization";
 
-export function findRecurringTransactions(transactions: any[], options: any = {}) {
-    const groups = {} as Record<string, { date: Date; category: string; amount: number; original: any }[]>;
-    const windowSize = options.windowSize || 12;
-    const varianceThreshold = options.varianceThreshold || 100;
-    const stdDevThreshold = options.stdDevThreshold || 15;
+export type RecurringTxLike = {
+    date?: string;
+    description?: string;
+    category?: string | null;
+    amount?: number | string;
+    [key: string]: unknown;
+};
+
+export type FindRecurringOptions = {
+    windowSize?: number;
+    varianceThreshold?: number;
+    stdDevThreshold?: number;
+};
+
+type GroupEntry<TTx extends RecurringTxLike> = {
+    date: Date;
+    category: string | null;
+    amount: number;
+    original: TTx;
+};
+
+export type RecurringFinding =
+    | {
+          description: string;
+          frequency: 'monthly?';
+          status: 'possible';
+          occurrences: number;
+          modeAmount: number;
+          lastDate: string;
+          note: string;
+      }
+    | {
+          id: string;
+          description: string;
+          frequency: 'monthly';
+          status: 'confirmed' | 'possible';
+          category: string | null;
+          dayOfMonth: number;
+          occurrences: number;
+          avgAmount: string;
+          lastDate: string;
+          amountVariance: string;
+          stdDev: string;
+      };
+
+export function findRecurringTransactions<TTx extends RecurringTxLike>(
+    transactions: TTx[],
+    options: FindRecurringOptions = {}
+): RecurringFinding[] {
+    const groups: Record<string, Array<GroupEntry<TTx>>> = {};
+    const windowSize = options.windowSize ?? 12;
+    const varianceThreshold = options.varianceThreshold ?? 100;
+    const stdDevThreshold = options.stdDevThreshold ?? 15;
 
     function normalizeDescription(desc: string) {
         return desc
@@ -39,40 +87,44 @@ export function findRecurringTransactions(transactions: any[], options: any = {}
 
         groups[descKey].push({
             date: new Date(tx.date),
-            category: tx.category,
-            amount: Math.abs(tx.amount),
+            category: typeof tx.category === 'string' ? tx.category : null,
+            amount: Math.abs(parseFiniteNumber(tx.amount, { fallback: 0 })),
             original: tx,
         });
     });
 
-    const recurring = [];
+    const recurring: RecurringFinding[] = [];
     // TODO: Check status of grouping often
     //console.log(groups);
 
     for (const desc in groups) {
-        const entries = groups[desc].sort((a: any, b: any) => a.date - b.date);
+        const entries = groups[desc].sort((a, b) => a.date.getTime() - b.date.getTime());
         if (entries.length < 6) continue;
 
         // Step: Filter out rare outlier amounts using mode
-        const rounded = entries.map((e) => Math.round(e.amount * 100)) as any;
-        const countMap = {} as any;
-        for (const amt of rounded) countMap[amt] = (countMap[amt] || 0) + 1 as any;
-        const modeCentsKey = Object.entries(countMap).sort((a: any, b: any) => b[1] - a[1])[0]?.[0];
+        const rounded = entries.map((e) => Math.round(e.amount * 100));
+        const countMap: Record<string, number> = {};
+        for (const amt of rounded) {
+            const key = String(amt);
+            countMap[key] = (countMap[key] || 0) + 1;
+        }
+        const modeCentsKey = Object.entries(countMap).sort((a, b) => b[1] - a[1])[0]?.[0];
         const mode = normalizeMoney(parseFiniteNumber(modeCentsKey, { fallback: 0 }) / 100, { fallback: 0, min: 0 });
 
         // Step: Keep only entries within 20% of mode
-        const closeToMode = entries.filter((e) => Math.abs(e.amount - mode) / mode <= 2) as any;
+        const closeToMode = entries.filter((e) => Math.abs(e.amount - mode) / mode <= 2);
 
         if (closeToMode.length < 3) {
             // Flag it as "possible" if there's 1-2 odd entries but at least 2-3 near mode
             if (entries.length >= 3 && closeToMode.length >= 2) {
+                const last = closeToMode[closeToMode.length - 1];
                 recurring.push({
                     description: desc,
                     frequency: 'monthly?',
                     status: 'possible',
                     occurrences: closeToMode.length,
                     modeAmount: mode,
-                    lastDate: closeToMode.at(-1).date.toISOString().slice(0, 10),
+                    lastDate: last.date.toISOString().slice(0, 10),
                     note: 'Outlier(s) present — might still be recurring.',
                 });
             }
@@ -86,7 +138,7 @@ export function findRecurringTransactions(transactions: any[], options: any = {}
 
         const intervals = recent
             .slice(1)
-            .map((entry: any, i: number) => (entry.date - recent[i].date) / (1000 * 60 * 60 * 24));
+            .map((entry, i) => (entry.date.getTime() - recent[i].date.getTime()) / (1000 * 60 * 60 * 24));
 
         const avgInterval = intervals.reduce((a: number, b: number) => a + b, 0) / intervals.length;
         const stdDev = Math.sqrt(
@@ -94,7 +146,7 @@ export function findRecurringTransactions(transactions: any[], options: any = {}
                 intervals.length
         );
 
-        const amounts = recent.map((e: any) => e.amount).sort((a: number, b: number) => a - b);
+        const amounts = recent.map((e) => e.amount).sort((a, b) => a - b);
 
         // Clone & trim up to 2 extreme values (if enough entries)
         let trimmed = [...amounts];
@@ -145,13 +197,13 @@ export function findRecurringTransactions(transactions: any[], options: any = {}
             frequency: 'monthly',
             status: isMonthly ? 'confirmed' : 'possible',
             category: groups[desc][0].category || null,
-            dayOfMonth: recent.map((r: any) => r.date.getDate()).sort((a: number, b: number) => a - b)[
+            dayOfMonth: recent.map((r) => r.date.getDate()).sort((a, b) => a - b)[
                 Math.floor(recent.length / 2)
             ],
             id: crypto.randomUUID(),
             occurrences: recent.length,
             avgAmount: (amounts.reduce((a: number, b: number) => a + b, 0) / amounts.length).toFixed(2),
-            lastDate: recent.at(-1).date.toISOString().slice(0, 10),
+            lastDate: recent[recent.length - 1].date.toISOString().slice(0, 10),
             amountVariance: amountVariance.toFixed(2),
             stdDev: stdDev.toFixed(2),
         });
