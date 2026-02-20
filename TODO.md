@@ -22,7 +22,6 @@ Actionable TODOs must use one of:
   - [`TODO`(P5)](#p5)
   - [stretch](#stretch)
   - [postmvp](#postmvp)
-- [Commit Plan (batching ~120 changes)](#commit-plan)
 - [Archive (implemented / completed)](#archive)
 
 ---
@@ -161,6 +160,12 @@ Docs (P1):
 - [ ] TODO(P3): Reduce store surface area (without tackling `any` yet)
   - separate UI-only flags from budgeting domain state
   - ensure persist `partialize` is correct and minimal
+- [ ] TODO(P3): Page-by-page DRY sweep (refactor-only; no behavior changes)
+  - [ ] extract shared helper functions (date/month-key math, formatting, common aggregations)
+  - [ ] extract shared helper consts (chart defaults/dimensions, clamp lengths, common table column sets)
+  - [ ] extract reusable Chakra wrappers only where it makes sense (similar to `DialogModal`, `AppCollapsible`, `AppSelect`, `AppTable`)
+  - [ ] consider a reusable RadioGroup wrapper if multiple pages share the same pattern
+  - [ ] consider a tiny Recharts wrapper to standardize `ResponsiveContainer` props (e.g. `initialDimension`, `minWidth`) and avoid reintroducing console warnings
 
 Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 
@@ -187,29 +192,8 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 
 ---
 
-<a id="commit-plan"></a>
-## Commit Plan (batching ~120 changes)
-
-Goal: land a clean, reviewable history by grouping commits by intent.
-
-- [ ] TODO(P1): Commit 1 — Docs foundation
-  - README/CONTRIBUTING updates, banner SVG, samples documentation
-- [ ] TODO(P1): Commit 2 — Route + copy cleanup
-  - redirects, sidebar items, page headings, welcome/about/dev copy
-- [ ] TODO(P1): Commit 3 — Storage namespace migration
-  - key rename + migration path + test plan notes
-- [ ] TODO(P1): Commit 4 — Follow-up hygiene
-  - remove dead assets, rename hooks/symbols, delete unused services
-
-Notes:
-
-- Keep each commit buildable (`npm run build`).
-- Prefer mechanical renames in their own commit.
-- Avoid mixing functional changes with copy/rename where possible.
-
----
-
 <a id="snowball"></a>
+### Snowball — Ingestion refactor: ImportPlan + commit (done)
 
 - [ ] TODO(P1): Add stable client device identity (deviceId in localStorage) for presence + sync lock ownership
 - [ ] TODO(P1): Add missing error handling around auth and storage access (try/catch + user-friendly messages)
@@ -244,6 +228,8 @@ Notes:
 ---
 
 <a id="stretch"></a>
+### Stretch goals (deferred until post-MVP)
+
 - [ ] TODO(stretch): Add true offline mode UX (sync badge + queued ops count + retry controls)
 - [ ] TODO(stretch): Add fine-grained conflict UI (pick local vs remote per field)
 - [ ] TODO(stretch): Add automated backups/export (cloud snapshot export)
@@ -256,6 +242,8 @@ Notes:
 ---
 
 <a id="postmvp"></a>
+### Post-MVP possibilities (deferred until core UX is stable and we have a better sense of user needs)
+
 - [ ] TODO(postmvp): Evaluate double-entry ledger redesign only if transfer/reconciliation bugs dominate
 - [ ] TODO(postmvp): Add OFX import + cloud sync integration
 - [ ] TODO(postmvp): Add Plaid-based syncing (replace stub in src/utils/plaidService.js)
