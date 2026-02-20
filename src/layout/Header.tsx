@@ -3,7 +3,7 @@ import { RouterLink } from "../components/RouterLink";
 import { Tooltip } from '../components/ui/Tooltip';
 import { requestOpenWelcomeModal } from '../services/welcomeModalPreference';
 import { IoSettingsSharp } from 'react-icons/io5';
-import { MdDarkMode, MdLightMode } from "react-icons/md";
+import { MdDarkMode, MdLightMode, MdNewReleases } from "react-icons/md";
 import { formatUsernameForDisplay } from '../services/userDisplay';
 import type { AuthUserLike, UserUI } from '../types';
 import { useUserUI } from '../hooks/useUserUI';
@@ -53,17 +53,19 @@ export default function Navigation({ user, userUI }: NavigationProps) {
       bg={{ base: "teal.300", _dark: "teal.700" }}
       color="teal.800"
       boxShadow="sm"
-      px={4}
-      py={3}
+      px={{ base: 2, sm: 4 }}
+      py={{ base: 2, sm: 3 }}
       shadow="md"
-      minW="400px"
+      w="100%"
+      minW={0}
       borderBottomWidth="1px"
       borderBottomColor={{ base: "teal.400", _dark: "teal.600" }}
+      overflowX="hidden"
     >
-      <Flex justifyContent="space-between" alignItems="center" width="100%">
+      <Flex justifyContent="space-between" alignItems="center" width="100%" minW={0}>
         <RouterLink to="/">{() =>
           <Heading
-            size="2xl"
+            size={{ base: "xl", sm: "2xl" }}
             pb={1}
             px={2}
             borderRadius={"xl"}
@@ -74,9 +76,11 @@ export default function Navigation({ user, userUI }: NavigationProps) {
             {"Budgeteer"}
           </Heading>
         }</RouterLink>
-          {signedIn ? (
-            <Tooltip content="What’s new" showArrow>
+        {signedIn ? (
+          <Tooltip content="What’s new" showArrow>
+            <>
               <Button
+                display={{ base: "none", sm: "inline-flex" }}
                 size="sm"
                 variant="ghost"
                 fontWeight="600"
@@ -88,10 +92,23 @@ export default function Navigation({ user, userUI }: NavigationProps) {
               >
                 What’s new
               </Button>
-            </Tooltip>
-          ) : null}
+              <IconButton
+                display={{ base: "inline-flex", sm: "none" }}
+                aria-label="What’s new"
+                variant="ghost"
+                onClick={() => {
+                  requestOpenWelcomeModal();
+                }}
+                color={{ base: "teal.800", _dark: "teal.300" }}
+                _hover={{ bg: { base: "teal.800", _dark: "teal.300" }, color: { base: "teal.300", _dark: "teal.800" } }}
+              >
+                <MdNewReleases />
+              </IconButton>
+            </>
+          </Tooltip>
+        ) : null}
 
-          <HStack gap={3}>
+          <HStack gap={{ base: 1, sm: 3 }} minW={0}>
             {/*{refreshing ? (
               <HStack gap={2} color="gray.600">
                 <Spinner size="sm" />
@@ -110,6 +127,11 @@ export default function Navigation({ user, userUI }: NavigationProps) {
                         color={{ base: "teal.800", _dark: "teal.300" }}
                         _hover={{ bg: { base: "teal.800", _dark: "teal.300" }, color: { base: "teal.300", _dark: "teal.800" } }}
                         bg={isActive ? "teal.600" : { base: "teal.300", _dark: "teal.700" }}
+                        display={{ base: "none", sm: "block" }}
+                        maxW="160px"
+                        overflow="hidden"
+                        whiteSpace="nowrap"
+                        textOverflow="ellipsis"
                     >
                         {displayUsername}
                     </Box>

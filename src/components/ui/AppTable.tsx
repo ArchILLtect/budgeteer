@@ -5,6 +5,7 @@ type Column = {
   key: string;
   header: ReactNode;
   bg?: string;
+  color?: string;
   textAlign?: "start" | "center" | "end";
   width?: string;
 };
@@ -35,7 +36,7 @@ export function AppTable<T>({
       <Table.Header>
         <Table.Row bg="bg.panel">
           {columns.map((c) => (
-            <Table.ColumnHeader key={c.key} textAlign={c.textAlign} width={c.width} bg={c.bg}>
+            <Table.ColumnHeader key={c.key} textAlign={c.textAlign} width={c.width} bg={c.bg} color={c.color}>
               {c.header}
             </Table.ColumnHeader>
           ))}

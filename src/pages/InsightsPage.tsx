@@ -436,11 +436,11 @@ export function InsightsPage() {
                 return (
                   <>
                     <Box as={"td"} px={2} py={1} bg={row === "netIncome" ? "teal.50" : row === "expenses" ? "orange.50" : row === "saved" ? "blue.50" : "green.50"} fontWeight="bold">
-                      <Text fontSize="sm">{metricLabel}</Text>
+                      <Text fontSize="sm" color="gray.900">{metricLabel}</Text>
                     </Box>
                     {values.map((v, idx) => (
                       <Box as={"td"} key={`${row}-${idx}`} textAlign="end" bg={row === "netIncome" ? "teal.50" : row === "expenses" ? "orange.50" : row === "saved" ? "blue.50" : "green.50"}>
-                        <Text fontSize="sm">{formatCurrency(v)}</Text>
+                        <Text fontSize="sm" color="gray.900">{formatCurrency(v)}</Text>
                       </Box>
                     ))}
                     <Box as={"td"} textAlign="end" bg={row === "netIncome" ? "teal.50" : row === "expenses" ? "orange.50" : row === "saved" ? "blue.50" : "green.50"}>
@@ -553,9 +553,9 @@ export function InsightsPage() {
               <AppTable
                 width="100%"
                 columns={[
-                  { key: "name", header: "Name", bg: "gray.50" },
+                  { key: "name", header: "Name", bg: "gray.50", color: "gray.900" },
                   { key: "delta", header: "Δ", textAlign: "end" },
-                  { key: "current", header: "Current", textAlign: "end", bg: "gray.50" },
+                  { key: "current", header: "Current", textAlign: "end", bg: "gray.50", color: "gray.900" },
                   { key: "previous", header: "Previous", textAlign: "end" },
                 ]}
                 rows={increased}
@@ -563,16 +563,16 @@ export function InsightsPage() {
                 renderRow={(r) => (
                   <>
                     <Box as={"td"} px={2} py={1} bg={r.key === "netIncome" ? "teal.50" : r.key === "expenses" ? "orange.50" : r.key === "saved" ? "blue.50" : "gray.50"} fontWeight="bold">
-                      <Text fontSize="sm">{r.key}</Text>
+                      <Text fontSize="sm" color="gray.900">{r.key}</Text>
                     </Box>
                     <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
                       <Text fontSize="sm" color={r.delta > 0 ? "green.500" : r.delta < 0 ? "red.500" : "gray.500"}>{formatDeltaCurrency(r.delta)}</Text>
                     </Box>
                     <Box as={"td"} textAlign="end" py={1} px={2} bg="gray.50">
-                      <Text fontSize="sm">{formatCurrency(r.current)}</Text>
+                      <Text fontSize="sm" color="gray.900">{formatCurrency(r.current)}</Text>
                     </Box>
                     <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
-                      <Text fontSize="sm">{formatCurrency(r.previous)}</Text>
+                      <Text fontSize="sm" color="fg">{formatCurrency(r.previous)}</Text>
                     </Box>
                   </>
                 )}
@@ -619,26 +619,26 @@ export function InsightsPage() {
               <AppTable
                 width="100%"
                 columns={[
-                  { key: "name", header: "Name", bg: "gray.50" },
-                  { key: "delta", header: "Δ", textAlign: "end" },
-                  { key: "current", header: "Current", textAlign: "end", bg: "gray.50" },
-                  { key: "previous", header: "Previous", textAlign: "end" },
+                  { key: "name", header: "Name", bg: "gray.50", color: "gray.900" },
+                  { key: "delta", header: "Δ", textAlign: "end", color: "fg" },
+                  { key: "current", header: "Current", textAlign: "end", bg: "gray.50", color: "gray.900" },
+                  { key: "previous", header: "Previous", textAlign: "end", color: "fg" },
                 ]}
                 rows={decreased}
                 emptyText="No decreases found."
                 renderRow={(r) => (
                   <>
                     <Box as={"td"} px={2} py={1} bg={r.key === "netIncome" ? "teal.50" : r.key === "expenses" ? "orange.50" : r.key === "saved" ? "blue.50" : "gray.50"} fontWeight="bold">
-                      <Text fontSize="sm">{r.key}</Text>
+                      <Text fontSize="sm" color="gray.900">{r.key}</Text>
                     </Box>
                     <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
                       <Text fontSize="sm" color={r.delta > 0 ? "green.500" : r.delta < 0 ? "red.500" : "gray.500"}>{formatDeltaCurrency(r.delta)}</Text>
                     </Box>
                     <Box as={"td"} textAlign="end" py={1} px={2} bg="gray.50">
-                      <Text fontSize="sm">{formatCurrency(r.current)}</Text>
+                      <Text fontSize="sm" color="gray.900">{formatCurrency(r.current)}</Text>
                     </Box>
                     <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
-                      <Text fontSize="sm">{formatCurrency(r.previous)}</Text>
+                      <Text fontSize="sm" color="fg">{formatCurrency(r.previous)}</Text>
                     </Box>
                   </>
                 )}
