@@ -1,7 +1,7 @@
 
 # Budgeteer — Architecture
 
-Last updated: 2026-02-15
+Last updated: 2026-02-19
 
 This document describes **how Budgeteer is built today** (as reflected in `src/`) and the intended direction as it evolves into a cohesive personal finance app.
 
@@ -248,7 +248,8 @@ Aligned with the vision doc:
 
 ## 10) Known issues / tech debt (tracked in ROADMAP)
 
-- Many “any” types in older/rapidly-evolving areas.
-- `budgetStore` is currently a monolith; it should be modularized (planner vs accounts vs import lifecycle).
-- Demo mode wiring exists but is still evolving.
+-- ~~Many “any” types in older/rapidly-evolving areas.~~ (addressed 2026-02-19: core paths typed; remaining loose edges use `unknown` at boundaries)
+-- ~~`budgetStore` is currently a monolith; it should be modularized (planner vs accounts vs import lifecycle).~~ (done 2026-02-19: slice modules under `src/store/slices/*`)
+-- Some ingestion/UI boundaries still treat parsed CSV rows as `unknown` until validated/normalized.
+-- Demo mode wiring exists but is still evolving.
 

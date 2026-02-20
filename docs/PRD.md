@@ -253,8 +253,8 @@ Potential success indicators (qualitative):
 Risks:
 
 - Naming inconsistencies (routes/copy/storage keys) can confuse users.
-- Monolithic store (`budgetStore`) can become hard to maintain.
-- Type gaps (`any`) can mask bugs in ingestion/account math.
+- Central persisted store (`budgetStore`), even when composed from slices, can become hard to maintain as features grow.
+- Remaining type gaps (mostly at boundaries like CSV parsing) can mask bugs in ingestion/account math.
 
 Open questions:
 

@@ -1,6 +1,6 @@
 # Budgeteer — Data Model
 
-Last updated: 2026-02-15
+Last updated: 2026-02-19
 
 This document describes the **data domains and shapes** Budgeteer uses today, plus the key conventions (dates, amounts, transaction identity) that make imports safe and deterministic.
 
@@ -165,6 +165,13 @@ Additional scoping fields (current):
 Savings queue behavior:
 - Ingestion collects savings-like transactions into a `savingsQueue`.
 - Review/linking to goals is deferred until “Apply to Budget”.
+
+Savings review queue entries (current):
+- UI/store uses a shared shape (`SavingsReviewEntry`) with required fields:
+	- `id`, `date` (`YYYY-MM-DD`), `month` (`YYYY-MM`), `name`, `amount`
+- Optional metadata commonly present:
+	- `importSessionId` (session scoping)
+	- `originalTxId` (link back to the source transaction when available)
 
 See:
 - `docs/developer/category-rules-and-savings-queue.md`

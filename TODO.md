@@ -49,27 +49,27 @@ Actionable TODOs must use one of:
 UI bugfixes (P1):
 
 - [x] TODO(P1): Planner — fix “Include savings in …” radio button not working
-- [ ] TODO(P1): Tracker — fix “Total Override” checkbox not working
+- [x] TODO(P1): Tracker — fix “Total Override” checkbox not working
 - [ ] TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”
 
 Income Details (Tracker) (P1):
 
-- [ ] TODO(P1): Tracker — income delete confirmation alert copy: don’t call it an “expense”, include the income source name, and fire success/error toast appropriately
-- [ ] TODO(P1): Tracker — updating/adding income sources should update “Monthly Income” total at top of card (currently only impacts “Actual Net Income” stat)
-- [ ] TODO(P1): Tracker — clarify stat bar layout above “<year> Summary”; fix duplicate “Total Saved” and “Leftover” stats (ensure intended count and uniqueness)
+- [x] TODO(P1): Tracker — income delete confirmation alert copy: don’t call it an “expense”, include the income source name, and fire success/error toast appropriately
+- [x] TODO(P1): Tracker — updating/adding income sources should update “Monthly Income” total at top of card (currently only impacts “Actual Net Income” stat)
+- [x] TODO(P1): Tracker — clarify stat bar layout above “<year> Summary”; fix duplicate “Total Saved” and “Leftover” stats (ensure intended count and uniqueness)
 
 Savings Goals (Tracker) (P1):
 
-- [ ] TODO(P1): Tracker — savings goal card display: fix incorrect/missing info rendering
-- [ ] TODO(P1): Tracker — savings goal edit: clicking “Edit” should only open the selected item (not all edit panels)
-- [ ] TODO(P1): Tracker — savings goal save: toast fires but changes are not persisted; fix persistence and refresh behavior
-- [ ] TODO(P1): Tracker — savings goal delete: toast fires but item is not removed; fix deletion and refresh behavior
+- [x] TODO(P1): Tracker — savings goal card display: fix incorrect/missing info rendering
+- [x] TODO(P1): Tracker — savings goal edit: clicking “Edit” should only open the selected item (not all edit panels)
+- [x] TODO(P1): Tracker — savings goal save: toast fires but changes are not persisted; fix persistence and refresh behavior
+- [x] TODO(P1): Tracker — savings goal delete: toast fires but item is not removed; fix deletion and refresh behavior
 
 Runtime console errors (P1):
 
-- [ ] TODO(P1): Tracker — fix duplicate React key warning `same key, NaN` from SavingsGoalsTracker list rendering (ensure stable, unique keys)
-- [ ] TODO(P1): Tracker — fix Chakra `Progress` error: value receives `[object Object],[object Object]` and exceeds max 100 (ensure numeric value and correct max)
-- [ ] TODO(P1): Settings — fix controlled/uncontrolled input warning: text input has both `value` and `defaultValue`
+- [x] TODO(P1): Tracker — fix duplicate React key warning `same key, NaN` from SavingsGoalsTracker list rendering (ensure stable, unique keys)
+- [x] TODO(P1): Tracker — fix Chakra `Progress` error: value receives `[object Object],[object Object]` and exceeds max 100 (ensure numeric value and correct max)
+- [x] TODO(P1): Settings — fix controlled/uncontrolled input warning: text input has both `value` and `defaultValue`
 
 Copy/branding (P1):
 
