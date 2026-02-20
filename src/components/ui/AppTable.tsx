@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 type Column = {
   key: string;
   header: ReactNode;
+  bg?: string;
   textAlign?: "start" | "center" | "end";
   width?: string;
 };
@@ -32,9 +33,9 @@ export function AppTable<T>({
   return (
     <Table.Root size={size} width={width} variant={variant} striped={striped}>
       <Table.Header>
-        <Table.Row>
+        <Table.Row bg="bg.panel">
           {columns.map((c) => (
-            <Table.ColumnHeader key={c.key} textAlign={c.textAlign} width={c.width}>
+            <Table.ColumnHeader key={c.key} textAlign={c.textAlign} width={c.width} bg={c.bg}>
               {c.header}
             </Table.ColumnHeader>
           ))}

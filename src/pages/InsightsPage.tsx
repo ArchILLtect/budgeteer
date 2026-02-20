@@ -1,12 +1,13 @@
 import {
   Box,
+  Grid,
   Heading,
   HStack,
   Stack,
   Text,
   Stat,
-  StatGroup,
   RadioGroup,
+  useMediaQuery,
 } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import {
@@ -273,6 +274,8 @@ export function InsightsPage() {
 
   const monthOptions = months;
 
+  const [isPhoneWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   return (
     <Stack gap={6} p={4}>
       <Box>
@@ -313,7 +316,14 @@ export function InsightsPage() {
         </HStack>
 
         <Box px={4} py={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel" mb={4}>
-          <StatGroup gapY={"20px"}>
+          <Grid
+            gap={3}
+            gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+            css={{
+              "@media (max-width: 600px)": { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" },
+              "@media (max-width: 320px)": { gridTemplateColumns: "repeat(1, minmax(0, 1fr))" },
+            }}
+          >
             <Stat.Root textAlign="center">
               <Stat.Label>Net Income</Stat.Label>
               <Stat.ValueText>{formatCurrency(latest.netIncome)}</Stat.ValueText>
@@ -342,17 +352,17 @@ export function InsightsPage() {
                 <Stat.HelpText>{formatDeltaCurrency(latest.leftover - prevLatest.leftover)} vs prior</Stat.HelpText>
               ) : null}
             </Stat.Root>
-          </StatGroup>
+          </Grid>
         </Box>
 
-        <Box height="260px" borderWidth={1} borderColor="border" rounded="md" bg="bg.panel" p={2}>
+        <Box height="300px" borderWidth={1} borderColor="border" rounded="md" bg="bg.panel" p={2} minW={0} overflow="hidden">
           <ResponsiveContainer
             width="100%"
             height="100%"
             minWidth={0}
             initialDimension={{ width: 800, height: 260 }}
           >
-            <LineChart data={trend} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+            <LineChart data={trend} margin={{ top: 24, right: 12, left: 0, bottom: isPhoneWidth ? 28 : 18 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" />
               <XAxis dataKey="monthLabel" />
               <YAxis tickFormatter={(v) => (typeof v === "number" ? `$${Math.round(v)}` : "")} />
@@ -361,7 +371,7 @@ export function InsightsPage() {
                   typeof value === "number" ? formatCurrency(value) : String(value ?? "")
                 }
               />
-              <Legend />
+              <Legend verticalAlign="bottom" height={22} wrapperStyle={{ paddingTop: 2 }} />
               <Line
                 type="monotone"
                 dataKey="netIncome"
@@ -398,40 +408,49 @@ export function InsightsPage() {
           </ResponsiveContainer>
         </Box>
 
-        <Box mt={4} overflowX="auto">
-          <AppTable
-            columns={[
-              { key: "metric", header: "Metric" },
-              ...months.map((m) => ({ key: m, header: getMonthLabel(m), textAlign: "end" as const })),
-              { key: "delta", header: "Δ vs prior", textAlign: "end" },
-            ]}
-            rows={["netIncome", "expenses", "saved", "leftover"] as const}
-            renderRow={(row) => {
-              const metricLabel =
-                row === "netIncome" ? "Net Income" : row === "expenses" ? "Expenses" : row === "saved" ? "Saved" : "Leftover";
+        <Box mt={4} p={2} border="2px solid" borderRadius="md" borderColor="border" bg="bg.panel" overflowX="auto" minW={0} width="100%" maxW="100%">
+          <Box minW="700px">
+            <AppTable
+              width="100%"
+              columns={[
+                { key: "metric", header: "Metric", width: "140px" },
+                ...months.map((m) => ({ key: m, header: getMonthLabel(m), textAlign: "end" as const, width: "150px" })),
+                { key: "delta", header: "Δ vs prior", textAlign: "end", width: "120px" },
+              ]}
+              rows={["netIncome", "expenses", "saved", "leftover"] as const}
+              renderRow={(row) => {
+                const metricLabel =
+                  row === "netIncome"
+                    ? "Net Income"
+                    : row === "expenses"
+                      ? "Expenses"
+                      : row === "saved"
+                        ? "Saved"
+                        : "Leftover";
 
-              const values = months.map((m) => trend.find((t) => t.month === m)?.[row] ?? 0);
-              const last = values[values.length - 1] ?? 0;
-              const prior = values.length >= 2 ? values[values.length - 2] ?? 0 : 0;
-              const delta = last - prior;
+                const values = months.map((m) => trend.find((t) => t.month === m)?.[row] ?? 0);
+                const last = values[values.length - 1] ?? 0;
+                const prior = values.length >= 2 ? values[values.length - 2] ?? 0 : 0;
+                const delta = last - prior;
 
-              return (
-                <>
-                  <Box as={"td"}>
-                    <Text fontSize="sm">{metricLabel}</Text>
-                  </Box>
-                  {values.map((v, idx) => (
-                    <Box as={"td"} key={`${row}-${idx}`} textAlign="end">
-                      <Text fontSize="sm">{formatCurrency(v)}</Text>
+                return (
+                  <>
+                    <Box as={"td"} px={2} py={1} bg={row === "netIncome" ? "teal.50" : row === "expenses" ? "orange.50" : row === "saved" ? "blue.50" : "green.50"} fontWeight="bold">
+                      <Text fontSize="sm">{metricLabel}</Text>
                     </Box>
-                  ))}
-                  <Box as={"td"} textAlign="end">
-                    <Text fontSize="sm">{formatDeltaCurrency(delta)}</Text>
-                  </Box>
-                </>
-              );
-            }}
-          />
+                    {values.map((v, idx) => (
+                      <Box as={"td"} key={`${row}-${idx}`} textAlign="end" bg={row === "netIncome" ? "teal.50" : row === "expenses" ? "orange.50" : row === "saved" ? "blue.50" : "green.50"}>
+                        <Text fontSize="sm">{formatCurrency(v)}</Text>
+                      </Box>
+                    ))}
+                    <Box as={"td"} textAlign="end" bg={row === "netIncome" ? "teal.50" : row === "expenses" ? "orange.50" : row === "saved" ? "blue.50" : "green.50"}>
+                      <Text fontSize="sm" color={delta > 0 ? "green.500" : delta < 0 ? "red.500" : "gray.500"}>{formatDeltaCurrency(delta)}</Text>
+                    </Box>
+                  </>
+                );
+              }}
+            />
+          </Box>
         </Box>
       </Box>
 
@@ -530,29 +549,29 @@ export function InsightsPage() {
               </ResponsiveContainer>
             </Box>
 
-            <Box mt={3}>
+            <Box mt={3} p={2} border="2px solid" borderRadius="md" borderColor="border" bg="bg.panel" overflowX="auto">
               <AppTable
                 width="100%"
                 columns={[
-                  { key: "name", header: "Name" },
+                  { key: "name", header: "Name", bg: "gray.50" },
                   { key: "delta", header: "Δ", textAlign: "end" },
-                  { key: "current", header: "Current", textAlign: "end" },
+                  { key: "current", header: "Current", textAlign: "end", bg: "gray.50" },
                   { key: "previous", header: "Previous", textAlign: "end" },
                 ]}
                 rows={increased}
                 emptyText="No increases found."
                 renderRow={(r) => (
                   <>
-                    <Box as={"td"}>
+                    <Box as={"td"} px={2} py={1} bg={r.key === "netIncome" ? "teal.50" : r.key === "expenses" ? "orange.50" : r.key === "saved" ? "blue.50" : "gray.50"} fontWeight="bold">
                       <Text fontSize="sm">{r.key}</Text>
                     </Box>
-                    <Box as={"td"} textAlign="end">
-                      <Text fontSize="sm">{formatDeltaCurrency(r.delta)}</Text>
+                    <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
+                      <Text fontSize="sm" color={r.delta > 0 ? "green.500" : r.delta < 0 ? "red.500" : "gray.500"}>{formatDeltaCurrency(r.delta)}</Text>
                     </Box>
-                    <Box as={"td"} textAlign="end">
+                    <Box as={"td"} textAlign="end" py={1} px={2} bg="gray.50">
                       <Text fontSize="sm">{formatCurrency(r.current)}</Text>
                     </Box>
-                    <Box as={"td"} textAlign="end">
+                    <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
                       <Text fontSize="sm">{formatCurrency(r.previous)}</Text>
                     </Box>
                   </>
@@ -596,29 +615,29 @@ export function InsightsPage() {
               </ResponsiveContainer>
             </Box>
 
-            <Box mt={3}>
+            <Box mt={3} p={2} border="2px solid" borderRadius="md" borderColor="border" bg="bg.panel" overflowX="auto">
               <AppTable
                 width="100%"
                 columns={[
-                  { key: "name", header: "Name" },
+                  { key: "name", header: "Name", bg: "gray.50" },
                   { key: "delta", header: "Δ", textAlign: "end" },
-                  { key: "current", header: "Current", textAlign: "end" },
+                  { key: "current", header: "Current", textAlign: "end", bg: "gray.50" },
                   { key: "previous", header: "Previous", textAlign: "end" },
                 ]}
                 rows={decreased}
                 emptyText="No decreases found."
                 renderRow={(r) => (
                   <>
-                    <Box as={"td"}>
+                    <Box as={"td"} px={2} py={1} bg={r.key === "netIncome" ? "teal.50" : r.key === "expenses" ? "orange.50" : r.key === "saved" ? "blue.50" : "gray.50"} fontWeight="bold">
                       <Text fontSize="sm">{r.key}</Text>
                     </Box>
-                    <Box as={"td"} textAlign="end">
-                      <Text fontSize="sm">{formatDeltaCurrency(r.delta)}</Text>
+                    <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
+                      <Text fontSize="sm" color={r.delta > 0 ? "green.500" : r.delta < 0 ? "red.500" : "gray.500"}>{formatDeltaCurrency(r.delta)}</Text>
                     </Box>
-                    <Box as={"td"} textAlign="end">
+                    <Box as={"td"} textAlign="end" py={1} px={2} bg="gray.50">
                       <Text fontSize="sm">{formatCurrency(r.current)}</Text>
                     </Box>
-                    <Box as={"td"} textAlign="end">
+                    <Box as={"td"} textAlign="end" py={1} px={2} bg="bg.panel">
                       <Text fontSize="sm">{formatCurrency(r.previous)}</Text>
                     </Box>
                   </>
