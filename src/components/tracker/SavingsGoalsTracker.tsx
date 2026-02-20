@@ -13,26 +13,26 @@ import { normalizeMoney } from '../../services/inputNormalization';
 
 export default function SavingsGoalsTracker() {
 
-  const selectedMonth =  useBudgetStore((s: any) => s.selectedMonth);
+  const selectedMonth =  useBudgetStore((s) => s.selectedMonth);
   const selectedYear = getYearFromMonthKey(selectedMonth) ?? (selectedMonth || '').slice(0, 4);
   //const currentMonthKey = dayjs().format('YYYY-MM');
   //const monthlyActuals = useBudgetStore((s) => s.monthlyActuals[currentMonthKey]);
   //const savingsGoal = useBudgetStore((s) => s.savingsGoal);
-  const removeSavingsEntriesForGoal = useBudgetStore((s: any) => s.removeSavingsEntriesForGoal);
-  const savingsLogs = useBudgetStore((s: any) => s.savingsLogs);
-  const showGoalInputs = useBudgetStore((s: any) => s.showGoalInputs);
-  const setShowGoalInputs = useBudgetStore((s: any) => s.setShowGoalInputs);
-  const goals = useBudgetStore((s: any) => s.savingsGoals);
-  const addSavingsGoal = useBudgetStore((s: any) => s.addSavingsGoal);
-  const removeSavingsGoal = useBudgetStore((s: any) => s.removeSavingsGoal);
-  const updateSavingsGoal = useBudgetStore((s: any) => s.updateSavingsGoal);
-  const [editGoalId, setEditGoalId] = useState<any>(null);
+  const removeSavingsEntriesForGoal = useBudgetStore((s) => s.removeSavingsEntriesForGoal);
+  const savingsLogs = useBudgetStore((s) => s.savingsLogs);
+  const showGoalInputs = useBudgetStore((s) => s.showGoalInputs);
+  const setShowGoalInputs = useBudgetStore((s) => s.setShowGoalInputs);
+  const goals = useBudgetStore((s) => s.savingsGoals);
+  const addSavingsGoal = useBudgetStore((s) => s.addSavingsGoal);
+  const removeSavingsGoal = useBudgetStore((s) => s.removeSavingsGoal);
+  const updateSavingsGoal = useBudgetStore((s) => s.updateSavingsGoal);
+  const [editGoalId, setEditGoalId] = useState<string | null>(null);
   const savingsLogsThisYear = Object.entries(savingsLogs)
     .filter(([month]) => String(month).startsWith(selectedYear))
     .flatMap(([, logs]) => (Array.isArray(logs) ? logs : []));
 
-  const handleGoalDelete = (id: any) => {
-    const goalName = String(goals.find((g: any) => g.id === id)?.name || '').trim();
+  const handleGoalDelete = (id: string) => {
+    const goalName = String(goals.find((g) => g.id === id)?.name || '').trim();
     const message = goalName
       ? `Are you sure you want to delete the savings goal "${goalName}"? This will also remove its saved progress.`
       : 'Are you sure you want to delete this savings goal? This will also remove its saved progress.';
@@ -58,11 +58,11 @@ export default function SavingsGoalsTracker() {
     fireToast("success", "Savings goal added", "Added a new savings goal.");
   };
 
-  const resetGoal = (goalId: any) => {
-    const goalName = String(goals.find((g: any) => g.id === goalId)?.name || '').trim();
+  const resetGoal = (goalId: string) => {
+    const goalName = String(goals.find((g) => g.id === goalId)?.name || '').trim();
     const totalForGoalThisYear = savingsLogsThisYear
-      .filter((e: any) => (e?.goalId ?? 'yearly') === goalId)
-      .reduce((sum: number, entry: any) => sum + (Number(entry?.amount) || 0), 0);
+      .filter((e) => ((e?.goalId ?? 'yearly') as string) === goalId)
+      .reduce((sum, entry) => sum + (Number(entry?.amount) || 0), 0);
 
     const confirm = window.confirm(
       `Are you sure you want to reset this goal${goalName ? ` ("${goalName}")` : ''}? This will remove ${formatCurrency(totalForGoalThisYear)} of saved progress from ${selectedYear}.`
@@ -79,12 +79,12 @@ export default function SavingsGoalsTracker() {
     fireToast('success', 'Savings goal reset', 'Removed saved progress for this goal.');
   };
 
-  const progressData = goals.map((goal: any) => {
-    const logsForGoal = savingsLogsThisYear.filter((l: any) => {
+  const progressData = goals.map((goal) => {
+    const logsForGoal = savingsLogsThisYear.filter((l) => {
       if (goal.id === 'yearly') return l.goalId == null || l.goalId === 'yearly';
       return l.goalId === goal.id;
     });
-    const total = logsForGoal.reduce((sum: number, l: any) => sum + (Number(l?.amount) || 0), 0);
+    const total = logsForGoal.reduce((sum, l) => sum + (Number(l?.amount) || 0), 0);
     const rawProgress = Number(goal.target) > 0 ? (total / Number(goal.target)) * 100 : 0;
     const progress = Number.isFinite(rawProgress) ? Math.max(0, Math.min(100, rawProgress)) : 0;
     return { goal, total, progress };
@@ -109,7 +109,7 @@ export default function SavingsGoalsTracker() {
           </Text>
         }
       >
-        {progressData.map(({ goal, total, progress }: { goal: any; total: number; progress: number }) => (
+        {progressData.map(({ goal, total, progress }) => (
         <Card.Root p={4} mb={4} borderWidth={1} borderColor="border" bg="bg.subtle" key={String(goal.id)}>
           <Flex justify="space-between" align="center" mb={4}>
             <Button

@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { Heading, Table, Button, HStack, Text, Card  } from "@chakra-ui/react";
-import { findRecurringTransactions } from "../../utils/analysisUtils";
+import { findRecurringTransactions, type RecurringFinding } from "../../utils/analysisUtils";
 import { useBudgetStore } from "../../store/budgetStore";
+import type { Account, Transaction } from "../../types";
 
 /* Note: this component is focused on displaying recurring transactions
 // identified in the system, and providing basic management (save/delete).
@@ -12,29 +13,22 @@ import { useBudgetStore } from "../../store/budgetStore";
 const noop = () => {};
 
 type RecurringPaymentsCardProps = {
-  account: {
-    accountNumber: string;
-    label: string;
-    transactions?: {
-      id: string;
-      description: string;
-      category?: string;
-      frequency: 'weekly' | 'biweekly' | 'monthly' | 'other';
-      dayOfMonth?: number;
-      weekday?: number;
-      start?: string;
-      avgAmount: number;
-      status: 'confirmed' | 'possible';
-    }[];
-  };
+  account: Account;
 };
 
+type MonthlyRecurring = Extract<RecurringFinding, { frequency: "monthly" }>;
+type ConfirmedRecurring = MonthlyRecurring & { status: "confirmed" };
+
+function isConfirmedRecurring(r: RecurringFinding): r is ConfirmedRecurring {
+  return r.frequency === "monthly" && r.status === "confirmed";
+}
+
 export default function RecurringPaymentsCard({ account }: RecurringPaymentsCardProps) {
-  const updateRecurring = useBudgetStore((s: any) => s.updateRecurring ?? noop);
-  const removeRecurring = useBudgetStore((s: any) => s.removeRecurring ?? noop);
+  const updateRecurring = useBudgetStore((s) => s.updateRecurring ?? noop);
+  const removeRecurring = useBudgetStore((s) => s.removeRecurring ?? noop);
 
   const currentAccount = account;
-  const currentTransactions = useMemo(() => currentAccount.transactions ?? [], [currentAccount]);
+  const currentTransactions = useMemo(() => (currentAccount.transactions ?? []) as Transaction[], [currentAccount]);
   const recurring = useMemo(
     () => findRecurringTransactions(currentTransactions),
     [currentTransactions]
@@ -62,16 +56,14 @@ export default function RecurringPaymentsCard({ account }: RecurringPaymentsCard
         </Table.Header>
         <Table.Body>
           {recurring
-             .filter((r) => r.status === 'confirmed')
-             .map((r: any) => (
-            <Table.Row key={`${currentAccount.accountNumber}:${r.description}:${r.dayOfMonth ?? r.weekday ?? r.start ?? 'n'}`}>
+             .filter(isConfirmedRecurring)
+             .map((r) => (
+            <Table.Row key={`${currentAccount.accountNumber}:${r.description}:${r.dayOfMonth ?? 'n'}`}>
             <Table.Cell borderRightWidth="2px" borderRightColor="border">{r.description}</Table.Cell>
             <Table.Cell>{r.category || "—"}</Table.Cell>
             <Table.Cell textTransform="capitalize">{r.frequency}</Table.Cell>
             <Table.Cell>
-              {r.frequency === 'monthly' ? `Day ${r.dayOfMonth || 1}`
-                : r.frequency === 'weekly' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][r.weekday ?? 0]
-                : r.frequency === 'biweekly' ? `Every 14d from ${r.start}` : '—'}
+              {`Day ${r.dayOfMonth || 1}`}
             </Table.Cell>
             <Table.Cell borderRightWidth="2px" borderRightColor="border">{Number(r.avgAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Table.Cell>
             <Table.Cell>

@@ -212,7 +212,7 @@ export function WelcomeModal({ signedIn, authLoading }: { signedIn: boolean; aut
 
             <Text fontSize="sm" color="fg.muted" mb={3}>
               {isDemo
-                ? "You can start the guided tour any time."
+                ? "You can start the guided tour at your leisure."
                 : "Want the guided demo tour and demo-mode UI? You can opt in for this account on this device."}
             </Text>
 

@@ -167,7 +167,6 @@ export function AboutPage() {
 
           <Box pl={4}>
             <Text>• Fix remaining UI correctness issues and clean up runtime console warnings/errors.</Text>
-            <Text>• Reduce high-risk `any` types around budgeting and import lifecycles.</Text>
             <Text>• Keep the ingestion pipeline fast and explainable, then improve review tooling later.</Text>
           </Box>
         </VStack>

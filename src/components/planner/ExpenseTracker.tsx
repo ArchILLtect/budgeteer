@@ -237,7 +237,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
                       borderColor={'gray.200'} borderRadius={'md'}>
                     <Checkbox.Root
                       checked={overrideEnabled}
-                      onCheckedChange={(details: any) => setChecked(details.checked === true)}
+                      onCheckedChange={(details) => setChecked(details.checked === true)}
                     >
                       <Checkbox.HiddenInput />
                       <Checkbox.Control />

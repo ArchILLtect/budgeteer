@@ -43,7 +43,15 @@ export function AppTable<T>({
 
       <Table.Body>
         {rows.map((row, idx) => (
-          <Table.Row key={(row as any)?.id ?? idx}>{renderRow(row)}</Table.Row>
+          <Table.Row
+            key={
+              (typeof row === "object" && row !== null && "id" in row
+                ? (row as { id?: string | number }).id
+                : undefined) ?? idx
+            }
+          >
+            {renderRow(row)}
+          </Table.Row>
         ))}
 
         {rows.length === 0 && (

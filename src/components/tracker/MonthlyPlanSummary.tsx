@@ -4,11 +4,12 @@ import { formatCurrency } from '../../utils/formatters';
 import { formatLocalIsoDate } from '../../services/dateTime';
 
 export default function MonthlyPlanSummary() {
-  const showPlanInputs = useBudgetStore((s: any) => s.showPlanInputs);
-  const setShowPlanInputs = useBudgetStore((s: any) => s.setShowPlanInputs);
-  const selectedMonth = useBudgetStore((s: any) => s.selectedMonth);
-  const monthlyPlans = useBudgetStore((s: any) => s.monthlyPlans);
+  const showPlanInputs = useBudgetStore((s) => s.showPlanInputs);
+  const setShowPlanInputs = useBudgetStore((s) => s.setShowPlanInputs);
+  const selectedMonth = useBudgetStore((s) => s.selectedMonth);
+  const monthlyPlans = useBudgetStore((s) => s.monthlyPlans);
   const plan = monthlyPlans[selectedMonth];
+  const estLeftover = plan?.estLeftover ?? 0;
 
   return (
     <Box p={4} boxShadow="md" bg="bg.subtle" borderWidth={2} borderColor="border">
@@ -47,8 +48,8 @@ export default function MonthlyPlanSummary() {
 
             <Stat.Root textAlign={'center'}>
                 <Stat.Label>Planned Leftover</Stat.Label>
-                <Stat.ValueText color={plan.estLeftover >= 0 ? "green.500" : "red.500"} fontSize="2xl">
-                  {formatCurrency(plan.estLeftover)}
+                <Stat.ValueText color={estLeftover >= 0 ? "green.500" : "red.500"} fontSize="2xl">
+                  {formatCurrency(estLeftover)}
                 </Stat.ValueText>
             </Stat.Root>
           </StatGroup>

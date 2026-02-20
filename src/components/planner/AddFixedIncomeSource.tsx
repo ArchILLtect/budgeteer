@@ -6,6 +6,7 @@ import { MdAdd, MdDelete, MdInfo, MdContentCopy } from "react-icons/md";
 import { Tooltip } from '../ui/Tooltip';
 import { fireToast } from '../../hooks/useFireToast';
 import { normalizeMoney } from '../../services/inputNormalization';
+import { errorToMessage } from '../../utils/appUtils';
 
 // TODO: Use FormErrorMessage for better validation feedback
 
@@ -38,8 +39,8 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
       try {
         removeActualIncomeSource(selectedMonth, id)
         fireToast('success', 'Income source removed', label ? `Removed "${label}".` : 'Removed income source.')
-      } catch (err: any) {
-        fireToast('error', 'Could not remove income source', err?.message || 'Please try again.')
+      } catch (err: unknown) {
+        fireToast('error', 'Could not remove income source', errorToMessage(err))
       }
     }
   }
@@ -143,7 +144,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
                   borderColor="border" borderRadius={'md'}>
                   <Checkbox.Root
                     checked={overrideEnabled}
-                    onCheckedChange={(details: any) => setChecked(details.checked === true)}
+                    onCheckedChange={(details) => setChecked(details.checked === true)}
                   >
                     <Checkbox.HiddenInput />
                     <Checkbox.Control />

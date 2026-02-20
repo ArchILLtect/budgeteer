@@ -14,7 +14,7 @@ import { formatUtcMonthKey } from '../../services/dateTime';
 export default function TrackerHeader() {
     const selectedMonth = useBudgetStore((s) => s.selectedMonth);
     const setSelectedMonth = useBudgetStore((s) => s.setSelectedMonth);
-    const monthlyPlans = useBudgetStore((s: any) => s.monthlyPlans);
+    const monthlyPlans = useBudgetStore((s) => s.monthlyPlans);
     const removeMonthlyPlan = useBudgetStore((s) => s.removeMonthlyPlan);
     const { open, onOpen, onClose } = useDisclosure();
 

@@ -2,7 +2,7 @@ import { RadioGroup, Stack, Text, Input, Checkbox } from "@chakra-ui/react";
 import { useState } from "react";
 import { applyOneMonth } from "../../utils/accountUtils";
 import { useBudgetStore } from "../../store/budgetStore";
-import { waitForIdleAndPaint } from "../../utils/appUtils";
+import { errorToMessage, waitForIdleAndPaint } from "../../utils/appUtils";
 import { startTransition } from 'react';
 import { fireToast } from "../../hooks/useFireToast";
 import { DialogModal } from "./DialogModal";
@@ -116,14 +116,14 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       const monthsApplied = targets;
       markTransactionsBudgetApplied(resolvedAccountNumber, monthsApplied);
       // Savings linking is handled once at the end (single aggregated modal).
-      // Clear any pending import savings entries for these months so they can't be processed a second time.
+      // Clear pending import savings entries for these months so they can't be processed a second time.
       clearPendingSavingsForAccountMonths?.(resolvedAccountNumber, monthsApplied);
 
       if (savingsReviewEntriesAll.length > 0) {
         await awaitSavingsLink(savingsReviewEntriesAll);
       }
-    } catch (err: any) {
-      fireToast("error", "Error applying to budget", err.message || "An error occurred while applying transactions to the budget.");
+    } catch (err: unknown) {
+      fireToast("error", "Error applying to budget", errorToMessage(err));
     }
     finally {
       

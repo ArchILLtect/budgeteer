@@ -2,6 +2,7 @@ import { Box, Heading, Flex, Button } from "@chakra-ui/react";
 import { useBudgetStore } from "../../store/budgetStore";
 import RecurringPaymentsCard from "./RecurringPaymentsCard";
 import { AppCollapsible } from "../ui/AppCollapsible";
+import type { Account } from "../../types";
 
 export default function RecurringManager() {
 
@@ -21,8 +22,8 @@ export default function RecurringManager() {
       <AppCollapsible title="Recurring Payments" mb={4} open={showRecurringTXs} onOpenChange={setShowRecurringTXs}>
         {accounts && Object.keys(accounts).length > 0 ? (
           <>
-            {Object.values(accounts).map((account: any) => (
-              <Box key={account.id} mt={4} color="fg.muted">
+            {(Object.values(accounts) as Account[]).map((account, idx) => (
+              <Box key={account.id ?? account.accountNumber ?? idx} mt={4} color="fg.muted">
                 <RecurringPaymentsCard account={account} />
               </Box>
             ))}

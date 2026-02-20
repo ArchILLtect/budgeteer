@@ -17,23 +17,23 @@ export default function SavingsLog() {
   const setShowInputs = useBudgetStore((s) => s.setShowSavingsLogInputs);
   const selectedMonth = useBudgetStore((s) => s.selectedMonth);
   const savingsGoals = useBudgetStore((s) => s.savingsGoals);
-  const savingsLogs = useBudgetStore((s: any) => s.savingsLogs);
+  const savingsLogs = useBudgetStore((s) => s.savingsLogs);
   const addSavingsLog = useBudgetStore((s) => s.addSavingsLog);
   const updateSavingsLog = useBudgetStore((s) => s.updateSavingsLog);
   const deleteSavingsEntry = useBudgetStore((s) => s.deleteSavingsEntry);
   const resetSavingsLog = useBudgetStore((s) => s.resetSavingsLog);
   const logsForMonth = savingsLogs[selectedMonth] || [];
   const [selectedGoal, setSelectedGoal] = useState(savingsGoals[0]?.id || "");
-  const [editingLogId, setEditingLogId] = useState<number | null>(null);
+  const [editingLogId, setEditingLogId] = useState<string | null>(null);
   const [editGoalId, setEditGoalId] = useState("");
   const [amount, setAmount] = useState<number | "">("");
-  const totalSavings = logsForMonth.reduce((sum: number, e: any) => sum + (e.amount || 0), 0) || 0;
+  const totalSavings = logsForMonth.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) || 0;
   const goal = savingsGoals.find((g) => g.id === selectedGoal);
   const hasSelectedGoal = !!goal;
   const logsForGoal = hasSelectedGoal
-    ? Object.values(savingsLogs).flat().filter((log: any) => log.goalId === selectedGoal)
+    ? Object.values(savingsLogs).flat().filter((log) => log.goalId === selectedGoal)
     : [];
-  const totalForGoal = hasSelectedGoal ? logsForGoal.reduce((sum: number, e: any) => sum + (e.amount || 0), 0) : 0;
+  const totalForGoal = hasSelectedGoal ? logsForGoal.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) : 0;
   const rawRemaining = hasSelectedGoal ? (goal?.target ?? 0) - totalForGoal : Infinity;
   const remaining = hasSelectedGoal
     ? Math.max(Number.isFinite(rawRemaining) ? rawRemaining : 0, 0)
@@ -55,7 +55,7 @@ export default function SavingsLog() {
   };
 
   // begin editing a specific row's goal
-  const beginEditRow = (entry: any) => {
+  const beginEditRow = (entry: (typeof logsForMonth)[number]) => {
     setEditingLogId(entry.id);
     setEditGoalId(entry.goalId || ""); // "" sentinel for no goal
   };
@@ -91,7 +91,7 @@ export default function SavingsLog() {
         ) : (
           <Box mt={6}>
             <List.Root gap={2}>
-              {logsForMonth.map((entry: any, index: number) => (
+              {logsForMonth.map((entry, index: number) => (
                 <List.Item key={entry.id ?? `${entry.date}-${entry.amount}-${index}`}>
                   <Flex justify="space-between" alignItems="center">
                     <VStack align="start" gap={0}>
@@ -215,7 +215,7 @@ export default function SavingsLog() {
                 ? (goalComplete
                   ? `✅ Goal complete! HINT: You may need to add a new savings goal to continue saving.` //TODO: Make HINT display on new line.
                   : `⚠️ $${(Number.isFinite(remaining) ? remaining : 0).toLocaleString()} remaining to complete "${goal?.name}"`)
-                : `No goal selected — this entry won't count toward any goal.`}
+                : `No goal selected — this entry won't count towards a goal.`}
             </Text>
           </Center>
           <hr style={{marginTop: 15 + "px", marginBottom: 15 + "px"}}/>

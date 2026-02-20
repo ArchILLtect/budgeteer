@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useBudgetStore } from '../../store/budgetStore'
-import { Box, Flex, Heading, HStack, Tabs, Stack, Text, Stat,
-    StatGroup, RadioGroup, Button, Icon, 
-    Field} from '@chakra-ui/react'
+import { Box, Flex, Heading, HStack, Tabs, Stack, Text, Stat, StatGroup, RadioGroup, Button, Icon, Field} from '@chakra-ui/react'
 import AddFixedIncomeSource from '../../components/planner/AddFixedIncomeSource'
 import IncomeSourceForm from '../../components/forms/IncomeSourceForm'
 import { MdInfo } from "react-icons/md";
@@ -27,9 +25,9 @@ const FilingStatusOptions = [
 
 export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: IncomeCalculatorProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const scenarios = useBudgetStore((s: any) => s.scenarios)
-  const currentScenario = useBudgetStore((s: any) => s.currentScenario)
-  const updateScenario = useBudgetStore((s: any) => s.updateScenario)
+  const scenarios = useBudgetStore((s) => s.scenarios)
+  const currentScenario = useBudgetStore((s) => s.currentScenario)
+  const updateScenario = useBudgetStore((s) => s.updateScenario)
   const sources = useBudgetStore((s) => s.incomeSources)
   const showIncomeInputs = useBudgetStore((s) => s.showIncomeInputs)
   const setShowIncomeInputs = useBudgetStore((s) => s.setShowIncomeInputs)
@@ -40,10 +38,9 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
   const setFilingStatus = useBudgetStore((s) => s.setFilingStatus)
   const grossTotal = useBudgetStore((s) => s.getTotalGrossIncome());
   const monthlyActuals = useBudgetStore((s) => s.monthlyActuals[selectedMonth]);
-  const trackerIncomeTotal = useBudgetStore((s: any) => {
-    const actualSources = s.monthlyActuals[selectedMonth]?.actualFixedIncomeSources;
-    if (!Array.isArray(actualSources)) return 0;
-    return actualSources.reduce((sum: number, src: any) => sum + (Number(src?.amount) || 0), 0);
+  const trackerIncomeTotal = useBudgetStore((s) => {
+    const actualSources = s.monthlyActuals[selectedMonth]?.actualFixedIncomeSources ?? [];
+    return actualSources.reduce((sum, src) => sum + (Number(src.amount) || 0), 0);
   });
   const overiddenIncomeTotal = useBudgetStore(
     (s) => s.monthlyActuals[selectedMonth]?.overiddenIncomeTotal

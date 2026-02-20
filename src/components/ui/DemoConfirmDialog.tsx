@@ -66,7 +66,7 @@ export function DemoConfirmDialog({
         await onConfirm();
       }}
       onCancel={() => {
-        // caller controls any additional cleanup
+        // caller controls additional cleanup
       }}
     />
   );

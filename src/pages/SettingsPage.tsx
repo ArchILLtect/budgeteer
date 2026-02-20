@@ -38,6 +38,15 @@ import {
 import { AppCollapsible } from "../components/ui/AppCollapsible";
 import { MdAdd, MdDelete } from "react-icons/md";
 
+type ImportSettingsLocal = {
+  importUndoWindowMinutes: number;
+  importHistoryMaxEntries: number;
+  importHistoryMaxAgeDays: number;
+  stagedAutoExpireDays: number;
+  streamingAutoLineThreshold: number;
+  streamingAutoByteThreshold: number;
+};
+
 export default function SettingsPage() {
 
   // Subscribe to primitives individually to avoid new object identity every render
@@ -52,7 +61,7 @@ export default function SettingsPage() {
   const updateImportSettings = useBudgetStore(s => s.updateImportSettings);
   const pruneImportHistory = useBudgetStore(s => s.pruneImportHistory);
   const expireOldStagedTransactions = useBudgetStore(s => s.expireOldStagedTransactions);
-  const [local, setLocal] = useState({
+  const [local, setLocal] = useState<ImportSettingsLocal>({
     importUndoWindowMinutes: importUndoWindowMinutes ?? 30,
     importHistoryMaxEntries: importHistoryMaxEntries ?? 30,
     importHistoryMaxAgeDays: importHistoryMaxAgeDays ?? 30,
@@ -63,17 +72,25 @@ export default function SettingsPage() {
 
     // Sync from store if external changes occur (e.g., another tab or reset) without causing loops
   useEffect(() => {
-    setLocal((prev: any) => {
-      const next = {
+    setLocal((prev) => {
+      const next: ImportSettingsLocal = {
         importUndoWindowMinutes: importUndoWindowMinutes ?? prev.importUndoWindowMinutes,
         importHistoryMaxEntries: importHistoryMaxEntries ?? prev.importHistoryMaxEntries,
         importHistoryMaxAgeDays: importHistoryMaxAgeDays ?? prev.importHistoryMaxAgeDays,
         stagedAutoExpireDays: stagedAutoExpireDays ?? prev.stagedAutoExpireDays,
         streamingAutoLineThreshold: streamingAutoLineThreshold ?? prev.streamingAutoLineThreshold,
         streamingAutoByteThreshold: streamingAutoByteThreshold ?? prev.streamingAutoByteThreshold,
-      } as any;
-      // shallow compare
-      const same = Object.keys(next).every((k) => next[k] === prev[k]);
+      };
+
+      const keys: Array<keyof ImportSettingsLocal> = [
+        "importUndoWindowMinutes",
+        "importHistoryMaxEntries",
+        "importHistoryMaxAgeDays",
+        "stagedAutoExpireDays",
+        "streamingAutoLineThreshold",
+        "streamingAutoByteThreshold",
+      ];
+      const same = keys.every((k) => next[k] === prev[k]);
       return same ? prev : next;
     });
   }, [importUndoWindowMinutes, importHistoryMaxEntries, importHistoryMaxAgeDays, stagedAutoExpireDays, streamingAutoLineThreshold, streamingAutoByteThreshold]);
@@ -397,7 +414,7 @@ export default function SettingsPage() {
           <Text color="fg.muted" fontSize="sm">
             {isDemoIdentity
               ? "Manage demo-marked sample data. These actions only affect data marked as demo."
-              : "Your account can start with sample data (marked as demo). You can remove it at any time."}
+              : "Your account can start with sample data (marked as demo). You can remove it when desired."}
           </Text>
 
           {!isDemoIdentity ? (
@@ -847,7 +864,7 @@ export default function SettingsPage() {
                   >
                     <NumberInput.Input min={500} max={200000} step={100} />
                   </NumberInput.Root>
-                    <Text fontSize='xs' color='fg.muted'>If a CSV exceeds this many lines, streaming parser auto-enables.</Text>
+                    <Text fontSize='xs' color='fg.muted'>If a CSV exceeds this number of lines, streaming parser auto-enables.</Text>
               </Field.Root>
               <Field.Root>
                 <Field.Label>Streaming Auto Size Threshold (KB)</Field.Label>

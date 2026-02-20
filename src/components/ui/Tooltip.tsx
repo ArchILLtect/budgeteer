@@ -4,12 +4,12 @@ import * as React from "react"
 import type { Placement } from "@floating-ui/react-dom";
 
 export interface TooltipProps extends ChakraTooltip.RootProps {
-  p?: number | string
-  bg?: string
+  p?: ChakraTooltip.ContentProps["p"]
+  bg?: ChakraTooltip.ContentProps["bg"]
   placement?: Placement
-  rounded?: string | number
+  rounded?: ChakraTooltip.ContentProps["rounded"]
   // Legacy alias; prefer `bg`
-  colorScheme?: string
+  colorScheme?: ChakraTooltip.ContentProps["bg"]
   showArrow?: boolean
   portalled?: boolean
   portalRef?: React.RefObject<HTMLElement | null>
@@ -40,14 +40,14 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
     if (disabled) return children
 
     const tooltipBg = bg ?? colorScheme
-    const finalBg = (contentProps?.bg ?? tooltipBg ?? "gray.900") as unknown as string;
+    const finalBg: ChakraTooltip.ContentProps["bg"] = contentProps?.bg ?? tooltipBg ?? "gray.900"
 
     const positioning = { ...(positioningProp ?? {}), placement };
 
-    const mergedCss = {
-      ...((contentProps?.css as Record<string, unknown> | undefined) ?? {}),
+    const mergedCss: ChakraTooltip.ContentProps["css"] = {
+      ...(contentProps?.css ?? {}),
       "--tooltip-bg": finalBg,
-    } as unknown as ChakraTooltip.ContentProps["css"];
+    }
 
     return (
       <ChakraTooltip.Root {...rest} positioning={positioning}>

@@ -78,7 +78,8 @@ export default function ImportHistoryPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- nowTick is a deliberate time invalidation key
   }, [importHistory, accounts, filterAccount, filterStatus, nowTick, getImportSessionRuntime]) as ImportHistoryRow[];
 
-  const anySelected = Object.values(selected).some(v => v);
+  const someSelected = Object.values(selected).some(v => v);
+
   const selectedEntries = rows.filter(r => selected[r.entry.sessionId]);
 
   const selectByStatus = (status: Status) => {
@@ -180,7 +181,7 @@ export default function ImportHistoryPage() {
       </Flex>
 
       <Flex mb={3} gap={2} wrap='wrap' align='center'>
-        {anySelected ? (
+        {someSelected ? (
           <>
             <Text fontSize='sm'>{selectedEntries.length} selected</Text>
             <Button size='xs' onClick={doUndoSelected} colorScheme='red' variant='outline'>Undo</Button>
@@ -395,7 +396,7 @@ export default function ImportHistoryPage() {
         }}
         body={
           <Text fontSize="sm">
-            This permanently deletes all transactions imported in this session and removes any Tracker actuals/savings logs created when you applied them.
+            This permanently deletes all transactions imported in this session and removes all Tracker actuals/savings logs created when you applied them.
             <br />
             This action is not reversible.
           </Text>

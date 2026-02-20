@@ -11,11 +11,11 @@ const preloadSyncModal = () => import('../components/ui/SyncAccountsModal');
 export default function AccountsTracker() {
 
   const accounts = useBudgetStore((s) => s.accounts);
-  const clearAllAccounts = useBudgetStore((s: any) => s.clearAllAccounts);
-  const clearAllAccountMappings = useBudgetStore((s: any) => s.clearAllAccountMappings);
-  const clearAllImportData = useBudgetStore((s: any) => s.clearAllImportData);
-  const resetMonthlyActuals = useBudgetStore((s: any) => s.resetMonthlyActuals);
-  const resetSavingsLogs = useBudgetStore((s: any) => s.resetSavingsLogs);
+  const clearAllAccounts = useBudgetStore((s) => s.clearAllAccounts);
+  const clearAllAccountMappings = useBudgetStore((s) => s.clearAllAccountMappings);
+  const clearAllImportData = useBudgetStore((s) => s.clearAllImportData);
+  const resetMonthlyActuals = useBudgetStore((s) => s.resetMonthlyActuals);
+  const resetSavingsLogs = useBudgetStore((s) => s.resetSavingsLogs);
   const syncModal = useDisclosure();
   const isDev = import.meta.env.DEV;
   

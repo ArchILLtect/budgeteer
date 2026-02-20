@@ -40,8 +40,8 @@ export default function Navigation({ user, userUI }: NavigationProps) {
   const signedIn = Boolean(username);
   const isAdmin = role === "Admin";
   const { isDemo } = useDemoMode(signedIn);
-  const demoTourDisabled = useDemoTourStore((s: any) => s.disabled);
-  const openDemoTour = useDemoTourStore((s: any) => s.openTour);
+  const demoTourDisabled = useDemoTourStore((s) => s.disabled);
+  const openDemoTour = useDemoTourStore((s) => s.openTour);
 
   const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
 

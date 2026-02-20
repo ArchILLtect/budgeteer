@@ -6,22 +6,26 @@ import IncomeCalculator from '../planner/IncomeCalculator';
 import { AppCollapsible } from '../ui/AppCollapsible';
 import { formatCurrency } from '../../utils/formatters';
 import { getYearFromMonthKey } from '../../services/dateTime';
+import type { PlannerSlice } from '../../store/slices/plannerSlice';
+
+type MonthlyActual = PlannerSlice["monthlyActuals"][string];
+type SavingsLogEntry = PlannerSlice["savingsLogs"][string][number];
 
 export default function MonthlyActualSummary() {
-  const selectedMonth = useBudgetStore((s: any) => s.selectedMonth);
-  const showActualInputs = useBudgetStore((s: any) => s.showActualInputs);
-  const setShowActualInputs = useBudgetStore((s: any) => s.setShowActualInputs);
-  const plan = useBudgetStore((s: any) => s.monthlyPlans[selectedMonth]);
-  const actual = useBudgetStore((s: any) => s.monthlyActuals[selectedMonth]);
-  const savingsSoFar = useBudgetStore((s: any) => s.getSavingsForMonth(selectedMonth));
-  const overiddenIncomeTotal = useBudgetStore((s: any) => s.monthlyActuals[selectedMonth]?.overiddenIncomeTotal);
-  const overiddenExpenseTotal = useBudgetStore((s: any) => s.monthlyActuals[selectedMonth]?.overiddenExpenseTotal);
+  const selectedMonth = useBudgetStore((s) => s.selectedMonth);
+  const showActualInputs = useBudgetStore((s) => s.showActualInputs);
+  const setShowActualInputs = useBudgetStore((s) => s.setShowActualInputs);
+  const plan = useBudgetStore((s) => s.monthlyPlans[selectedMonth]);
+  const actual = useBudgetStore((s) => s.monthlyActuals[selectedMonth]);
+  const savingsSoFar = useBudgetStore((s) => s.getSavingsForMonth(selectedMonth));
+  const overiddenIncomeTotal = useBudgetStore((s) => s.monthlyActuals[selectedMonth]?.overiddenIncomeTotal);
+  const overiddenExpenseTotal = useBudgetStore((s) => s.monthlyActuals[selectedMonth]?.overiddenExpenseTotal);
   const calculateWithOverride = (overrideValue: number | undefined, fallbackFn: () => number) =>
       overrideValue != null && overrideValue >= 1 ? overrideValue : fallbackFn();
   const netIncome = calculateWithOverride(overiddenIncomeTotal, () =>
-      actual?.actualFixedIncomeSources?.reduce((sum: number, e: any) => sum + (e.amount || 0), 0) || 0);
+    actual?.actualFixedIncomeSources?.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) || 0);
   const totalExpenses = calculateWithOverride(overiddenExpenseTotal, () =>
-      actual?.actualExpenses?.reduce((sum: number, e: any) => sum + (e.amount || 0), 0) || 0);
+    actual?.actualExpenses?.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) || 0);
   const savings = actual?.actualSavings || savingsSoFar || 0;
   const leftover = netIncome - totalExpenses - savings;
   const rawPercentComplete = plan?.totalSavings ? (Number(savings) / Number(plan.totalSavings)) * 100 : 0;
@@ -32,33 +36,25 @@ export default function MonthlyActualSummary() {
   const savingsLogs = useBudgetStore((s) => s.savingsLogs);
 
   const selectedYear = getYearFromMonthKey(selectedMonth) ?? (selectedMonth || '').slice(0, 4);
-  // Get all monthlyActual objects for the selected year
-  const actualsThisYear = Object.fromEntries(
-    Object.entries(actuals).filter(([key]) => key.startsWith(selectedYear))
+  const actualEntries = (Object.entries(actuals) as Array<[string, MonthlyActual]>).filter(([key]) =>
+    key.startsWith(selectedYear)
   );
-  // Get all savingsLogs objects for the selected year
-  const savingsLogsThisYear = Object.fromEntries(
-    Object.entries(savingsLogs).filter(([key]) => key.startsWith(selectedYear))
+
+  const savingsLogEntries = (Object.entries(savingsLogs) as Array<[string, SavingsLogEntry[]]>).filter(([key]) =>
+    key.startsWith(selectedYear)
   );
-  // Get the total actual income for the selected year summed from each month
-  const totalNetIncome = Object.values(actualsThisYear)
-    .reduce((sum, month) => sum + (month.actualTotalNetIncome || 0), 0);
-  // Get the total actual expenses for the selected year summed from each month
-  const totalExpensesThisYear = Object.values(actualsThisYear)
-    .reduce((sum, month) => {
-      const monthTotal = month.actualExpenses?.reduce((mSum, expense) => {
-        return mSum + (expense.amount || 0);
-      }, 0) || 0;
-      return sum + monthTotal;
-    }, 0);
-  // Get the total actual expenses for the selected year summed from each month
-    const totalSavingsThisYear = Object.values(savingsLogsThisYear)
-      .reduce((sum: number, month: any) => {
-        const monthTotal = month.reduce((mSum: number, log: any) => {
-          return mSum + (log.amount || 0);
-        }, 0) || 0;
-        return sum + monthTotal;
-      }, 0);
+
+  const totalNetIncome = actualEntries.reduce((sum, [, month]) => sum + (month.actualTotalNetIncome || 0), 0);
+
+  const totalExpensesThisYear = actualEntries.reduce((sum, [, month]) => {
+    const monthTotal = month.actualExpenses?.reduce((mSum, expense) => mSum + (expense.amount || 0), 0) || 0;
+    return sum + monthTotal;
+  }, 0);
+
+  const totalSavingsThisYear = savingsLogEntries.reduce((sum, [, monthLogs]) => {
+    const monthTotal = monthLogs.reduce((mSum, log) => mSum + (log.amount || 0), 0);
+    return sum + monthTotal;
+  }, 0);
 
   return (
     <Box p={4} borderBottomRadius="lg" boxShadow="md" bg="bg" borderWidth={2}>
@@ -108,7 +104,7 @@ export default function MonthlyActualSummary() {
         </StatGroup>
       </Box>
 
-      {plan?.totalSavings > 0 ? (
+      {(plan?.totalSavings ?? 0) > 0 ? (
         <Box mt={4}>
           <Text fontSize="sm" color="fg.muted">Savings progress toward this month's savings plan:</Text>
           <Progress.Root value={percentComplete} size="sm" colorScheme="green" mt={1} borderRadius="md">
@@ -116,7 +112,7 @@ export default function MonthlyActualSummary() {
               <Progress.Range borderRadius="md" />
             </Progress.Track>
           </Progress.Root>
-          <Text fontSize="xs" mt={1}>({formatCurrency(savings)} of {formatCurrency(plan.totalSavings)} planned)</Text>
+          <Text fontSize="xs" mt={1}>({formatCurrency(savings)} of {formatCurrency(plan?.totalSavings ?? 0)} planned)</Text>
         </Box>
       ) : ('')}
       <Heading size="md" my={3}>{selectedYear} Summary</Heading>

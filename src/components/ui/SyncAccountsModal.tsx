@@ -6,6 +6,7 @@ import { analyzeImport } from "../../ingest/analyzeImport";
 import IngestionMetricsPanel from "../accounts/IngestionMetricsPanel";
 import { fireToast } from "../../hooks/useFireToast";
 import type { ImportPlan } from "../../ingest/importPlan";
+import type { AccountMapping, Transaction } from "../../types";
 
 // Migration Notes:
 // This modal now leverages the ingestion pipeline (analyzeImport + commitImportPlan) for each account present in the CSV.
@@ -23,6 +24,23 @@ type SyncAccountsModalProps = {
 
 type syncFileTypeMode = "csv" | "ofx" | "plaid";
 
+type Step = "select" | "mapping" | "accounts" | "transactions";
+
+type CsvRow = Record<string, unknown>;
+
+type IngestionResult = { accountNumber: string; plan: ImportPlan };
+
+type AggregateTelemetry = {
+  accounts: number;
+  rows: number;
+  newCount: number;
+  dupesExisting: number;
+  dupesIntraFile: number;
+  savings: number;
+};
+
+type AccountInput = Partial<AccountMapping>;
+
 const syncFileTypeOptions = [
     { value: "csv", label: "CSV File" },
     { value: "ofx", label: "OFX File (Coming Soon)" },
@@ -30,31 +48,31 @@ const syncFileTypeOptions = [
   ];
 
 export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModalProps) {
-  const accountMappings = useBudgetStore((s: any) => s.accountMappings);
-  const accounts = useBudgetStore((s: any) => s.accounts);
-  const setAccountMapping = useBudgetStore((s: any) => s.setAccountMapping);
-  const addOrUpdateAccount = useBudgetStore((s: any) => s.addOrUpdateAccount);
-  const commitImportPlan = useBudgetStore((s: any) => s.commitImportPlan);
-  const streamingAutoByteThreshold = useBudgetStore((s: any) => s.streamingAutoByteThreshold);
+  const accountMappings = useBudgetStore((s) => s.accountMappings);
+  const accounts = useBudgetStore((s) => s.accounts);
+  const setAccountMapping = useBudgetStore((s) => s.setAccountMapping);
+  const addOrUpdateAccount = useBudgetStore((s) => s.addOrUpdateAccount);
+  const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
+  const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
 
-  const [sourceType, setSourceType] = useState("csv");
-  const [csvFile, setCsvFile] = useState<any>(null);
-  const [ofxFile, setOfxFile] = useState<any>(null);
-  const [step, setStep] = useState<'select' | 'mapping' | 'accounts' | 'transactions'>('select');
+  const [sourceType, setSourceType] = useState<syncFileTypeMode>("csv");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [ofxFile, setOfxFile] = useState<File | null>(null);
+  const [step, setStep] = useState<Step>("select");
   const [pendingMappings, setPendingMappings] = useState<string[]>([]);
-  const [pendingData, setPendingData] = useState<any[]>([]); // original parsed rows awaiting mapping
+  const [pendingData, setPendingData] = useState<CsvRow[]>([]); // original parsed rows awaiting mapping
   const [foundAccounts, setFoundAccounts] = useState<string[]>([]);
-  const [accountInputs, setAccountInputs] = useState<any>({});
+  const [accountInputs, setAccountInputs] = useState<Record<string, AccountInput>>({});
   const [ingesting, setIngesting] = useState(false);
-  const [ingestionResults, setIngestionResults] = useState<Array<{ accountNumber: string; plan: ImportPlan }>>([]); // [{ accountNumber, plan }]
-  const [telemetry, setTelemetry] = useState<any>(null); // aggregate
+  const [ingestionResults, setIngestionResults] = useState<IngestionResult[]>([]); // [{ accountNumber, plan }]
+  const [telemetry, setTelemetry] = useState<AggregateTelemetry | null>(null); // aggregate
   const [metricsAccount, setMetricsAccount] = useState('');
   const setLastIngestionTelemetry = useBudgetStore(s => s.setLastIngestionTelemetry);
   const [dryRunStarted, setDryRunStarted] = useState(false);
 
   const primaryActionButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const fileTypes = ["csv", "ofx"];
+  const fileTypes: syncFileTypeMode[] = ["csv", "ofx"];
   const isDemo = useBudgetStore((s) => s.isDemoUser);
 
   // Keep latest store values available to async callbacks without reach-through reads.
@@ -91,10 +109,10 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (sourceType === "csv") {
-      setCsvFile(e.target.files?.[0]);
+      setCsvFile(e.target.files?.[0] ?? null);
       setOfxFile(null);
     } else if (sourceType === "ofx") {
-      setOfxFile(e.target.files?.[0]);
+      setOfxFile(e.target.files?.[0] ?? null);
       setCsvFile(null);
     }
   };
@@ -106,11 +124,15 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     }
 
     if (sourceType === "csv") {
+      if (!csvFile) {
+        fireToast("warning", "CSV Required", "Please select a CSV file before importing.");
+        return;
+      }
       Papa.parse(csvFile, {
         header: true,
         skipEmptyLines: true,
         worker: (csvFile?.size || 0) > 500_000,
-        complete: (results) => {
+        complete: (results: Papa.ParseResult<CsvRow>) => {
           const data = results.data;
 
           if (!Array.isArray(data) || data.length === 0) {
@@ -119,7 +141,13 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           }
 
           const accountNumbers = new Set(
-            data.map((row: any) => row.AccountNumber?.trim()).filter(Boolean)
+            data
+              .map((row) => {
+                const v = row?.AccountNumber ?? row?.accountNumber;
+                const s = typeof v === 'string' ? v : String(v ?? '');
+                return s.trim();
+              })
+              .filter(Boolean)
           );
 
           const accountsList = Array.from(accountNumbers);
@@ -146,6 +174,10 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         },
       );
     } else if (sourceType === "ofx") {
+      if (!ofxFile) {
+        fireToast("warning", "OFX Required", "Please select an OFX file before importing.");
+        return;
+      }
       fireToast("warning", "OFX File Import Coming Soon", "Please use CSV for now.");
     }
   };
@@ -153,7 +185,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const createOrUpdateAccounts = (accountNumbers: string[]) => {
     const now = new Date().toISOString();
     for (const accountNumber of accountNumbers) {
-      const mapping: any = accountMappingsRef.current?.[accountNumber];
+      const mapping = accountMappingsRef.current?.[accountNumber] as AccountMapping | undefined;
       const existingId = accountsRef.current?.[accountNumber]?.id;
       addOrUpdateAccountRef.current(accountNumber, {
         accountNumber,
@@ -201,7 +233,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const onDialogKeyDown: React.KeyboardEventHandler = (e) => {
     if (!enableEnterToProceed) return;
     if (e.key !== "Enter") return;
-    if ((e as any).isComposing) return;
+    if (e.nativeEvent.isComposing) return;
 
     const target = e.target as HTMLElement | null;
     if (!target) return;
@@ -242,22 +274,23 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   }, [step, dryRunStarted, shouldAutoRunDryRun]);
 
   // Ingestion migration implementation
-  const importCsvData: any = async (data: any[]) => {
+  const importCsvData = async (data: CsvRow[]) => {
     setIngesting(true);
     setIngestionResults([]);
     setTelemetry(null);
     try {
       // Group raw rows by AccountNumber
-      const groups = data.reduce((acc, row) => {
-        const acct = (row.AccountNumber || row.accountNumber || '').trim();
+      const groups = data.reduce<Record<string, CsvRow[]>>((acc, row) => {
+        const v = row?.AccountNumber ?? row?.accountNumber;
+        const acct = (typeof v === 'string' ? v : String(v ?? '')).trim();
         if (!acct) return acc;
         if (!acc[acct]) acc[acct] = [];
         acc[acct].push(row);
         return acc;
-      }, {} as Record<string, any[]>);
+      }, {});
 
-      const results: any = [];
-      const aggregate: any = {
+      const results: IngestionResult[] = [];
+      const aggregate: AggregateTelemetry = {
         accounts: 0,
         rows: 0,
         newCount: 0,
@@ -271,14 +304,14 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         aggregate.accounts++;
         aggregate.rows += rows.length;
         // Build a parsedRows structure that analyzeImport understands: each row mapped to expected normalizeRow fields
-        const adaptedRows = rows.map((r: any, idx: number) => ({
+        const adaptedRows = rows.map((r, idx) => ({
           date: r['Posted Date'] || r['Date'] || r.date,
           Description: r.Description || r.description || r.Memo,
           Amount: r.Amount ?? r.amount ?? r.Amt ?? r.amt,
           Category: r.Category || r.category,
           __line: idx + 1,
         }));
-        const existing: any[] = accountsRef.current?.[acctNumber]?.transactions || [];
+        const existing = (accountsRef.current?.[acctNumber]?.transactions ?? []) as Transaction[];
 
         const plan = await analyzeImport({
           parsedRows: { rows: adaptedRows, errors: [] },
@@ -296,8 +329,9 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
       if (results.length && !metricsAccount) setMetricsAccount(results[0].accountNumber);
       setTelemetry(aggregate);
       fireToast("info", "Dry run complete", `Accounts: ${aggregate.accounts} New: ${aggregate.newCount} DupEx: ${aggregate.dupesExisting} DupIntra: ${aggregate.dupesIntraFile}`);
-    } catch (e: any) {
-      fireToast("error", "Ingestion failed", e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      fireToast("error", "Ingestion failed", msg);
     } finally {
       setIngesting(false);
     }
@@ -312,7 +346,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         commitImportPlan(plan);
 
         // Update account metadata (label/institution) if newly mapped
-        const mapping: any = accountMappingsRef.current?.[accountNumber];
+        const mapping = accountMappingsRef.current?.[accountNumber] as AccountMapping | undefined;
         if (mapping) {
           const existingId = accountsRef.current?.[accountNumber]?.id;
           addOrUpdateAccountRef.current(accountNumber, {
@@ -328,7 +362,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         fireToast("info", "Import Applied (Staged)", `Account ${accountNumber}: ${plan.stats.newCount} new transactions.`)
 
         /* TODO(P3): Re-enable per-account undo to staged state; requires plumbing undoStagedImport to
-        // accept an accountNumber + sessionId and revert just that slice of the patch, leaving any other
+        // accept an accountNumber + sessionId and revert just that slice of the patch, leaving all other
         // accounts' transactions intact. For now, users can apply all then undo from the history tab if needed. 
           render: ({ onClose }) => (
             <Box p={3} bg='gray.800' color='white' borderRadius='md' boxShadow='md'>
@@ -340,18 +374,19 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
       if (telemetry) {
         setLastIngestionTelemetry({
           at: new Date().toISOString(),
-          accountNumber: telemetry.accounts > 1 ? `${telemetry.accounts} accounts` : ingestionResults[0]?.accountNumber,
+          accountNumber: telemetry.accounts > 1 ? `${telemetry.accounts} accounts` : (ingestionResults[0]?.accountNumber || ''),
           newCount: telemetry.newCount,
           dupesExisting: telemetry.dupesExisting,
           dupesIntraFile: telemetry.dupesIntraFile,
-          categorySources: null,
+          categorySources: undefined,
         });
       }
       fireToast("success", "Import applied (staged)", "Transactions are staged until you Apply to Budget.");
       onClose();
       resetState();
-    } catch (e: any) {
-      fireToast("error", "Apply failed", e.message);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      fireToast("error", "Apply failed", msg);
     }
   };
 
@@ -416,7 +451,9 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                   value={sourceType}
                   onValueChange={(details) => {
                     if (!details.value) return;
-                    setSourceType(details.value);
+                    if (details.value === 'csv' || details.value === 'ofx' || details.value === 'plaid') {
+                      setSourceType(details.value);
+                    }
                     setCsvFile(null);
                     setOfxFile(null);
                   }}
@@ -483,7 +520,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 </Text>
                 <Box maxH='160px' overflow='auto' borderWidth='1px' borderRadius='md' p={2} fontSize='sm'>
                   {foundAccounts.map((acctNum) => {
-                    const mapping: any = accountMappingsRef.current?.[acctNum];
+                    const mapping = accountMappingsRef.current?.[acctNum] as AccountMapping | undefined;
                     return (
                       <Box key={acctNum} mb={2}>
                         <Text fontWeight='bold'>{acctNum}</Text>
@@ -594,7 +631,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 <Stat.Root><Stat.Label>Savings</Stat.Label><Stat.ValueText fontSize='md'>{telemetry?.savings}</Stat.ValueText></Stat.Root>
               </SimpleGrid>
               <Box maxH='140px' overflow='auto' borderWidth='1px' borderRadius='md' p={2} fontSize='11px'>
-                {ingestionResults.map(({ accountNumber, plan }: any) => (
+                {ingestionResults.map(({ accountNumber, plan }) => (
                   <Box key={accountNumber} mb={2}>
                     <Text fontWeight='bold'>{accountNumber}</Text>
                     <Text>New: {plan.stats.newCount} | DupEx: {plan.stats.dupesExisting} | DupIntra: {plan.stats.dupesIntraFile} | EarlySC: {plan.stats.earlyShortCircuits?.total}</Text>
@@ -616,16 +653,22 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                   const s = sel.plan.stats;
                   const metrics = {
                     ingestMs: s.ingestMs,
-                    parseMs: null,
+                    parseMs: 0,
                     processMs: s.processMs,
                     totalMs: s.ingestMs,
                     rowsProcessed: s.rowsProcessed,
                     rowsPerSec: s.rowsPerSec,
                     duplicatesRatio: s.duplicatesRatio,
                     stageTimings: s.stageTimings,
-                    earlyShortCircuits: s.earlyShortCircuits,
+                    earlyShortCircuits: {
+                      total: s.earlyShortCircuits.total,
+                      byStage: {
+                        existing: s.earlyShortCircuits.existing,
+                        intraFile: s.earlyShortCircuits.intraFile,
+                      },
+                    },
                   };
-                  return <IngestionMetricsPanel metrics={metrics as any} sessionId={s.importSessionId} />;
+                  return <IngestionMetricsPanel metrics={metrics} sessionId={s.importSessionId} />;
                 })()}
               </Box>
             </Box>

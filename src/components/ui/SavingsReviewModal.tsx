@@ -5,27 +5,10 @@ import { AppSelect } from './AppSelect';
 import { DialogModal } from './DialogModal';
 import { normalizeMoney } from "../../services/inputNormalization";
 
-type SavingsReviewEntry = {
-  id: string;
-  date: string;
-  name: string;
-  amount: number;
-  month: string;
-  createdAt?: string;
-  importSessionId?: string;
-};
-
-type SavingsGoal = {
-  id: string;
-  name: string;
-  target?: number;
-  createdFromImportSessionId?: string;
-};
-
 export default function SavingsReviewModal() {
-  const savingsGoals = useBudgetStore((s) => s.savingsGoals) as SavingsGoal[];
+  const savingsGoals = useBudgetStore((s) => s.savingsGoals);
   const addSavingsGoal = useBudgetStore((s) => s.addSavingsGoal);
-  const queue = useBudgetStore((s) => s.savingsReviewQueue) as SavingsReviewEntry[];
+  const queue = useBudgetStore((s) => s.savingsReviewQueue);
   const addSavingsLog = useBudgetStore((s) => s.addSavingsLog);
   const isOpen = useBudgetStore((s) => s.isSavingsModalOpen);
   const setIsOpen = useBudgetStore((s) => s.setSavingsModalOpen);
@@ -36,7 +19,8 @@ export default function SavingsReviewModal() {
   const [selectedGoals, setSelectedGoals] = useState<{ [key: string]: string }>({});
   // Track which entries are creating a new goal
   const [isCreating, setIsCreating] = useState<{ [key: string]: boolean }>({});
-  const isAnyCreating = Object.values(isCreating).some(Boolean);
+  // Determine if an entry is currently in create mode
+  const isEntryCreating = Object.values(isCreating).some(Boolean);
   // Track the text input for new goal names
   const [newGoalNames, setNewGoalNames] = useState<Record<string, { name?: string; target?: string }>>({});
 
@@ -120,7 +104,7 @@ export default function SavingsReviewModal() {
       acceptColorPalette='blue'
       acceptLabel='Confirm'
       onAccept={handleSubmit}
-      acceptDisabled={isAnyCreating}
+      acceptDisabled={isEntryCreating}
       body={
         <VStack align="stretch" gap={4}>
           {queue.map((entry) => (

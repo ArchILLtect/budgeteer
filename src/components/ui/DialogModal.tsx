@@ -116,7 +116,7 @@ export const DialogModal = ({
   const onDialogKeyDown: React.KeyboardEventHandler = (e) => {
     if ((enterKeyAction ?? "none") === "none") return;
     if (e.key !== "Enter") return;
-    if ((e as any).isComposing) return;
+    if (e.nativeEvent.isComposing) return;
 
     const target = e.target as HTMLElement | null;
     if (!target) return;

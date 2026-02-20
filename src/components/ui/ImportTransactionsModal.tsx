@@ -8,6 +8,45 @@ import IngestionMetricsPanel from '../accounts/IngestionMetricsPanel';
 import { fireToast } from '../../hooks/useFireToast';
 import { AppSelect } from './AppSelect';
 import type { ImportPlan } from '../../ingest/importPlan';
+import type { Transaction } from '../../types';
+import type {
+  AcceptedTxnPreview,
+  DuplicateSample,
+  IngestionError,
+  IngestionStats,
+  SavingsQueueEntry,
+} from '../../ingest/importPlan';
+
+type ImportDryRunResult = {
+  plan: ImportPlan;
+  stats: IngestionStats;
+  errors: IngestionError[];
+  duplicatesSample: DuplicateSample[];
+  acceptedTxns: AcceptedTxnPreview[];
+  savingsQueue: SavingsQueueEntry[];
+  importSessionId: string;
+};
+
+type Timing = {
+  parseMs: number | null;
+  ingestMs: number | null;
+  totalMs: number | null;
+};
+
+type ParsedRowsContainer = {
+  rows: unknown[];
+  errors: unknown[];
+};
+
+function errorToMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string') return msg;
+  }
+  if (typeof err === 'string') return err;
+  return 'Unknown error';
+}
 
 
 type ImportTransactionsModalProps = {
@@ -19,20 +58,20 @@ type ImportTransactionsModalProps = {
  * Provides dry-run ingestion, duplicate breakdown, manifest warning, preview & patch apply.
  */
 export default function ImportTransactionsModal({ isOpen, onClose }: ImportTransactionsModalProps) {
-  const accounts = useBudgetStore((s: any) => s.accounts);
-  const importManifests = useBudgetStore((s: any) => s.importManifests || {});
-  const registerImportManifest = useBudgetStore((s: any) => s.registerImportManifest);
-  const setLastIngestionTelemetry = useBudgetStore((s: any) => s.setLastIngestionTelemetry);
-  const lastIngestionTelemetry = useBudgetStore((s: any) => s.lastIngestionTelemetry);
-  const streamingAutoLineThreshold = useBudgetStore((s: any) => s.streamingAutoLineThreshold);
-  const streamingAutoByteThreshold = useBudgetStore((s: any) => s.streamingAutoByteThreshold);
-  const commitImportPlan = useBudgetStore((s: any) => s.commitImportPlan);
+  const accounts = useBudgetStore((s) => s.accounts);
+  const importManifests = useBudgetStore((s) => s.importManifests || {});
+  const registerImportManifest = useBudgetStore((s) => s.registerImportManifest);
+  const setLastIngestionTelemetry = useBudgetStore((s) => s.setLastIngestionTelemetry);
+  const lastIngestionTelemetry = useBudgetStore((s) => s.lastIngestionTelemetry);
+  const streamingAutoLineThreshold = useBudgetStore((s) => s.streamingAutoLineThreshold);
+  const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
+  const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
 
   const [fileName, setFileName] = useState('');
   const [fileObj, setFileObj] = useState<File | null>(null);
   const [fileText, setFileText] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
-  const [detectedAccounts, setDetectedAccounts] = useState([]);
+  const [detectedAccounts, setDetectedAccounts] = useState<string[]>([]);
   const [autoDetected, setAutoDetected] = useState(false);
   const [ingesting, setIngesting] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -44,21 +83,13 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
   const [autoStreamingReason, setAutoStreamingReason] = useState('');
   const [streamAborted, setStreamAborted] = useState(false);
   const [streamController, setStreamController] = useState<ReturnType<typeof streamParseCsv> | null>(null);
-  const [result, setResult] = useState<null | {
-    plan: ImportPlan;
-    stats: any;
-    errors: any[];
-    duplicatesSample: any[];
-    acceptedTxns: any[];
-    savingsQueue: any[];
-    importSessionId: string;
-  }>(null);
+  const [result, setResult] = useState<ImportDryRunResult | null>(null);
   const [applied, setApplied] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [totalLines, setTotalLines] = useState<number | null>(null); // for progress % estimation
   const [showErrors, setShowErrors] = useState(false);
   const [errorFilter, setErrorFilter] = useState('all'); // all | parse | normalize | duplicate
-  const [timing, setTiming] = useState({ parseMs: null, ingestMs: null, totalMs: null });
+  const [timing, setTiming] = useState<Timing>({ parseMs: null, ingestMs: null, totalMs: null });
   const exportLockRef = useRef(false);
 
   const resetState = () => {
@@ -82,14 +113,14 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
     setStreamController(null);
   };
 
-  const existingTxns = accounts[accountNumber]?.transactions || [];
+  const existingTxns = (accounts[accountNumber]?.transactions || []) as Transaction[];
 
-  const detectAccountNumbers = useCallback((csvText: string) => {
+  const detectAccountNumbers = useCallback((csvText: string): string[] => {
     try {
       const parsed = parseCsv(csvText);
       const rows = Array.isArray(parsed) ? parsed : parsed.rows; // backward compatibility
       if (!rows.length) return [];
-      const setVals = new Set();
+      const setVals = new Set<string>();
       for (let i = 0; i < rows.length && i < 800; i++) {
         const r = rows[i];
         const val = (r.AccountNumber || r.accountNumber || '').toString().trim();
@@ -129,10 +160,10 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         const text: string = (evt.target?.result as string) || '';
         const accountsFound = detectAccountNumbers(text);
         if (accountsFound.length === 1) {
-          setAccountNumber((prev: any) => prev || accountsFound[0]);
+          setAccountNumber((prev) => prev || accountsFound[0]);
           setAutoDetected(true);
         } else if (accountsFound.length > 1) {
-          setDetectedAccounts(accountsFound as any);
+          setDetectedAccounts(accountsFound);
         }
       };
       reader.readAsText(file.slice(0, 256_000));
@@ -156,10 +187,10 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         }
       } catch {/* heuristic failure ignored */}
       if (accountsFound.length === 1) {
-        setAccountNumber((prev: any) => prev || accountsFound[0]);
+        setAccountNumber((prev) => prev || accountsFound[0]);
         setAutoDetected(true);
       } else if (accountsFound.length > 1) {
-        setDetectedAccounts(accountsFound as any);
+        setDetectedAccounts(accountsFound);
       }
     };
     reader.readAsText(file);
@@ -183,7 +214,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
     setStreaming(false);
     try {
       const wallStart = (performance && performance.now) ? performance.now() : Date.now();
-      let ingestionInput: any = { fileText };
+      let ingestionInput: { fileText?: string; parsedRows?: ParsedRowsContainer } = { fileText };
       // Streaming path: parse rows first, then hand to ingestion (skip internal parse)
       if (useStreaming) {
         setStreaming(true);
@@ -192,7 +223,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         setStreamFinished(false);
         setStreamAborted(false);
         const parseStart = (performance && performance.now) ? performance.now() : Date.now();
-        const parsedRowsContainer = await new Promise((resolve, reject) => {
+        const parsedRowsContainer = await new Promise<ParsedRowsContainer>((resolve, reject) => {
           try {
             const controller = streamParseCsv(fileObj as File, {
               onRow: () => true,
@@ -210,7 +241,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                 }
               },
             });
-            setStreamController(controller as any);
+            setStreamController(controller);
           } catch (err) { reject(err); }
         });
         const parseEnd = (performance && performance.now) ? performance.now() : Date.now();
@@ -219,12 +250,13 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
           setIngesting(false);
           return; // do not proceed to ingestion
         }
-        ingestionInput = { parsedRows: parsedRowsContainer } as any;
-        setTiming((t: any) => ({ ...t, parseMs: +(parseEnd - parseStart).toFixed(2) }));
+        ingestionInput = { parsedRows: parsedRowsContainer };
+        setTiming((t) => ({ ...t, parseMs: +(parseEnd - parseStart).toFixed(2) }));
       }
 
       const plan = await analyzeImport({
-        ...(ingestionInput as any),
+        fileText: ingestionInput.fileText,
+        parsedRows: ingestionInput.parsedRows,
         accountNumber,
         existingTxns,
         yieldEvery: useStreaming ? 500 : undefined,
@@ -241,7 +273,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         });
       } catch {/* noop */}
 
-      const r = {
+      const r: ImportDryRunResult = {
         plan,
         stats: plan.stats,
         errors: plan.errors,
@@ -266,10 +298,10 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         });
       } catch {/* noop */}
       const wallEnd = (performance && performance.now) ? performance.now() : Date.now();
-      setTiming((t: any) => ({ ...t, ingestMs: r.stats.ingestMs, totalMs: +(wallEnd - wallStart).toFixed(2) }));
+      setTiming((t) => ({ ...t, ingestMs: r.stats.ingestMs, totalMs: +(wallEnd - wallStart).toFixed(2) }));
       fireToast("info", "Dry run complete", `New: ${r.stats.newCount} | DupEx: ${r.stats.dupesExisting} | DupIntra: ${r.stats.dupesIntraFile} | Ingest: ${r.stats.ingestMs}ms` + (timing.parseMs ? ` | Parse: ${timing.parseMs}ms` : ''));
-    } catch (e: any) {
-      fireToast("error", "Ingestion failed", e.message);
+    } catch (e: unknown) {
+      fireToast("error", "Ingestion failed", errorToMessage(e));
     } finally {
       setIngesting(false);
     }
@@ -292,8 +324,8 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
       if (result.savingsQueue && result.savingsQueue.length) {
         fireToast("info", "Savings deferred", `${result.savingsQueue.length} potential savings transactions will be reviewed after budget apply.`);
       }
-    } catch (e: any) {
-      fireToast("error", "Apply failed", e.message);
+    } catch (e: unknown) {
+      fireToast("error", "Apply failed", errorToMessage(e));
     }
   };
 
@@ -427,18 +459,24 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                 {/* Ingestion metrics panel */}
                 <IngestionMetricsPanel
                   metrics={(() => {
-                    if (!result?.stats) return null;
+                    if (!result?.stats) return undefined;
                     return {
                       ingestMs: result.stats.ingestMs,
-                      parseMs: timing.parseMs,
+                      parseMs: timing.parseMs ?? 0,
                       processMs: result.stats.processMs,
-                      totalMs: timing.totalMs,
+                      totalMs: timing.totalMs ?? 0,
                       rowsProcessed: result.stats.rowsProcessed,
                       rowsPerSec: result.stats.rowsPerSec,
                       duplicatesRatio: result.stats.duplicatesRatio,
                       stageTimings: result.stats.stageTimings,
-                      earlyShortCircuits: result.stats.earlyShortCircuits,
-                    } as any;
+                      earlyShortCircuits: {
+                        total: result.stats.earlyShortCircuits.total,
+                        byStage: {
+                          existing: result.stats.earlyShortCircuits.existing,
+                          intraFile: result.stats.earlyShortCircuits.intraFile,
+                        },
+                      },
+                    };
                   })()}
                   sessionId={result?.stats?.importSessionId}
                 />
@@ -452,18 +490,19 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                       <Box mt={2} mb={2}>
                         <Text fontSize="xs" fontWeight="semibold">Category Inference Sources</Text>
                         {(() => {
-                          const total: any = Object.values(result.stats.categorySources).reduce((a: any,b: any)=>a+b,0) || 1;
-                          const tooltipMap: any = {
+                          const total = Object.values(result.stats.categorySources).reduce((a, b) => a + b, 0) || 1;
+                          const tooltipMap: Record<string, string> = {
                             provided: 'Category supplied in CSV (non-uncategorized).',
                             keyword: 'Matched a configured keyword substring.',
                             regex: 'Matched a regex rule pattern.',
                             consensus: 'Assigned via vendor consensus (dominant category among labeled samples).',
                             none: 'No category inferred (remains unlabeled).'
                           };
+                          const entries = Object.entries(result.stats.categorySources) as [string, number][];
                           return (
                             <HStack gap={3} mt={1} wrap="wrap">
-                              {Object.entries(result.stats.categorySources).map(([k,v]: any) => {
-                                const pct: any = ((v/total)*100).toFixed(1);
+                              {entries.map(([k, v]) => {
+                                const pct = ((v / total) * 100).toFixed(1);
                                 return (
                                   <Badge key={k} title={tooltipMap[k] || k} colorScheme={k === 'none' ? 'gray' : (k === 'consensus' ? 'purple' : 'blue')} fontSize="0.6rem">
                                     {k}: {v} ({pct}%)
@@ -477,9 +516,16 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                     )}
                     <Text fontSize="xs" mb={2}>First 5 new transactions:</Text>
                     <Box fontFamily="mono" fontSize="10px" maxH="120px" overflowY="auto" bg="gray.800" color="green.200" p={2} borderRadius="sm">
-                      {result.acceptedTxns.slice(0,5).map((t: any) => (
-                        <Text key={t.id}>{t.date} | {(t.rawAmount ?? t.amount).toFixed(2)} | {t.type} | {t.category || '—'} | {t.description.slice(0,60)}</Text>
-                      ))}
+                      {result.acceptedTxns.slice(0, 5).map((t) => {
+                        const amount = t.rawAmount ?? t.amount;
+                        const amountNum = typeof amount === 'number' ? amount : Number(amount);
+                        const amountText = Number.isFinite(amountNum) ? amountNum.toFixed(2) : '0.00';
+                        return (
+                          <Text key={t.id}>
+                            {t.date ?? ''} | {amountText} | {t.type ?? ''} | {t.category || '—'} | {(t.description ?? '').slice(0, 60)}
+                          </Text>
+                        );
+                      })}
                     </Box>
                   </Box>
                 )}
@@ -494,9 +540,9 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                     {(() => {
                       const counts = {
                         all: result.errors.length,
-                        parse: result.errors.filter((e: any)=>e.type==='parse').length,
-                        normalize: result.errors.filter((e: any)=>e.type==='normalize').length,
-                        duplicate: result.errors.filter((e: any)=>e.type==='duplicate').length,
+                        parse: result.errors.filter((e) => e.type === 'parse').length,
+                        normalize: result.errors.filter((e) => e.type === 'normalize').length,
+                        duplicate: result.errors.filter((e) => e.type === 'duplicate').length,
                       };
                       return (
                         <HStack gap={2} mb={1} wrap='wrap'>
@@ -511,8 +557,13 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                             setTimeout(()=>{ exportLockRef.current = false; }, 1500);
                             try {
                               const header = 'line,type,reason,message';
-                              const rows = result.errors.map((e: any) => [e.line, e.type, e.reason || '', (e.message||'').replace(/"/g,'""')]);
-                              const csv = [header, ...rows.map((r: any)=>r.map((f: any)=>`"${(f??'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
+                              const rows = result.errors.map((e) => [
+                                e.line,
+                                e.type,
+                                e.type === 'duplicate' ? e.reason || '' : '',
+                                (e.message || '').replace(/"/g, '""'),
+                              ]);
+                              const csv = [header, ...rows.map((r) => r.map((f) => `"${(f ?? '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
                               // Light safeguard: large files warn
                               if (csv.length > 2_000_000) {
                                 fireToast("info", 'Large CSV', 'Generating large error export...');
@@ -534,8 +585,8 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                     {showErrors && (
                       <Box maxH='160px' overflowY='auto' borderWidth={1} borderRadius='md' p={2} bg='gray.900' color='red.200' fontFamily='mono' fontSize='10px'>
                         {(() => {
-                          const filtered = result.errors.filter((e: any) => errorFilter==='all' || e.type===errorFilter);
-                          return filtered.slice(0,200).map((err: any, idx: number) => {
+                          const filtered = result.errors.filter((e) => errorFilter === 'all' || e.type === errorFilter);
+                          return filtered.slice(0, 200).map((err, idx: number) => {
                             let color;
                             if (err.type === 'duplicate') color = 'yellow.300';
                             else if (err.type === 'normalize') color = 'red.200';
@@ -547,7 +598,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                           });
                         })()}
                         {(() => {
-                          const filtered = result.errors.filter((e: any) => errorFilter==='all' || e.type===errorFilter);
+                          const filtered = result.errors.filter((e) => errorFilter === 'all' || e.type === errorFilter);
                           if (filtered.length <= 200) return null;
                           return (
                             <Text mt={1} color='gray.400'>Showing first 200 of {filtered.length}. Use Download CSV for full list.</Text>
@@ -559,17 +610,25 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                 )}
                 {/* Legacy brief error preview removed in favor of panel */}
                 <Separator my={3} />
-                {lastIngestionTelemetry && !showConfirm && (
+                {!!lastIngestionTelemetry && !showConfirm && (
                   <Box mb={3} p={2} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.subtle">
                     <Text fontSize="xs" fontWeight="semibold" mb={1}>Last Import Telemetry</Text>
                     <Text fontSize="10px" mb={1}>At: {lastIngestionTelemetry.at} | Account: {lastIngestionTelemetry.accountNumber} | New: {lastIngestionTelemetry.newCount} | DupEx: {lastIngestionTelemetry.dupesExisting} | DupIntra: {lastIngestionTelemetry.dupesIntraFile}</Text>
                     {lastIngestionTelemetry.categorySources && (
                       <HStack gap={2} wrap="wrap">
-                        {Object.entries(lastIngestionTelemetry.categorySources).map(([k, v]: any) => {
-                          const totalPrev: any = Object.values(lastIngestionTelemetry.categorySources).reduce((a:any,b:any)=>a+b,0)||1;
-                          const pctPrev = ((v/totalPrev)*100).toFixed(1);
-                          return <Badge key={k} fontSize="0.55rem" colorScheme={k==='none'?'gray':(k==='consensus'?'purple':'blue')}>{k}:{v} ({pctPrev}%)</Badge>;
-                        })}
+                        {(() => {
+                          const categorySources = lastIngestionTelemetry.categorySources!;
+                          const totalPrev = Object.values(categorySources).reduce((a, b) => a + b, 0) || 1;
+                          const entries = Object.entries(categorySources) as [string, number][];
+                          return entries.map(([k, v]) => {
+                            const pctPrev = ((v / totalPrev) * 100).toFixed(1);
+                            return (
+                              <Badge key={k} fontSize="0.55rem" colorScheme={k === 'none' ? 'gray' : (k === 'consensus' ? 'purple' : 'blue')}>
+                                {k}:{v} ({pctPrev}%)
+                              </Badge>
+                            );
+                          });
+                        })()}
                       </HStack>
                     )}
                   </Box>
@@ -577,12 +636,26 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                 <Text fontSize="xs" color="fg.muted">Preview of accepted (first 10)</Text>
                 <Box mt={1} maxH="180px" overflowY="auto" fontFamily="mono" fontSize="xs" p={2} borderWidth={1} borderRadius="md" bg="gray.800" color="green.200">
                   {(() => {
-                    const merged = [...(existingTxns || []), ...(result?.plan?.accepted || [])].sort((a: any, b: any) =>
-                      String(a?.date || "").localeCompare(String(b?.date || ""))
+                    const accepted = result?.plan?.accepted ?? [];
+                    const merged: Transaction[] = [...existingTxns, ...accepted].sort((a, b) =>
+                      String(a.date ?? "").localeCompare(String(b.date ?? ""))
                     );
-                    return merged.slice(0,10).map((t: any) => (
-                      <Text key={t.id}>{t.date} | {(t.rawAmount ?? t.amount).toFixed(2)} | {t.type} | {t.category || '—'} | {t.description.slice(0,50)}</Text>
-                    ));
+
+                    return merged.slice(0, 10).map((t, idx) => {
+                      const raw = t.rawAmount ?? t.amount;
+                      const amtText =
+                        typeof raw === "number"
+                          ? raw.toFixed(2)
+                          : typeof raw === "string" && raw.trim() !== "" && Number.isFinite(Number(raw))
+                            ? Number(raw).toFixed(2)
+                            : "";
+
+                      return (
+                        <Text key={t.id ?? `${t.date ?? "tx"}-${idx}`}>
+                          {t.date} | {amtText} | {t.type} | {t.category || '—'} | {String(t.description ?? '').slice(0, 50)}
+                        </Text>
+                      );
+                    });
                   })()}
                 </Box>
               </Box>
