@@ -30,7 +30,7 @@ export function buildPatch(accountNumber: string, existingTxns: Transaction[], n
         const nextAccount = prev
             ? {
                   ...baseNew,
-                  ...prev, // keep any existing custom fields
+                  ...prev, // keep all existing custom fields
                   transactions: merged,
               }
             : {

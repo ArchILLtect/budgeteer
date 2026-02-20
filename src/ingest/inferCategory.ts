@@ -15,6 +15,29 @@ import * as accountUtils from '../utils/accountUtils.js';
 
 const extractVendorDescriptionFn = accountUtils.extractVendorDescription || null;
 
+type TxForInference = {
+    description?: string;
+    category?: string;
+    _vendorRoot?: string;
+    _catSource?: string;
+    [key: string]: unknown;
+};
+
+type VendorStats = {
+    total: number;
+    labeled: number;
+    categoryCounts: Map<string, number>;
+};
+
+export type CategoryContext = {
+    vendorStats: Map<string, VendorStats>;
+};
+
+type ConsensusThresholds = {
+    minOccurrences: number;
+    dominanceRatio: number;
+};
+
 function stripCardPrefixes(desc: string): string {
     let s = desc;
     CARD_PREFIX_PATTERNS.forEach((re) => {
@@ -39,11 +62,16 @@ function deriveVendorRoot(description: string, maxWords = 3): string {
  */
 export function createCategoryContext() {
     return {
-        vendorStats: new Map(), // vendorRoot -> { total, labeled, categoryCounts: Map }
-    };
+        vendorStats: new Map<string, VendorStats>(), // vendorRoot -> { total, labeled, categoryCounts: Map }
+    } satisfies CategoryContext;
 }
 
-function recordVendorSample(ctx: any, vendorRoot: string, category: string, hadCategory: boolean) {
+function recordVendorSample(
+    ctx: CategoryContext,
+    vendorRoot: string,
+    category: string | undefined,
+    hadCategory: boolean
+) {
     if (!vendorRoot) return;
     let v = ctx.vendorStats.get(vendorRoot);
     if (!v) {
@@ -51,7 +79,7 @@ function recordVendorSample(ctx: any, vendorRoot: string, category: string, hadC
         ctx.vendorStats.set(vendorRoot, v);
     }
     v.total += 1;
-    if (hadCategory) {
+    if (hadCategory && category) {
         v.labeled += 1;
         v.categoryCounts.set(category, (v.categoryCounts.get(category) || 0) + 1);
     }
@@ -60,13 +88,13 @@ function recordVendorSample(ctx: any, vendorRoot: string, category: string, hadC
 /**
  * Immediate inference (returns category or undefined)
  */
-function inferImmediate(tx: any) {
+function inferImmediate(tx: TxForInference): { category?: string; source: 'provided' | 'keyword' | 'regex' | 'none' } {
     // 1. If provided & not low-quality
     if (tx.category && !/^uncategorized$/i.test(tx.category)) {
         return { category: tx.category, source: 'provided' };
     }
 
-    const desc = normalizeDesc(tx.description);
+    const desc = normalizeDesc(String(tx.description ?? ''));
 
     // 2. Keyword map (longest keyword first)
     const sortedKeywords = Object.keys(KEYWORD_MAP).sort((a, b) => b.length - a.length);
@@ -90,8 +118,8 @@ function inferImmediate(tx: any) {
  * Called per transaction during ingestion loop.
  * Returns updated transaction with possibly inferred category.
  */
-export function inferCategoryPerTx(tx: any, ctx: any) {
-    const vendorRoot = deriveVendorRoot(tx.description);
+export function inferCategoryPerTx<TTx extends TxForInference>(tx: TTx, ctx: CategoryContext) {
+    const vendorRoot = deriveVendorRoot(String(tx.description ?? ''));
     const hadCategoryIn = !!(tx.category && !/^uncategorized$/i.test(tx.category));
 
     const { category: inferredCat, source } = inferImmediate(tx);
@@ -111,9 +139,9 @@ export function inferCategoryPerTx(tx: any, ctx: any) {
  * After loop: apply vendor consensus for unlabeled tx.
  */
 export function applyConsensusCategories(
-    accepted: any[],
-    ctx: any,
-    thresholds = CONSENSUS_THRESHOLDS
+    accepted: Array<TxForInference>,
+    ctx: CategoryContext,
+    thresholds: ConsensusThresholds = CONSENSUS_THRESHOLDS
 ) {
     for (let i = 0; i < accepted.length; i++) {
         const tx = accepted[i];
@@ -142,7 +170,7 @@ export function applyConsensusCategories(
     // Clean temp fields
     for (let i = 0; i < accepted.length; i++) {
         if (accepted[i]._vendorRoot) {
-            const next = { ...(accepted[i] as any) };
+            const next = { ...accepted[i] };
             delete next._vendorRoot;
             accepted[i] = next;
         }

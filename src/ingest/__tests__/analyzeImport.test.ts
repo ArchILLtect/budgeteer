@@ -4,11 +4,13 @@ import { createStore } from "zustand/vanilla";
 import { analyzeImport } from "../analyzeImport";
 import { createAccountsSlice } from "../../store/slices/accountsSlice";
 import { createImportSlice } from "../../store/slices/importSlice";
+import type { AccountsSlice } from "../../store/slices/accountsSlice";
+import type { ImportSlice } from "../../store/slices/importSlice";
 
 function makeTestStore() {
-  return createStore<any>()((set, get, api) => ({
-    ...createAccountsSlice(set as any, get as any, api as any),
-    ...createImportSlice(set as any, get as any, api as any),
+  return createStore<AccountsSlice & ImportSlice>()((set, get, api) => ({
+    ...createAccountsSlice(set, get, api),
+    ...createImportSlice(set, get, api),
   }));
 }
 
@@ -21,7 +23,7 @@ function makeDeterministicNow() {
 }
 
 function installDeterministicCrypto() {
-  const original = (globalThis as unknown as { crypto?: Crypto }).crypto;
+  const original = (globalThis as typeof globalThis & { crypto?: Crypto }).crypto;
 
   let i = 0;
   const randomUUID = () => {
@@ -82,7 +84,7 @@ describe("analyzeImport", () => {
 
     // ImportPlan should be cloneable/serializable (no functions).
     expect(() => structuredClone(plan)).not.toThrow();
-    expect((plan as unknown as { patch?: unknown }).patch).toBeUndefined();
+    expect((plan as Record<string, unknown>).patch).toBeUndefined();
   });
 
   it("commitImportPlan(plan) stages accepted transactions and records history", async () => {
@@ -118,10 +120,10 @@ describe("analyzeImport", () => {
 
     store.getState().commitImportPlan(plan);
 
-    expect(store.getState().importHistory.some((h: any) => h.sessionId === "s1")).toBe(true);
+    expect(store.getState().importHistory.some((h) => h.sessionId === "s1")).toBe(true);
     expect(store.getState().importManifests?.[plan.stats.hash]).toBeTruthy();
 
-    const txns = store.getState().accounts["1234"].transactions;
+    const txns = store.getState().accounts["1234"].transactions ?? [];
     expect(txns).toHaveLength(plan.accepted.length);
     for (const t of txns) {
       expect(t).toMatchObject({ importSessionId: "s1", staged: true, budgetApplied: false });

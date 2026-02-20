@@ -396,7 +396,7 @@ export async function analyzeImport({
 
   // SECOND PASS: vendor consensus for unlabeled
   const tConsensusStart = nowMs();
-  applyConsensusCategories(accepted as unknown[], catCtx);
+  applyConsensusCategories(accepted, catCtx);
   const tConsensusEnd = nowMs();
   tConsensus += tConsensusEnd - tConsensusStart;
 

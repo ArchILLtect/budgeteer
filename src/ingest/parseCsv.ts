@@ -5,7 +5,7 @@
  *  - Comma separated.
  *  - Quotes may wrap fields; embedded commas inside quotes are handled; embedded newlines NOT supported (Phase 5 will replace with streaming parser).
  *  - Header names flexible: date/Date, description/Description/memo, amount/Amount/amt, type/Type.
- * TODO Phase 5: Replace with PapaParse worker-based streaming & better error capture.
+ * TODO(P3): Phase 5: Replace with PapaParse worker-based streaming & better error capture.
  */
 export type CsvParseError = { line: number; message: string };
 
@@ -44,10 +44,10 @@ export function parseCsv(text: string) {
                 ...obj,
                 __line: i + 1, // natural line numbering (1-based)
             });
-        } catch (e: any) {
+        } catch (e: Error | unknown) {
             errors.push({
                 line: i + 1,
-                message: e?.message || 'Parse failure',
+                message: (e as Error)?.message || 'Parse failure',
             });
         }
     }
