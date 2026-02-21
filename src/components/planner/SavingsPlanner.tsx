@@ -4,8 +4,10 @@ import {
   Field,
   Heading,
   HStack,
+  Flex,
+  useMediaQuery,
 } from "@chakra-ui/react";
-import { useBudgetStore } from "../store/budgetStore";
+import { useBudgetStore } from "../../store/budgetStore";
 
 type SavingsMode = "none" | "10" | "20" | "custom";
 
@@ -26,6 +28,8 @@ export default function SavingsPlanner() {
   const setCustomSavings = useBudgetStore((s) => s.setCustomSavings);
 
   const netIncome = useBudgetStore((s) => s.getTotalNetIncome().net);
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
   const applySavings = (nextMode: SavingsMode, nextCustom: number) => {
     const monthlyIncome = (Number(netIncome) || 0) / 12;
@@ -79,15 +83,31 @@ export default function SavingsPlanner() {
         }}
       >
         <HStack gap={6} wrap="wrap">
-          {savingsOptions.map((opt) => (
-            <RadioGroup.Item key={opt.value} value={opt.value as SavingsMode}>
-              <RadioGroup.ItemHiddenInput />
-              <RadioGroup.ItemControl>
-                <RadioGroup.ItemIndicator />
-              </RadioGroup.ItemControl>
-              <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
-            </RadioGroup.Item>
-          ))}
+          {isPortraitWidth ? (
+            <Flex flexDirection={'column'} gap={2} justifyContent={"flex-start"}>
+              {savingsOptions.map((opt) => (
+                <RadioGroup.Item key={opt.value} value={opt.value as SavingsMode}>
+                  <RadioGroup.ItemHiddenInput />
+                  <RadioGroup.ItemControl>
+                    <RadioGroup.ItemIndicator />
+                  </RadioGroup.ItemControl>
+                  <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
+                </RadioGroup.Item>
+                    ))}
+            </Flex>
+          ) : (
+            <>
+              {savingsOptions.map((opt) => (
+                <RadioGroup.Item key={opt.value} value={opt.value as SavingsMode}>
+                  <RadioGroup.ItemHiddenInput />
+                  <RadioGroup.ItemControl>
+                    <RadioGroup.ItemIndicator />
+                  </RadioGroup.ItemControl>
+                  <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
+                </RadioGroup.Item>
+                    ))}
+            </>
+          )}
         </HStack>
       </RadioGroup.Root>
 
