@@ -1,4 +1,4 @@
-import { Tooltip as ChakraTooltip, Portal } from "@chakra-ui/react"
+import { Box, Tooltip as ChakraTooltip, Portal } from "@chakra-ui/react"
 import * as React from "react"
 
 import type { Placement } from "@floating-ui/react-dom";
@@ -39,6 +39,24 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
 
     if (disabled) return children
 
+    const childArray = React.Children.toArray(children)
+    const onlyChild = childArray.length === 1 ? childArray[0] : null
+    const canUseAsChildDirectly =
+      onlyChild != null &&
+      React.isValidElement(onlyChild) &&
+      // Chakra/Ark will pass `data-scope`/`data-part` props to the child.
+      // React.Fragment cannot receive arbitrary props, so wrap it.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (onlyChild as any).type !== React.Fragment
+
+    const triggerChild = canUseAsChildDirectly ? (
+      (onlyChild as React.ReactElement)
+    ) : (
+      <Box as="span" display="inline-flex" alignItems="center">
+        {children}
+      </Box>
+    )
+
     const tooltipBg = bg ?? colorScheme
     const finalBg: ChakraTooltip.ContentProps["bg"] = contentProps?.bg ?? tooltipBg ?? "gray.900"
 
@@ -51,7 +69,7 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
 
     return (
       <ChakraTooltip.Root {...rest} positioning={positioning}>
-        <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
+        <ChakraTooltip.Trigger asChild>{triggerChild}</ChakraTooltip.Trigger>
         <Portal disabled={!portalled} container={portalRef}>
           <ChakraTooltip.Positioner>
             <ChakraTooltip.Content
