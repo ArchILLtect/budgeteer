@@ -1,5 +1,5 @@
 import { RadioGroup, Stack, Text, Input, Checkbox } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { applyOneMonth } from "../../utils/accountUtils";
 import { useBudgetStore } from "../../store/budgetStore";
 import { errorToMessage, waitForIdleAndPaint } from "../../utils/appUtils";
@@ -28,8 +28,20 @@ type AccountLike = {
 
 type ApplyScope = "month" | "year" | "all";
 
+const formatElapsed = (ms: number) => {
+  const safe = Number.isFinite(ms) && ms > 0 ? ms : 0;
+  const totalSeconds = Math.floor(safe / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes <= 0) return `${seconds}s`;
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+};
+
 export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: ApplyToBudgetModalProps) {
   const [loading, setLoading] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const applyStartMsRef = useRef<number | null>(null);
+  const timerIdRef = useRef<number | null>(null);
   const applyAlwaysExtractVendorName = useApplyAlwaysExtractVendorName();
   const expenseNameOverrides = useExpenseNameOverrides();
   const incomeNameOverrides = useIncomeNameOverrides();
@@ -53,6 +65,15 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   const awaitSavingsLink = useBudgetStore(s => s.awaitSavingsLink);
   const isSavingsModalOpen = useBudgetStore(s => s.isSavingsModalOpen);
 
+  useEffect(() => {
+    return () => {
+      if (timerIdRef.current != null) {
+        window.clearInterval(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+    };
+  }, []);
+
   const applyTimelineOptions = [
     { value: "month", label: `Current Month ${formatUtcMonthKey(selectedMonth, { noneLabel: 'n/a', month: 'long' })} = (${transactionsThisMonth?.length.toLocaleString('en-US')})`, disabled: !selectedMonth || transactionsThisMonth?.length <= 0 },
     { value: "year", label: `Current Year (${selectedYearFromStore || 'year not set'}) = (${transactionsThisYear?.length.toLocaleString('en-US') || 0})`, disabled: !selectedYearFromStore || transactionsThisYear.length <= 0 },
@@ -63,12 +84,27 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
     setLoading(true);
     setIsLoading(true);
     openLoading('Finalizing changes...');
+    const start = performance.now();
+    applyStartMsRef.current = start;
+    setElapsedMs(0);
+
+    if (timerIdRef.current != null) {
+      window.clearInterval(timerIdRef.current);
+      timerIdRef.current = null;
+    }
+    timerIdRef.current = window.setInterval(() => {
+      const s = applyStartMsRef.current;
+      if (s == null) return;
+      setElapsedMs(performance.now() - s);
+    }, 250);
+
     // give the browser a chance to paint the modal
     await new Promise(requestAnimationFrame);
     
     let targets: string[] = [];
     const total = { e: 0, i: 0, s: 0 };
     const savingsReviewEntriesAll: NonNullable<ApplyOneMonthCounts["reviewEntries"]> = [];
+    let didSucceed = false;
 
     try {
       const resolvedAccountNumber = acct.accountNumber || acct.account || acct.label;
@@ -80,8 +116,25 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       else if (scope === 'year') { targets = monthsForYear }
       else if (scope === 'all') { targets = months || [] }
 
-      openProgress('Applying Transactions', targets.length);
-      let processed = 0;
+      const txCountByMonth = new Map<string, number>();
+      for (const tx of acct.transactions) {
+        const month = tx.date?.slice(0, 7);
+        if (!month) continue;
+        txCountByMonth.set(month, (txCountByMonth.get(month) ?? 0) + 1);
+      }
+
+      const totalRows = targets.reduce((sum, m) => sum + (txCountByMonth.get(m) ?? 0), 0);
+      // progress units are roughly: scan rows + write rows
+      const totalUnits = Math.max(1, totalRows * 2);
+
+      openProgress('Applying Transactions', totalUnits);
+      let processedUnits = 0;
+      const advanceProgress = (delta: number) => {
+        const d = Number.isFinite(delta) ? Math.max(0, Math.floor(delta)) : 0;
+        if (d <= 0) return;
+        processedUnits = Math.min(totalUnits, processedUnits + d);
+        updateProgress(processedUnits);
+      };
 
       const ignoreBeforeDateForThisRun: string | null =
         ignoreBeforeEnabled && ignoreBeforeDate ? ignoreBeforeDate : null;
@@ -97,7 +150,8 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
             alwaysExtractVendorName: applyAlwaysExtractVendorName,
             expenseNameOverrides,
             incomeNameOverrides,
-          }
+          },
+          { advance: advanceProgress }
         );
         total.e += counts.e;
         total.i += counts.i;
@@ -106,10 +160,6 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
         if (Array.isArray(counts.reviewEntries) && counts.reviewEntries.length > 0) {
           savingsReviewEntriesAll.push(...counts.reviewEntries);
         }
-
-        processed++;
-        updateProgress(processed);
-        await new Promise(requestAnimationFrame);
       }
 
       // Mark staged transactions as applied for selected scope
@@ -122,11 +172,20 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       if (savingsReviewEntriesAll.length > 0) {
         await awaitSavingsLink(savingsReviewEntriesAll);
       }
+
+      didSucceed = true;
     } catch (err: unknown) {
       fireToast("error", "Error applying to budget", errorToMessage(err));
     }
     finally {
-      
+      if (timerIdRef.current != null) {
+        window.clearInterval(timerIdRef.current);
+        timerIdRef.current = null;
+      }
+      const elapsed = applyStartMsRef.current != null ? performance.now() - applyStartMsRef.current : 0;
+      applyStartMsRef.current = null;
+      setElapsedMs(elapsed);
+
       setLoading(false);
       closeProgress();
       onClose();
@@ -134,7 +193,13 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       await waitForIdleAndPaint();
       startTransition(() => {
         setIsLoading(false);
-        fireToast("success", "Budget updated", `Applied ${targets.length} month(s): ${total.e} expenses, ${total.i} income, ${total.s} savings.`);
+        if (didSucceed) {
+          fireToast(
+            "success",
+            "Budget updated",
+            `Applied ${targets.length} month(s): ${total.e} expenses, ${total.i} income, ${total.s} savings (in ${formatElapsed(elapsed)}).`
+          );
+        }
         closeLoading();
       });
     }
@@ -194,6 +259,12 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
               onChange={(e) => setIgnoreBeforeDate(e.target.value)}
               mt={2}
             />
+          )}
+
+          {loading && (
+            <Text fontSize="xs" color="fg.muted" mt={3}>
+              Elapsed: {formatElapsed(elapsedMs)}
+            </Text>
           )}
         </>
       }

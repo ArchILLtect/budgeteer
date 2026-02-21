@@ -10,6 +10,7 @@ import { Suspense, useMemo, useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { WelcomeModal } from "../components/ui/WelcomeModal";
+import { GlobalProgressOverlay } from "../components/ui/GlobalProgressOverlay";
 import { Sidebar } from "./Sidebar.tsx";
 import { PublicSidebar } from "./PublicSidebar.tsx";
 import { SIDEBAR_WIDTH } from "../config/sidebar";
@@ -58,6 +59,7 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
       </Link>
       <Toaster />
       <WelcomeModal signedIn={signedIn} authLoading={authLoading} />
+      <GlobalProgressOverlay />
 
       <Header user={user}/>
 

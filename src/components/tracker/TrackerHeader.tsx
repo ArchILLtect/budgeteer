@@ -1,7 +1,7 @@
 import { Box, Center, Flex, Text, Button, IconButton, useDisclosure } from '@chakra-ui/react';
 import { TiArrowLeftThick, TiArrowRightThick } from "react-icons/ti";
 import { useBudgetStore } from '../../store/budgetStore';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import InlineSpinner from '../ui/InlineSpinner';
 const ScenarioPlanModal = lazy(() => import('./ScenarioPlanModal'));
 import dayjs from 'dayjs';
@@ -16,10 +16,29 @@ export default function TrackerHeader() {
     const setSelectedMonth = useBudgetStore((s) => s.setSelectedMonth);
     const monthlyPlans = useBudgetStore((s) => s.monthlyPlans);
     const removeMonthlyPlan = useBudgetStore((s) => s.removeMonthlyPlan);
+    const accounts = useBudgetStore((s) => s.accounts);
     const { open, onOpen, onClose } = useDisclosure();
+    const [planTargetMonths, setPlanTargetMonths] = useState<string[] | undefined>(undefined);
 
     const plan = monthlyPlans[selectedMonth];
     const formatted = formatUtcMonthKey(selectedMonth, { noneLabel: 'n/a', month: 'long' });
+
+    const appliedMonths = useMemo(() => {
+        const set = new Set<string>();
+        for (const acct of Object.values(accounts || {})) {
+            for (const tx of acct?.transactions || []) {
+                if (!tx?.budgetApplied) continue;
+                const m = tx?.date?.slice(0, 7);
+                if (m) set.add(m);
+            }
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [accounts]);
+
+    const eligibleAppliedMonths = useMemo(
+        () => appliedMonths.filter((m) => !monthlyPlans[m]),
+        [appliedMonths, monthlyPlans]
+    );
 
     const shiftMonth = (direction: number) => {
         const newDate = dayjs(selectedMonth).add(direction, 'month');
@@ -68,25 +87,53 @@ export default function TrackerHeader() {
 
             {!plan ? (
                 <Center mt={1}>
-                    <Button colorScheme="teal" size="xs" onClick={onOpen}>
-                        Set plan
-                    </Button>
+                    <Flex gap={2} align="center" wrap="wrap" justify="center">
+                        <Button
+                            colorScheme="teal"
+                            size="xs"
+                            onClick={() => {
+                                setPlanTargetMonths(undefined);
+                                onOpen();
+                            }}
+                        >
+                            Set plan
+                        </Button>
+                        <Button
+                            variant="outline"
+                            colorScheme="teal"
+                            size="xs"
+                            disabled={eligibleAppliedMonths.length === 0}
+                            onClick={() => {
+                                setPlanTargetMonths(appliedMonths);
+                                onOpen();
+                            }}
+                        >
+                            Set plan (applied months)
+                        </Button>
+                    </Flex>
                 </Center>
             ) : (
                 <Center alignContent="center" gap={3}>
                     <Text fontSize="sm" color="fg.muted">
                         Plan: {plan.scenarioName || 'Unnamed'}
                     </Text>
-                    <Button size="xs" variant="outline" colorScheme="blue" onClick={() => handleTempButton()}>
+                    <Button size="xs" variant="outline" colorPalette="blue" onClick={() => handleTempButton()}>
                         Edit plan/actuals
                     </Button>
-                    <Button size="xs" variant="outline" colorScheme="red" onClick={handleRemove}>
+                    <Button size="xs" variant="outline" colorPalette="red" onClick={handleRemove}>
                         Remove plan
                     </Button>
                 </Center>
             )}
         <Suspense fallback={<InlineSpinner />}>
-            <ScenarioPlanModal isOpen={open} onClose={onClose} />
+            <ScenarioPlanModal
+                isOpen={open}
+                onClose={() => {
+                    setPlanTargetMonths(undefined);
+                    onClose();
+                }}
+                targetMonths={planTargetMonths}
+            />
         </Suspense>
         </Box>
     );

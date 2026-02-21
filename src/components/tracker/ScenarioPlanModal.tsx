@@ -8,13 +8,15 @@ import { AppSelect } from "../ui/AppSelect";
 type ScenarioPlanModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  targetMonths?: string[];
 };
 
-export default function ScenarioPlanModal({ isOpen, onClose }: ScenarioPlanModalProps) {
+export default function ScenarioPlanModal({ isOpen, onClose, targetMonths }: ScenarioPlanModalProps) {
   const scenarios = useBudgetStore((s) => s.scenarios);
   const saveMonthlyPlan = useBudgetStore((s) => s.saveMonthlyPlan);
   const selectedMonth = useBudgetStore((s) => s.selectedMonth);
   const monthlyActuals = useBudgetStore((s) => s.monthlyActuals);
+  const monthlyPlans = useBudgetStore((s) => s.monthlyPlans);
   const currentActuals = monthlyActuals[selectedMonth];
 
   // const [applyAsActuals, setApplyAsActuals] = useState(false); // planned feature
@@ -41,7 +43,7 @@ export default function ScenarioPlanModal({ isOpen, onClose }: ScenarioPlanModal
     const totalExpenses = scenario.expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
     const estLeftover = netIncome - totalExpenses;
 
-    saveMonthlyPlan(selectedMonth, {
+    const planPayload = {
       scenarioName: selectedScenario,
       incomeSources: JSON.parse(JSON.stringify(scenario.incomeSources)),
       expenses: JSON.parse(JSON.stringify(scenario.expenses)),
@@ -51,8 +53,36 @@ export default function ScenarioPlanModal({ isOpen, onClose }: ScenarioPlanModal
       savingsPercent: savingsPercent,
       totalSavings: estSavings,
       totalExpenses: totalExpenses,
-      estLeftover: estLeftover
-    });
+      estLeftover: estLeftover,
+    };
+
+    const uniqueTargetMonths = Array.isArray(targetMonths) && targetMonths.length
+      ? Array.from(new Set(targetMonths.filter(Boolean))).sort((a, b) => a.localeCompare(b))
+      : null;
+
+    if (uniqueTargetMonths) {
+      let applied = 0;
+      let skipped = 0;
+      for (const m of uniqueTargetMonths) {
+        if (monthlyPlans[m]) {
+          skipped++;
+          continue;
+        }
+        saveMonthlyPlan(m, planPayload);
+        applied++;
+      }
+
+      if (applied > 0) {
+        const skipSuffix = skipped > 0 ? ` (skipped ${skipped} w/ existing plan)` : "";
+        fireToast("success", "Plans Saved", `Applied to ${applied} month(s)${skipSuffix}.`);
+      } else {
+        fireToast("info", "No Changes", `All target months already have a plan.`);
+      }
+      onClose();
+      return;
+    }
+
+    saveMonthlyPlan(selectedMonth, planPayload);
 
     /* TODO: Apply to actuals if selected
     if (applyAsActuals && !currentActuals) {

@@ -41,13 +41,11 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
 
     const childArray = React.Children.toArray(children)
     const onlyChild = childArray.length === 1 ? childArray[0] : null
-    const canUseAsChildDirectly =
-      onlyChild != null &&
-      React.isValidElement(onlyChild) &&
-      // Chakra/Ark will pass `data-scope`/`data-part` props to the child.
-      // React.Fragment cannot receive arbitrary props, so wrap it.
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      (onlyChild as any).type !== React.Fragment
+    const isSingleValidElement = onlyChild != null && React.isValidElement(onlyChild)
+    // Chakra/Ark will pass `data-scope`/`data-part` props to the child.
+    // React.Fragment cannot receive arbitrary props, so wrap it.
+    const isFragment = isSingleValidElement && onlyChild.type === React.Fragment
+    const canUseAsChildDirectly = isSingleValidElement && !isFragment
 
     const triggerChild = canUseAsChildDirectly ? (
       (onlyChild as React.ReactElement)

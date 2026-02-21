@@ -19,6 +19,10 @@ type ApplyOneMonthResult = {
     reviewEntries?: SavingsReviewEntry[];
 };
 
+type ApplyOneMonthProgress = {
+    advance?: (delta: number) => void;
+};
+
 type SavingsLogEntry = {
     goalId: string | null;
     date: string;
@@ -280,7 +284,8 @@ export const applyOneMonth = async <State extends BudgetStoreStateForApply>(
     acct: { accountNumber: string; transactions: Transaction[] },
     showToast = true,
     ignoreBeforeDate: string | null = null,
-    options?: ExpenseNameOptions
+    options?: ExpenseNameOptions,
+    progress?: ApplyOneMonthProgress
 ): Promise<ApplyOneMonthResult> => {
     const store = budgetStore.getState();
     let savingsReviewEntries: SavingsReviewEntry[] = [];
@@ -351,6 +356,8 @@ export const applyOneMonth = async <State extends BudgetStoreStateForApply>(
             )
         );
 
+        progress?.advance?.(chunk.length);
+
         // Let the browser catch up
         await new Promise(requestAnimationFrame);
     }
@@ -369,17 +376,38 @@ export const applyOneMonth = async <State extends BudgetStoreStateForApply>(
         actualTotalNetIncome: newTotalNetIncome,
     });
 
-    // Add expenses
-    newExpenses.forEach((e) => {
-        store.addActualExpense(monthKey, {
-            ...e,
-            name: getNonEmptyExpenseName(e, options),
-            amount: normalizeTransactionAmount(e),
-        });
-    });
+    // Treat income/savings as part of the "write" phase for progress.
+    // The caller can set total to roughly 2x monthRows.length (scan + write).
+    let writePhaseAdvanced = 0;
+    if (newIncome.length > 0) {
+        writePhaseAdvanced += newIncome.length;
+        progress?.advance?.(newIncome.length);
+        await new Promise(requestAnimationFrame);
+    }
+
+    // Add expenses (chunked) to avoid blocking, and keep progress moving.
+    const writeChunkSize = 200;
+    for (let i = 0; i < newExpenses.length; i += writeChunkSize) {
+        const chunk = newExpenses.slice(i, i + writeChunkSize);
+        for (const e of chunk) {
+            store.addActualExpense(monthKey, {
+                ...e,
+                name: getNonEmptyExpenseName(e, options),
+                amount: normalizeTransactionAmount(e),
+            });
+        }
+
+        writePhaseAdvanced += chunk.length;
+        progress?.advance?.(chunk.length);
+        await new Promise(requestAnimationFrame);
+    }
 
     // Savings handling
     if (newSavings.length > 0) {
+        writePhaseAdvanced += newSavings.length;
+        progress?.advance?.(newSavings.length);
+        await new Promise(requestAnimationFrame);
+
         let reviewEntries: SavingsReviewEntry[] = newSavings.map((s) => ({
             id: s.id || crypto.randomUUID(),
             date: s.date || '',
@@ -434,6 +462,14 @@ export const applyOneMonth = async <State extends BudgetStoreStateForApply>(
         } else {
             savingsReviewEntries = reviewEntries;
         }
+    }
+
+    // If the caller sets total to ~2x monthRows.length, make sure we
+    // fully consume the "write" phase even when de-dupe reduced counts.
+    const writePhaseRemaining = monthRows.length - writePhaseAdvanced;
+    if (writePhaseRemaining > 0) {
+        progress?.advance?.(writePhaseRemaining);
+        await new Promise(requestAnimationFrame);
     }
 
     if (showToast) {
