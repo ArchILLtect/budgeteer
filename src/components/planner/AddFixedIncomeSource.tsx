@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useBudgetStore } from '../../store/budgetStore'
 import type { ActualFixedIncomeSource } from '../../store/slices/plannerSlice'
-import { Box, Flex, Stack, Input, Button, HStack, IconButton, Checkbox } from '@chakra-ui/react'
+import { Box, Flex, Stack, Input, Button, HStack, IconButton, Checkbox, useMediaQuery } from '@chakra-ui/react'
 import { MdAdd, MdDelete, MdInfo, MdContentCopy } from "react-icons/md";
 import { Tooltip } from '../ui/Tooltip';
 import { fireToast } from '../../hooks/useFireToast';
@@ -28,6 +28,8 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
 
   const [overrideEnabled, setOverrideEnabled] = useState(overiddenIncomeTotal >= 1);
   const lastSyncedMonthRef = useRef<string>(selectedMonth);
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
   const handleRemove = (id: string) => {
     const label = String(sources.find((s) => s.id === id)?.description || '').trim();
@@ -129,42 +131,68 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
             </HStack>
         ))}
 
-        <Flex justifyContent="space-between" alignItems="center">
+        <Flex justifyContent="space-between" alignItems="center" gap={4}>
             <Box width={'25%'} p={1}>
-            <Button
-              onClick={() => addActualIncomeSource(selectedMonth, { description: '', amount: 0 })}
-              size="sm"
-            >
-              <MdAdd />
-              Add Source
-            </Button>
+              <Button
+                onClick={() => addActualIncomeSource(selectedMonth, { description: '', amount: 0 })}
+                size={isPortraitWidth ? "xs" : "sm"}
+              >
+                <MdAdd />
+                {isPortraitWidth ? "Add" : "Add Income Source"}
+              </Button>
             </Box>
-            <Flex gap={2} alignItems="center" p={2} borderWidth={1} borderColor="border.error">
-              <Flex gap={2} alignItems="center" py={'7px'} px={4} borderWidth={1}
-                  borderColor="border" borderRadius={'md'}>
-                  <Checkbox.Root
-                    checked={overrideEnabled}
-                    onCheckedChange={(details) => setChecked(details.checked === true)}
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control />
-                    <Checkbox.Label whiteSpace={'nowrap'}>
-                      Total Override
-                    </Checkbox.Label>
-                  </Checkbox.Root>
-                <Tooltip content="Use this to override the system-calculated total." placement="top">
-                  <MdInfo />
-                </Tooltip>
+            {isPortraitWidth ? (
+              <Flex gap={1}>
+                <Flex alignItems="center" py={'7px'} px={4} borderWidth={1}
+                     borderColor="border.error" borderRadius={'md'}>
+                    <Checkbox.Root
+                      checked={overrideEnabled}
+                      onCheckedChange={(details) => setChecked(details.checked === true)}
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label whiteSpace={'nowrap'}>
+                        Override
+                      </Checkbox.Label>
+                    </Checkbox.Root>
+                </Flex>
+                <Input
+                    type="number"
+                    value={overrideEnabled ? (overiddenIncomeTotal ?? '') : ''}
+                    disabled={!overrideEnabled}
+                    onChange={(e) => {
+                      setOveriddenIncomeTotal(selectedMonth, normalizeMoney(e.target.value, { min: 0 }));
+                    }}
+                />
               </Flex>
-              <Input
-                  type="number"
-                  value={overrideEnabled ? (overiddenIncomeTotal ?? '') : ''}
-                  disabled={!overrideEnabled}
-                  onChange={(e) => {
-                    setOveriddenIncomeTotal(selectedMonth, normalizeMoney(e.target.value, { min: 0 }));
-                  }}
-              />
-            </Flex>
+            ) : (
+              <Flex gap={2} alignItems="center" p={2} borderWidth={4} borderColor={'border.error'} borderRadius={'md'}>
+                <Flex gap={2} alignItems="center" py={'7px'} px={4} borderWidth={1}
+                    borderColor="border" borderRadius={'md'}>
+                    <Checkbox.Root
+                      checked={overrideEnabled}
+                      onCheckedChange={(details) => setChecked(details.checked === true)}
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label whiteSpace={'nowrap'}>
+                        Total Override
+                      </Checkbox.Label>
+                    </Checkbox.Root>
+                  <Tooltip content="Use this to override the system-calculated total." placement="top">
+                    <MdInfo />
+                  </Tooltip>
+                </Flex>
+                <Input
+                    type="number"
+                    value={overrideEnabled ? (overiddenIncomeTotal ?? '') : ''}
+                    disabled={!overrideEnabled}
+                    onChange={(e) => {
+                      setOveriddenIncomeTotal(selectedMonth, normalizeMoney(e.target.value, { min: 0 }));
+                    }}
+                />
+              </Flex>
+            )}
         </Flex>
         </Stack>
     </Box>

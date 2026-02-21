@@ -274,7 +274,7 @@ export function InsightsPage() {
 
   const monthOptions = months;
 
-  const [isPhoneWidth] = useMediaQuery(["(max-width: 450px)"]);
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
   return (
     <Stack gap={6} p={4}>
@@ -303,12 +303,16 @@ export function InsightsPage() {
             <HStack gap={3}>
               <RadioGroup.Item value="all">
                 <RadioGroup.ItemHiddenInput />
-                <RadioGroup.ItemIndicator />
+                <RadioGroup.ItemControl>
+                  <RadioGroup.ItemIndicator borderColor="fg" _checked={{ borderColor: "fg.inverted" }} />
+                </RadioGroup.ItemControl>
                 <RadioGroup.ItemText>All logs</RadioGroup.ItemText>
               </RadioGroup.Item>
               <RadioGroup.Item value="goalOnly">
                 <RadioGroup.ItemHiddenInput />
-                <RadioGroup.ItemIndicator />
+                <RadioGroup.ItemControl>
+                  <RadioGroup.ItemIndicator borderColor="fg" _checked={{ borderColor: "fg.inverted" }} />
+                </RadioGroup.ItemControl>
                 <RadioGroup.ItemText>Goal-linked only</RadioGroup.ItemText>
               </RadioGroup.Item>
             </HStack>
@@ -362,7 +366,7 @@ export function InsightsPage() {
             minWidth={0}
             initialDimension={{ width: 800, height: 260 }}
           >
-            <LineChart data={trend} margin={{ top: 24, right: 12, left: 0, bottom: isPhoneWidth ? 28 : 18 }}>
+            <LineChart data={trend} margin={{ top: 24, right: 12, left: 0, bottom: isPortraitWidth ? 28 : 18 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" />
               <XAxis dataKey="monthLabel" />
               <YAxis tickFormatter={(v) => (typeof v === "number" ? `$${Math.round(v)}` : "")} />
@@ -486,12 +490,16 @@ export function InsightsPage() {
               <HStack gap={3}>
                 <RadioGroup.Item value="actualName">
                   <RadioGroup.ItemHiddenInput />
-                  <RadioGroup.ItemIndicator />
+                  <RadioGroup.ItemControl>
+                    <RadioGroup.ItemIndicator borderColor="fg" _checked={{ borderColor: "fg.inverted" }} />
+                  </RadioGroup.ItemControl>
                   <RadioGroup.ItemText>Actual entries (name)</RadioGroup.ItemText>
                 </RadioGroup.Item>
                 <RadioGroup.Item value="importedCategory">
                   <RadioGroup.ItemHiddenInput />
-                  <RadioGroup.ItemIndicator />
+                  <RadioGroup.ItemControl>
+                    <RadioGroup.ItemIndicator borderColor="fg" _checked={{ borderColor: "fg.inverted" }} />
+                  </RadioGroup.ItemControl>
                   <RadioGroup.ItemText>Imported category</RadioGroup.ItemText>
                 </RadioGroup.Item>
               </HStack>

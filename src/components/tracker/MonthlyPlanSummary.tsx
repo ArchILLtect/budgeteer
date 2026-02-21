@@ -1,4 +1,4 @@
-import { Box, Heading, Stat, StatGroup, Text, Button, Flex } from "@chakra-ui/react";
+import { Box, Heading, Stat, StatGroup, Text, Button, Flex, useMediaQuery } from "@chakra-ui/react";
 import { useBudgetStore } from '../../store/budgetStore';
 import { formatCurrency } from '../../utils/formatters';
 import { formatLocalIsoDate } from '../../services/dateTime';
@@ -10,6 +10,8 @@ export default function MonthlyPlanSummary() {
   const monthlyPlans = useBudgetStore((s) => s.monthlyPlans);
   const plan = monthlyPlans[selectedMonth];
   const estLeftover = plan?.estLeftover ?? 0;
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
   return (
     <Box p={4} boxShadow="md" bg="bg.subtle" borderWidth={2} borderColor="border">
@@ -30,25 +32,25 @@ export default function MonthlyPlanSummary() {
         <Box px={4} py={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
           <StatGroup>
             <Stat.Root textAlign={'center'}>
-                <Stat.Label>Planned Net Income</Stat.Label>
-              <Stat.ValueText color="teal.500">{formatCurrency(plan.netIncome)}</Stat.ValueText>
+                <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Planned Net Income</Stat.Label>
+              <Stat.ValueText color="teal.500" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(plan.netIncome)}</Stat.ValueText>
             </Stat.Root>
 
             <Stat.Root textAlign={'center'}>
-                <Stat.Label>Planned Expenses</Stat.Label>
-              <Stat.ValueText color="orange.500">{formatCurrency(plan.totalExpenses)}</Stat.ValueText>
+                <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Planned Expenses</Stat.Label>
+              <Stat.ValueText color="orange.500" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(plan.totalExpenses)}</Stat.ValueText>
             </Stat.Root>
 
             <Stat.Root textAlign="center">
-              <Stat.Label>Planned Savings</Stat.Label>
-              <Stat.ValueText color="blue.500">
+              <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Planned Savings</Stat.Label>
+              <Stat.ValueText color="blue.500" fontSize={isPortraitWidth ? "md" : "2xl"}>
                 {Number(plan.totalSavings) > 0 ? formatCurrency(plan.totalSavings) : '--'}
               </Stat.ValueText>
             </Stat.Root>
 
             <Stat.Root textAlign={'center'}>
-                <Stat.Label>Planned Leftover</Stat.Label>
-                <Stat.ValueText color={estLeftover >= 0 ? "green.500" : "red.500"} fontSize="2xl">
+                <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Planned Leftover</Stat.Label>
+                <Stat.ValueText color={estLeftover >= 0 ? "green.500" : "red.500"} fontSize={isPortraitWidth ? "md" : "2xl"}>
                   {formatCurrency(estLeftover)}
                 </Stat.ValueText>
             </Stat.Root>

@@ -3,11 +3,12 @@ import { useBudgetStore } from '../../store/budgetStore'
 import {
   Box, Flex, Heading, Stack, Input, Button, HStack, Text,
   IconButton, Stat, StatGroup, StatLabel, Checkbox, Icon,
+  useMediaQuery,
 } from '@chakra-ui/react'
 import { MdAdd, MdDelete, MdInfo } from "react-icons/md";
 import { MdContentCopy } from "react-icons/md";
-import SavingsPlanner from '../SavingsPlanner.js';
-import { AppCollapsible } from '../ui/AppCollapsible.js';
+import SavingsPlanner from './SavingsPlanner';
+import { AppCollapsible } from '../ui/AppCollapsible';
 import { Tooltip } from '../ui/Tooltip';
 import { fireToast } from '../../hooks/useFireToast';
 import { formatCurrency } from '../../utils/formatters';
@@ -48,6 +49,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
 
   const [overrideEnabled, setOverrideEnabled] = useState(overiddenExpenseTotal >= 1);
   const isTracker = origin === 'Tracker';
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
   const lastSyncedMonthRef = useRef<string>(selectedMonth);
   const trackerExpenses = actualraw?.actualExpenses || [];
   const expenses = isTracker ? trackerExpenses : plannerExpenses;
@@ -133,21 +135,23 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
   };
 
   return (
-    <Box borderWidth="1px" borderRadius="lg" p={4} mt={6} bg="bg.muted" borderColor="border">
+    <Box border={isPortraitWidth ? "none" :"1px solid"} borderWidth="1px" borderRadius="lg" p={isPortraitWidth ? 0 : 4} mt={6} bg="bg.muted" borderColor="border">
       <Flex justifyContent="space-between" alignItems="center" borderWidth={1} p={3} borderRadius="lg" bg="bg.panel" borderColor="border">
         <Heading size="md">Expenses (Monthly)</Heading>
         {!isTracker &&
-          <Button variant={'outline'} colorScheme="blue" onClick={() => handleTempButton()}>Use Fixed Expense Total</Button>
+          <Button variant={'outline'} colorScheme="blue" onClick={() => handleTempButton()}>{isPortraitWidth ? "Fixed" : "Use Fixed Expense Total"}</Button>
         }
         <Heading size="md">{formatCurrency(displayedTotalExpenses)}</Heading>
       </Flex>
 
-      <Box p={2} mt={3} borderWidth={1} borderColor="border" borderRadius={"lg"} bg="bg.panel">
+      <Box p={4} mt={3} borderWidth={1} borderColor="border" borderRadius={"lg"} bg="bg.panel">
         <Stack gap={3}>
           <AppCollapsible
             mb={"4px"}
             fontSize='md'
             title={"Expense Details"}
+            noRight={isPortraitWidth ? true : false}
+            pxContent={isPortraitWidth ? 0 : 4}
             ariaLabel="Toggle expense details"
             defaultOpen={showExpenseInputs}
             open={showExpenseInputs}
@@ -197,6 +201,8 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
                     }
                     bg={expense.isSavings ? "bg.success" : "bg.subtle"}
                     placeholder="Amount"
+                    w={isPortraitWidth ? "170px" : "auto"}
+                    justifyItems={isPortraitWidth ? "end" : "unset"}
                   />
                   {expense.id !== 'rent' && !expense.isSavings && (
                     <IconButton
@@ -222,42 +228,68 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
                   </Button>
                 </Box>
               ) : (
-              <Flex justifyContent="space-between" alignItems="center">
+              <Flex justifyContent="space-between" alignItems="center" gap={4}>
                 <Box width={'25%'} p={1}>
                   <Button
                     onClick={() => addExpense({ name: '', amount: 0 })}
-                    size="sm"
+                    size={isPortraitWidth ? "xs" : "sm"}
                   >
                     <MdAdd />
-                    Add Expense
+                    {isPortraitWidth ? "Add" : "Add Expense"}
                   </Button>
                 </Box>
-                <Flex gap={2} alignItems="center" p={2} borderWidth={1} borderColor={'lightpink'}>
-                  <Flex gap={2} alignItems="center" py={'7px'} px={4} borderWidth={1}
-                      borderColor={'gray.200'} borderRadius={'md'}>
-                    <Checkbox.Root
-                      checked={overrideEnabled}
-                      onCheckedChange={(details) => setChecked(details.checked === true)}
-                    >
-                      <Checkbox.HiddenInput />
-                      <Checkbox.Control />
-                      <Checkbox.Label whiteSpace={'nowrap'}>
-                        Total Override
-                      </Checkbox.Label>
-                    </Checkbox.Root>
-                    <Tooltip content="Use this to override the system-calculated total." placement="top">
-                        <Icon as={MdInfo} color="fg.muted" />
-                    </Tooltip>
+                {isPortraitWidth ? (
+                  <Flex gap={1}>
+                    <Flex alignItems="center" py={'7px'} px={4} borderWidth={1}
+                        borderColor="border.error" borderRadius={'md'}>
+                      <Checkbox.Root
+                        checked={overrideEnabled}
+                        onCheckedChange={(details) => setChecked(details.checked === true)}
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                        <Checkbox.Label whiteSpace={'nowrap'}>
+                          Override
+                        </Checkbox.Label>
+                      </Checkbox.Root>
+                    </Flex>
+                    <Input
+                      type="number"
+                      value={overrideEnabled ? (overiddenExpenseTotal ?? '') : ''}
+                      disabled={!overrideEnabled}
+                      onChange={(e) => {
+                        setOveriddenExpenseTotal(selectedMonth, normalizeMoney(e.target.value, { min: 0 }));
+                      }}
+                    />
                   </Flex>
-                  <Input
-                    type="number"
-                    value={overrideEnabled ? (overiddenExpenseTotal ?? '') : ''}
-                    disabled={!overrideEnabled}
-                    onChange={(e) => {
-                      setOveriddenExpenseTotal(selectedMonth, normalizeMoney(e.target.value, { min: 0 }));
-                    }}
-                  />
-                </Flex>
+                ) : (
+                  <Flex gap={2} alignItems="center" p={2} borderWidth={4} borderColor={'border.error'} borderRadius={'md'}>
+                    <Flex gap={2} alignItems="center" py={'7px'} px={4} borderWidth={1}
+                        borderColor={'gray.200'} borderRadius={'md'}>
+                      <Checkbox.Root
+                        checked={overrideEnabled}
+                        onCheckedChange={(details) => setChecked(details.checked === true)}
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                        <Checkbox.Label whiteSpace={'nowrap'}>
+                          Total Override
+                        </Checkbox.Label>
+                      </Checkbox.Root>
+                      <Tooltip content="Use this to override the system-calculated total." placement="top">
+                          <Icon as={MdInfo} color="fg.muted" />
+                      </Tooltip>
+                    </Flex>
+                    <Input
+                      type="number"
+                      value={overrideEnabled ? (overiddenExpenseTotal ?? '') : ''}
+                      disabled={!overrideEnabled}
+                      onChange={(e) => {
+                        setOveriddenExpenseTotal(selectedMonth, normalizeMoney(e.target.value, { min: 0 }));
+                      }}
+                    />
+                  </Flex>
+                )}
               </Flex>
               )}
               {!isTracker &&

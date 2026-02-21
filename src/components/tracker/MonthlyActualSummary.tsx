@@ -1,5 +1,7 @@
 import { Box, Text, Heading, Stat, Stack,
-  StatGroup, Progress, Flex } from '@chakra-ui/react';
+  StatGroup, Progress, Flex,
+  useMediaQuery, 
+} from '@chakra-ui/react';
 import { useBudgetStore } from '../../store/budgetStore';
 import ExpenseTracker from '../planner/ExpenseTracker';
 import IncomeCalculator from '../planner/IncomeCalculator';
@@ -56,17 +58,22 @@ export default function MonthlyActualSummary() {
     return sum + monthTotal;
   }, 0);
 
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   return (
     <Box p={4} borderBottomRadius="lg" boxShadow="md" bg="bg" borderWidth={2}>
       {actual &&
-      <>
-        <Flex justifyContent="space-between" alignItems="center" mb={3}>
+      <Box mb={4}>
+        <Flex justifyContent="space-between" alignItems="center" mb={isPortraitWidth ? 0 : 3}>
           <Heading size="lg">This Month's Summary</Heading>
         </Flex>
 
         <Stack gap={3}>
           <AppCollapsible
             title="Actual Inputs"
+            fontSize={isPortraitWidth ? "md" : "lg"}
+            noRight={isPortraitWidth ? true : false}
+            pxContent={isPortraitWidth ? 0 : 4}
             mb={6}
             defaultOpen={showActualInputs}
             open={showActualInputs}
@@ -81,25 +88,25 @@ export default function MonthlyActualSummary() {
             <ExpenseTracker origin='Tracker' selectedMonth={selectedMonth} />
           </AppCollapsible>
         </Stack>
-      </>
+      </Box>
       }
       <Box px={4} py={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
         <StatGroup>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>Actual Net Income</Stat.Label>
-            <Stat.ValueText color="teal.500">{formatCurrency(netIncome)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Actual Net Income</Stat.Label>
+            <Stat.ValueText color="teal.500" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(netIncome)}</Stat.ValueText>
           </Stat.Root>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>Actual Expenses</Stat.Label>
-            <Stat.ValueText color="orange.500">{formatCurrency(totalExpenses)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Actual Expenses</Stat.Label>
+            <Stat.ValueText color="orange.500" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(totalExpenses)}</Stat.ValueText>
           </Stat.Root>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>Actual Savings</Stat.Label>
-            <Stat.ValueText color="blue.500">{formatCurrency(savings)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Actual Savings</Stat.Label>
+            <Stat.ValueText color="blue.500" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(savings)}</Stat.ValueText>
           </Stat.Root>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>Actual Leftover</Stat.Label>
-            <Stat.ValueText color={leftover >= 0 ? 'green.500' : 'red.500'}>{formatCurrency(leftover)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>Actual Leftover</Stat.Label>
+            <Stat.ValueText color={leftover >= 0 ? 'green.500' : 'red.500'} fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(leftover)}</Stat.ValueText>
           </Stat.Root>
         </StatGroup>
       </Box>
@@ -119,16 +126,16 @@ export default function MonthlyActualSummary() {
       <Box mb={4} px={4} py={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
         <StatGroup>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>{selectedYear} Total Income</Stat.Label>
-            <Stat.ValueText color="teal.600">{formatCurrency(totalNetIncome)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>{selectedYear} Total Income</Stat.Label>
+            <Stat.ValueText color="teal.600" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(totalNetIncome)}</Stat.ValueText>
           </Stat.Root>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>{selectedYear} Total Expenses</Stat.Label>
-            <Stat.ValueText color="teal.600">{formatCurrency(totalExpensesThisYear)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>{selectedYear} Total Expenses</Stat.Label>
+            <Stat.ValueText color="teal.600" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(totalExpensesThisYear)}</Stat.ValueText>
           </Stat.Root>
           <Stat.Root textAlign={'center'}>
-            <Stat.Label>{selectedYear} Total Savings</Stat.Label>
-            <Stat.ValueText color="teal.600">{formatCurrency(totalSavingsThisYear)}</Stat.ValueText>
+            <Stat.Label fontSize={isPortraitWidth ? "xs" : "sm"}>{selectedYear} Total Savings</Stat.Label>
+            <Stat.ValueText color="teal.600" fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(totalSavingsThisYear)}</Stat.ValueText>
           </Stat.Root>
         </StatGroup>
       </Box>

@@ -1,6 +1,7 @@
 import {
   Box, Text, Center, Stat, Progress, Input,
   Button, HStack, VStack, Flex, Heading, Card,
+  useMediaQuery,
 } from '@chakra-ui/react';
 import { useState } from 'react';
 import { useBudgetStore } from '../../store/budgetStore';
@@ -27,6 +28,9 @@ export default function SavingsGoalsTracker() {
   const removeSavingsGoal = useBudgetStore((s) => s.removeSavingsGoal);
   const updateSavingsGoal = useBudgetStore((s) => s.updateSavingsGoal);
   const [editGoalId, setEditGoalId] = useState<string | null>(null);
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   const savingsLogsThisYear = Object.entries(savingsLogs)
     .filter(([month]) => String(month).startsWith(selectedYear))
     .flatMap(([, logs]) => (Array.isArray(logs) ? logs : []));
@@ -113,7 +117,7 @@ export default function SavingsGoalsTracker() {
         <Card.Root p={4} mb={4} borderWidth={1} borderColor="border" bg="bg.subtle" key={String(goal.id)}>
           <Flex justify="space-between" align="center" mb={4}>
             <Button
-              size="xs"
+              size={isPortraitWidth ? "xs" : "sm"}
               colorScheme="blue"
               onClick={() => setEditGoalId(editGoalId === goal.id ? null : goal.id)}
             >
@@ -121,13 +125,13 @@ export default function SavingsGoalsTracker() {
             </Button>
             <Stat.Root mb={4}>
               <Box justifyContent="center" display="flex" flexDirection="column" alignItems="center">
-              <Stat.Label fontSize={'lg'}>{goal.name} {goal.id === 'yearly' ? selectedYear : ''}</Stat.Label>
-              <Stat.ValueText color="green.500">
+              <Stat.Label fontSize={isPortraitWidth ? 'sm' : 'lg'}>{goal.name} {goal.id === 'yearly' ? selectedYear : ''}</Stat.Label>
+              <Stat.ValueText color="green.500" fontSize={isPortraitWidth ? 'md' : '2xl'}>
                 {formatCurrency(total)} / {formatCurrency(goal?.target)}
               </Stat.ValueText>
               </Box>
             </Stat.Root>
-            <Button size="xs" colorScheme="red" onClick={() => resetGoal(goal.id)}>Reset</Button>
+            <Button size={isPortraitWidth ? "xs" : "sm"} colorScheme="red" onClick={() => resetGoal(goal.id)}>Reset</Button>
           </Flex>
           <Progress.Root value={progress} size="lg" colorScheme="green" bg="bg.subtle" borderRadius="xl" mb={4}>
             <Progress.Track borderRadius="xl" bg={"bg.panel"}>
@@ -190,7 +194,7 @@ export default function SavingsGoalsTracker() {
             <Center>
               <Button
                 mt={4}
-                size="sm"
+                size={isPortraitWidth ? "xs" : "sm"}
                 variant={'outline'}
                 colorScheme="red"
                 onClick={() => handleGoalDelete(goal.id)}
@@ -205,7 +209,7 @@ export default function SavingsGoalsTracker() {
         <Box width={'25%'} p={1}>
           <Button
             onClick={() => handleGoalAdd()}
-            size="sm"
+            size={isPortraitWidth ? "xs" : "sm"}
             colorScheme='green'
           >
             <MdAdd />

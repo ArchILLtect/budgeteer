@@ -1,4 +1,4 @@
-import { Box, Flex, Center, Heading, Stack, List, Text, Input, Button, VStack } from "@chakra-ui/react";
+import { Box, Flex, Center, Heading, Stack, List, Text, Input, Button, VStack, useMediaQuery } from "@chakra-ui/react";
 import { Tooltip } from "../ui/Tooltip";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
@@ -40,6 +40,8 @@ export default function SavingsLog() {
     : Infinity;
   const goalComplete = hasSelectedGoal ? remaining <= 0 : false;
 
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   // TODO: Clamp the value here also.
   const handleAdd = () => {
     const value =
@@ -66,7 +68,7 @@ export default function SavingsLog() {
   }
 
   return (
-    <Box p={4} boxShadow="md" borderRadius="lg" mt={6} bg="bg" borderWidth={1}>
+    <Box p={4} boxShadow="md" borderRadius="lg" mt={6} bg="bg" borderWidth={1} borderColor="border">
 
       <Flex justifyContent="space-between" alignItems="center">
         <Heading size="md">Savings Logs</Heading>
@@ -75,6 +77,7 @@ export default function SavingsLog() {
 
       <AppCollapsible
         mb={4}
+        pxContent={0}
         defaultOpen={showInputs}
         open={showInputs}
         onOpenChange={(open) => setShowInputs(open)}
@@ -95,7 +98,7 @@ export default function SavingsLog() {
                 <List.Item key={entry.id ?? `${entry.date}-${entry.amount}-${index}`}>
                   <Flex justify="space-between" alignItems="center">
                     <VStack align="start" gap={0}>
-                      <Text fontWeight="medium">${entry.amount?.toFixed(2)}</Text>
+                      <Text fontWeight="medium" fontSize={isPortraitWidth ? "sm" : "md"}>${entry.amount?.toFixed(2)}</Text>
                       <Text fontSize="xs" color="fg.muted">
                         {entry.date}
                       </Text>
@@ -104,7 +107,7 @@ export default function SavingsLog() {
                     {editingLogId === entry.id ? (
                       <Flex gap={2} align="center">
                         <AppSelect
-                          width={300}
+                          width={isPortraitWidth ? 100 : 300}
                           value={editGoalId}
                           onChange={(e) => setEditGoalId(e.target.value)}
                         >
@@ -114,7 +117,7 @@ export default function SavingsLog() {
                           ))}
                         </AppSelect>
                         <Button
-                          size="xs"
+                          size={isPortraitWidth ? "2xs" : "xs"}
                           colorScheme="green"
                           onClick={() => {
                             const newGoalId = editGoalId || null; // "" -> null
@@ -126,7 +129,7 @@ export default function SavingsLog() {
                           Save
                         </Button>
                         <Button
-                          size="xs"
+                          size={isPortraitWidth ? "2xs" : "xs"}
                           variant="ghost"
                           onClick={() => setEditingLogId(null)}
                         >
@@ -135,22 +138,27 @@ export default function SavingsLog() {
                       </Flex>
                     ) : (
                       <Tooltip content="Click to edit this entry">
-                      <Button
-                        size="xs"
-                        bg={"bg.panel"}
-                        variant="outline"
-                        onClick={() => beginEditRow(entry)}
-                      >
-                        {savingsGoals.find((g) => g.id === entry.goalId)?.name || '----'}
-                        {' '}
-                        {savingsGoals.find((g) => g.id === entry.goalId)
-                          ? `(${savingsGoals.find((g) => g.id === entry.goalId)?.target ?? '---'})`
-                          : ''}
-                      </Button>
+                        <Button
+                          justifyContent={"right"}
+                          size={isPortraitWidth ? "2xs" : "xs"}
+                          bg={"bg.panel"}
+                          variant="outline"
+                          onClick={() => beginEditRow(entry)}
+                        >
+                          <Text truncate maxWidth={isPortraitWidth ? "210px" : "350px"}>
+                          {savingsGoals.find((g) => g.id === entry.goalId)?.name || '----'}
+                          {' '}
+                          {savingsGoals.find((g) => g.id === entry.goalId)
+                            ? `(${savingsGoals.find((g) => g.id === entry.goalId)?.target ?? '---'})`
+                            : ''}
+                          </Text>
+                        </Button>
                       </Tooltip>
                     )}
                     <Button
-                      size="xs"
+                      size={isPortraitWidth ? "2xs" : "xs"}
+                      border={"1px solid"}
+                      borderColor={"red.500"}
                       bg={"bg.error"}
                       onClick={() => handleRemove(selectedMonth, index)}
                     >
@@ -164,7 +172,9 @@ export default function SavingsLog() {
             {/* Reset Button */}
             <Center>
               <Button
-                size="sm"
+                size={isPortraitWidth ? "2xs" : "sm"}
+                border={"1px solid"}
+                borderColor={"red.500"}
                 bg={"bg.error"}
                 variant="outline"
                 onClick={() => resetSavingsLog(selectedMonth)}
@@ -176,7 +186,7 @@ export default function SavingsLog() {
           </Box>
         )}
         <Stack mt={10} gap={3}>
-          <Flex justifyContent="space-between" alignItems="center" mb={3}>
+          <Flex justifyContent="center" alignItems="center" mb={3} gap={isPortraitWidth ? 2 : 15}>
             <Input
               type="number"
               placeholder="Enter amount"
@@ -191,12 +201,12 @@ export default function SavingsLog() {
                   : raw;
                 setAmount(Number.isFinite(clamped) ? clamped : "");
               }}
-              width={300}
+              width={isPortraitWidth ? 130 : 300}
               max={hasSelectedGoal && Number.isFinite(remaining) ? remaining : undefined}
               disabled={hasSelectedGoal ? goalComplete : false}
             />
             <AppSelect
-              width={300}
+              width={isPortraitWidth ? 150 : 300}
               value={selectedGoal}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedGoal(e.target.value)}
             >
@@ -205,7 +215,13 @@ export default function SavingsLog() {
                   <option key={goal.id} value={goal.id}>{goal.name}</option>
               ))}
             </AppSelect>
-            <Button colorScheme="teal" onClick={handleAdd} disabled={goalComplete}>
+            <Button
+              bg="teal.300"
+              color="gray.900"
+              size={isPortraitWidth ? "2xs" : "xs" }
+              onClick={handleAdd}
+              disabled={goalComplete}
+            >
               Add Entry
             </Button>
           </Flex>

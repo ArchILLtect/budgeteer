@@ -1,6 +1,6 @@
 import { useBudgetStore } from '../../store/budgetStore'
 import { Input, Stack, RadioGroup, Field, HStack, Button, Center, NativeSelect,
-    type RadioGroupValueChangeDetails } from '@chakra-ui/react'
+    Flex, Box, useMediaQuery, type RadioGroupValueChangeDetails } from '@chakra-ui/react'
 import { normalizeMoney, parseFiniteNumber } from "../../services/inputNormalization";
 
 type IncomeSourceFormProps = {
@@ -35,9 +35,11 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
       removeIncomeSource(source.id)
     }
   }
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
   
   return (
-    <>
+    <Box w={isPortraitWidth ? "55vw" : "100%"}>
       {/* Income Type Toggle */}
       <Field.Root mb={4}>
         <Field.Label>Income Type</Field.Label>
@@ -48,15 +50,31 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
           }
         >
           <HStack gap={4}>
-            {IncomeTypeOptions.map((opt) => (
-              <RadioGroup.Item key={opt.value} value={opt.value as IncomeType}>
-                <RadioGroup.ItemHiddenInput />
-                <RadioGroup.ItemControl>
-                  <RadioGroup.ItemIndicator />
-                </RadioGroup.ItemControl>
-                <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
-              </RadioGroup.Item>
-            ))}
+            {isPortraitWidth ? (
+              <Flex flexDirection={'column'} gap={2} justifyContent={"flex-start"}>
+                {IncomeTypeOptions.map((opt) => (
+                  <RadioGroup.Item key={opt.value} value={opt.value as IncomeType}>
+                    <RadioGroup.ItemHiddenInput />
+                    <RadioGroup.ItemControl>
+                      <RadioGroup.ItemIndicator />
+                    </RadioGroup.ItemControl>
+                    <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
+                  </RadioGroup.Item>
+                ))}
+              </Flex>
+            ) : (
+              <>
+                {IncomeTypeOptions.map((opt) => (
+                  <RadioGroup.Item key={opt.value} value={opt.value as IncomeType}>
+                    <RadioGroup.ItemHiddenInput />
+                    <RadioGroup.ItemControl>
+                      <RadioGroup.ItemIndicator />
+                    </RadioGroup.ItemControl>
+                    <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
+                  </RadioGroup.Item>
+                ))}
+              </>
+            )}
           </HStack>
         </RadioGroup.Root>
       </Field.Root>
@@ -115,21 +133,21 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
       {/* Bi-Weekly Inputs */}
       {source.type === 'bi-weekly' && (
         <Stack gap={3}>
-        <Field.Root>
-          <Field.Label>Bi-Weekly Gross Salary</Field.Label>
-          <Input
-            type="number"
-            placeholder="Enter your bi-weekly gross salary"
-            min="0"
-            step="1"
-            max="1000000"
-            value={source.biWeeklySalary ?? 0}
-            onChange={(e) =>
-                onUpdate(source.id, { biWeeklySalary: normalizeMoney(e.target.value, { min: 0 }) })
-            }
-            bg="bg.panel"
-          />
-        </Field.Root>
+          <Field.Root>
+            <Field.Label>Bi-Weekly Gross Salary</Field.Label>
+            <Input
+              type="number"
+              placeholder="Enter your bi-weekly gross salary"
+              min="0"
+              step="1"
+              max="1000000"
+              value={source.biWeeklySalary ?? 0}
+              onChange={(e) =>
+                  onUpdate(source.id, { biWeeklySalary: normalizeMoney(e.target.value, { min: 0 }) })
+              }
+              bg="bg.panel"
+            />
+          </Field.Root>
         </Stack>
       )}
 
@@ -181,6 +199,6 @@ export default function IncomeSourceForm({ source, onUpdate }: IncomeSourceFormP
           </Button>
         </Center>
       )}
-    </>
+    </Box>
   )
 }

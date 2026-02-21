@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Heading, Center, Text, VStack } from '@chakra-ui/react'
+import { Box, Heading, Center, Text, VStack, useMediaQuery } from '@chakra-ui/react'
 import ScenarioSelector from '../components/planner/ScenarioSelector';
 import IncomeCalculator from '../components/planner/IncomeCalculator';
 import ExpenseTracker from '../components/planner/ExpenseTracker';
@@ -16,9 +16,11 @@ function BudgetPlannerPage() {
 
   const selectedMonth = useBudgetStore((s) => s.selectedMonth);
 
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   return (
     <Box bg="bg.subtle" p={4} minH="100%">
-      <Box p={4} maxW="80%" mx="auto" borderWidth={1} borderColor="border" borderRadius="lg" boxShadow="md" bg="bg.panel">
+      <Box p={4} maxW={isPortraitWidth ? "100%" : "80%"} mx="auto" borderWidth={1} borderColor="border" borderRadius="lg" boxShadow="md" bg="bg.panel">
         <Center mb={4}>
           <VStack gap={1}>
             <Heading size="md" fontWeight={700} onMouseEnter={preloadExpensePie}>

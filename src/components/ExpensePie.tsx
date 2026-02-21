@@ -1,11 +1,14 @@
 import { PieChart, Pie, Tooltip, Legend, Cell } from 'recharts'
 import { useBudgetStore } from '../store/budgetStore'
-import { Box, Heading } from '@chakra-ui/react'
+import { Box, Heading, useMediaQuery } from '@chakra-ui/react'
 
 const COLORS = ['#3182ce', '#38a169', '#e53e3e', '#dd6b20', '#805ad5', '#319795']
 
 export default function ExpensePie() {
   const expenses = useBudgetStore((s) => s.expenses)
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   const chartData = expenses
     .filter(e => e.amount > 0)
     .map((e) => ({
@@ -18,7 +21,7 @@ export default function ExpensePie() {
   return (
     <Box borderWidth={1} borderRadius="md" p={4} mt={6}>
       <Heading size="md" mb={3}>Expense Breakdown</Heading>
-      <PieChart width={400} height={300}>
+      <PieChart width={isPortraitWidth ? "100%" : 400} height={300}>
         <Pie
           data={chartData}
           dataKey="value"
