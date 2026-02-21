@@ -45,7 +45,6 @@ export function WelcomeModal({ signedIn, authLoading }: { signedIn: boolean; aut
   const [openRequested, setOpenRequested] = useState(false);
   const [openReason, setOpenReason] = useState<WelcomeModalOpenReason>("manual");
   const wasOpenRef = useRef(false);
-  const prevSignedInRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,26 +80,6 @@ export function WelcomeModal({ signedIn, authLoading }: { signedIn: boolean; aut
       unsub();
     };
   }, [signedIn]);
-
-  // Open on login (but not on refresh): detect a signed-out -> signed-in transition.
-  useEffect(() => {
-    const prevSignedIn = prevSignedInRef.current;
-    prevSignedInRef.current = signedIn;
-
-    if (authLoading) return;
-    if (!signedIn) return;
-    if (prevSignedIn) return;
-
-    // Read from storage immediately so we don't briefly open before state sync.
-    const nextSeen = getWelcomeModalSeenVersion();
-    setSeenVersion(nextSeen);
-    setNeverShowAgainChecked(nextSeen >= WELCOME_MODAL_VERSION);
-
-    if (nextSeen >= WELCOME_MODAL_VERSION) return;
-
-    setOpenReason("login");
-    setOpenRequested(true);
-  }, [authLoading, signedIn]);
 
   useEffect(() => {
     // Subscribe even while signed-out/loading so we don't miss the sign-in event.
