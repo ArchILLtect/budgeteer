@@ -111,7 +111,7 @@ export function HomePage({ signedIn }: { signedIn: boolean }) {
             Plan your month. Import safely. Track honestly.
           </Heading>
           <Tip storageKey="tip:home-imports" title="Tip">
-            Imports are previewed and staged first, so you can apply them (or undo them) safely.
+            Imports are previewed and staged first, so you can apply them deliberately (or undo them within the window) without risking duplicates.
           </Tip>
           <Text color="fg.muted" fontSize="lg" maxW="2xl">
             Budgeteer is a privacy-aware budgeting app built around a planning-first workflow and deterministic CSV imports.
