@@ -1,10 +1,13 @@
 import { Box, Flex, Separator } from "@chakra-ui/react";
-import { Tooltip } from "../components/ui/Tooltip";
 import { SidebarItem } from "../components/SidebarItem";
 import { sidebarItems, SIDEBAR_WIDTH, publicSidebarItems } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
+import { useUserUI } from "../hooks/useUserUI";
 
 export function Sidebar() {
+
+  const { userUI } = useUserUI();
+  const isAdmin = userUI?.role === "Admin";
 
   const sidebarWidthPreset = useSidebarWidthPreset();
   const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH[sidebarWidthPreset] ?? SIDEBAR_WIDTH.small;
@@ -34,17 +37,25 @@ export function Sidebar() {
         ))}
       </Box>
       <Box>
-        <Tooltip content="Resize Sidebar" placement="right">
-          <Box>
+        {import.meta.env.DEV || isAdmin ? (
+          <Separator my={3} />
+        ) : null}
         {import.meta.env.DEV ? (
           <>
-            <Separator my={3} />
               <SidebarItem to="/dev" label="Dev" />
-            <Separator my={3} />
           </>
         ) : null}
-      </Box>
-      </Tooltip>
+        {import.meta.env.DEV && isAdmin ? (
+          <Separator my={3} />
+        ) : null}
+        {isAdmin ? (
+          <>
+            <SidebarItem to="/admin" label="Admin" />
+          </>
+        ) : null}
+        {import.meta.env.DEV || isAdmin ? (
+          <Separator my={3} />
+        ) : null}
       </Box>
       <Box mt={4}>
         {publicSidebarItems.map((item) => (

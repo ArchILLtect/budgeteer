@@ -1,12 +1,13 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { Box, Flex, IconButton, Link } from "@chakra-ui/react";
 import { Toaster } from "../components/ui/Toaster";
+import { Tooltip } from "../components/ui/Tooltip";
 import { StorageDisclosureBanner } from "../components/ui/StorageDisclosureBanner.tsx";
 import Header from "./Header.tsx";
 import Footer from "./Footer.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import type { AuthUserLike } from "../types";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { WelcomeModal } from "../components/ui/WelcomeModal";
@@ -23,6 +24,7 @@ import { STORAGE_REPAIR_NOTICE_KEY } from "../services/userScopedStorage";
 import { waitForIdleAndPaint } from "../utils/appUtils";
 import { FullPageLoading } from "./FullPageLoading";
 import { useRouteLoadingStore } from "../store/routeLoadingStore";
+import { recordRouteLoadComplete } from "../services/perfLogger";
 
 type AppShellProps = {
   user?: AuthUserLike | null;
@@ -54,6 +56,8 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
   const startRouteLoading = useRouteLoadingStore((s) => s.startRouteLoading);
   const stopRouteLoading = useRouteLoadingStore((s) => s.stopRouteLoading);
 
+  const prevRouteRef = useRef<string>(`${location.pathname}${location.search}${location.hash}`);
+
   useBootstrapUserProfile(user);
 
   // Fallback: if navigation happens outside our RouterLink clicks (e.g. redirects),
@@ -68,13 +72,26 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
     (async () => {
       await waitForIdleAndPaint();
       if (cancelled) return;
+
+      const now = Date.now();
+      if (routeLoadingStartedAtMs) {
+        recordRouteLoadComplete({
+          from: prevRouteRef.current,
+          to: `${location.pathname}${location.search}${location.hash}`,
+          destination: routeLoadingDestination,
+          durationMs: now - routeLoadingStartedAtMs,
+        });
+      }
+
       stopRouteLoading();
+
+      prevRouteRef.current = `${location.pathname}${location.search}${location.hash}`;
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [location.key, stopRouteLoading]);
+  }, [location.hash, location.key, location.pathname, location.search, routeLoadingDestination, routeLoadingStartedAtMs, stopRouteLoading]);
 
   useEffect(() => {
     try {
@@ -150,24 +167,27 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
         </Box>
 
         {/* Mid-height toggle arrow */}
-        <IconButton
-          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-          aria-expanded={sidebarOpen}
-          aria-controls="app-sidebar"
-          size="sm"
-          variant="outline"
-          bg="bg.panel"
-          borderColor="border"
-          position="absolute"
-          top="50%"
-          left={sidebarOpen ? sidebarWidth : "0px"}
-          transform={sidebarOpen ? "translate(-50%, -50%)" : "translate(0, -50%)"}
-          zIndex={2000}
-          onClick={() => setSidebarOpen((v) => !v)}
-        >
-          {sidebarOpen ? <MdChevronLeft /> : <MdChevronRight />}
-        </IconButton>
-
+          <Box>
+            <Tooltip content={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"} placement="top-start">
+              <IconButton
+                aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                aria-expanded={sidebarOpen}
+                aria-controls="app-sidebar"
+                size="sm"
+                variant="outline"
+                bg="bg.panel"
+                borderColor="border"
+                position="absolute"
+                top="50%"
+                left={sidebarOpen ? sidebarWidth : "0px"}
+                transform={sidebarOpen ? "translate(-50%, -50%)" : "translate(0, -50%)"}
+                zIndex={2000}
+                onClick={() => setSidebarOpen((v) => !v)}
+              >
+                {sidebarOpen ? <MdChevronLeft /> : <MdChevronRight />}
+              </IconButton>
+            </Tooltip>
+          </Box>
         {/* Main area is the primary scroll container */}
         <Box flex="1" minW={0} h="100%" overflow="auto" className="Main" id="main-content" tabIndex={-1} position="relative">
           {isRouteLoading ? (
