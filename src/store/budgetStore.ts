@@ -56,6 +56,8 @@ export const useBudgetStore = create<BudgetStoreState>()(
                 delete clone.progressTotal;
                 delete clone.loadingHeader;
                 delete clone.showIngestionBenchmark; // dev-only toggle not persisted
+                delete clone.lastIngestionBenchmarkMetrics;
+                delete clone.lastIngestionBenchmarkSessionId;
                 // importHistory is retained for audit/undo
                 return clone;
             },

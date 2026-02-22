@@ -17,6 +17,7 @@ import { buildTxKey } from "../../ingest/buildTxKey";
 import type { ImportPlan } from "../../ingest/importPlan";
 import { normalizeTransactionAmount } from "../../utils/storeHelpers";
 import type { SavingsReviewEntry } from "../../types/savingsReview";
+import type { IngestionMetrics } from "../../types/ingestionMetrics";
 
 type ImportManifestMeta = {
   size?: number;
@@ -62,10 +63,14 @@ type ImportSliceStoreState = Pick<
   savingsReviewQueue?: SavingsReviewEntry[];
   isSavingsModalOpen?: boolean;
   importManifests: Record<string, ImportManifest>;
+  budgetAppliedAtByMonth: Record<string, string>;
 
   streamingAutoLineThreshold: number;
   streamingAutoByteThreshold: number;
   showIngestionBenchmark: boolean;
+
+  lastIngestionBenchmarkMetrics: IngestionMetrics | null;
+  lastIngestionBenchmarkSessionId: string | null;
 
   lastIngestionTelemetry: LastIngestionTelemetry | null;
 
@@ -76,6 +81,7 @@ export type ImportSlice = {
   pendingSavingsByAccount: ImportLifecycleState["pendingSavingsByAccount"];
   savingsReviewQueue: SavingsReviewEntry[];
   importHistory: ImportHistoryEntry[];
+  budgetAppliedAtByMonth: Record<string, string>;
 
   importUndoWindowMinutes: number;
   importHistoryMaxEntries: number;
@@ -86,10 +92,14 @@ export type ImportSlice = {
   streamingAutoByteThreshold: number;
   showIngestionBenchmark: boolean;
 
+  lastIngestionBenchmarkMetrics: IngestionMetrics | null;
+  lastIngestionBenchmarkSessionId: string | null;
+
   importManifests: Record<string, ImportManifest>;
   lastIngestionTelemetry: LastIngestionTelemetry | null;
 
   setLastIngestionTelemetry: (telemetry: LastIngestionTelemetry | null) => void;
+  setLastIngestionBenchmark: (metrics: IngestionMetrics | null, sessionId?: string | null) => void;
   clearAllImportData: () => void;
   registerImportManifest: (hash: string, accountNumber: string, meta?: ImportManifestMeta) => void;
 
@@ -103,6 +113,7 @@ export type ImportSlice = {
   processPendingSavingsForAccount: (accountNumber: string, months: string[]) => void;
   clearPendingSavingsForAccountMonths: (accountNumber: string, months: string[]) => void;
   markTransactionsBudgetApplied: (accountNumber: string, months: string[]) => void;
+  recordBudgetAppliedAt: (months: string[], appliedAtIso?: string) => void;
 
   processPendingSavingsForImportSession: (
     accountNumber: string,
@@ -141,6 +152,7 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
   pendingSavingsByAccount: {},
   savingsReviewQueue: [],
   importHistory: [],
+  budgetAppliedAtByMonth: {},
 
   importUndoWindowMinutes: 30,
   importHistoryMaxEntries: 30,
@@ -151,10 +163,19 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
   streamingAutoByteThreshold: 500_000,
   showIngestionBenchmark: false,
 
+  lastIngestionBenchmarkMetrics: null,
+  lastIngestionBenchmarkSessionId: null,
+
   importManifests: {},
   lastIngestionTelemetry: null,
 
   setLastIngestionTelemetry: (telemetry) => set(() => ({ lastIngestionTelemetry: telemetry })),
+
+  setLastIngestionBenchmark: (metrics, sessionId) =>
+    set(() => ({
+      lastIngestionBenchmarkMetrics: metrics ?? null,
+      lastIngestionBenchmarkSessionId: sessionId ? String(sessionId) : null,
+    })),
 
   clearAllImportData: () =>
     set(() => ({
@@ -163,6 +184,9 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
       importHistory: [],
       importManifests: {},
       lastIngestionTelemetry: null,
+      budgetAppliedAtByMonth: {},
+      lastIngestionBenchmarkMetrics: null,
+      lastIngestionBenchmarkSessionId: null,
     })),
 
   registerImportManifest: (hash, accountNumber, meta) =>
@@ -442,6 +466,27 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
           [accountNumber]: { ...acct, transactions: updated },
         },
       };
+    }),
+
+  recordBudgetAppliedAt: (months, appliedAtIso) =>
+    set((state) => {
+      const safeMonths = Array.isArray(months) ? months.filter(Boolean) : [];
+      if (!safeMonths.length) return {};
+
+      const at = appliedAtIso || new Date().toISOString();
+      const prev = state.budgetAppliedAtByMonth || {};
+      let changed = false;
+      const next: Record<string, string> = { ...prev };
+
+      for (const m of safeMonths) {
+        if (next[m] !== at) {
+          next[m] = at;
+          changed = true;
+        }
+      }
+
+      if (!changed) return {};
+      return { budgetAppliedAtByMonth: next };
     }),
 
   markImportSessionBudgetApplied: (accountNumber, sessionId, months) =>
