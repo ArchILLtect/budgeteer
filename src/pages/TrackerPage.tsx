@@ -3,8 +3,11 @@ import TrackerHeader from '../components/tracker/TrackerHeader';
 import BudgetTracker from '../components/tracker/BudgetTracker';
 const preloadMonthlyActualSummary = () => import('../components/tracker/MonthlyActualSummary');
 import SavingsGoalsTracker from '../components/tracker/SavingsGoalsTracker';
+import { usePerfMilestone } from "../hooks/usePerfMilestone";
 
 export default function BudgetTrackerPage() {
+
+  usePerfMilestone("tracker:mounted");
 
   const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 

@@ -3,12 +3,15 @@ import { Suspense, lazy } from 'react';
 import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from "../store/budgetStore";
 import AccountCard from '../components/accounts/AccountCard';
+import { usePerfMilestone } from "../hooks/usePerfMilestone";
 // Dev harness can still be imported manually when needed
 // import IngestionDevHarness from '../../dev/IngestionDevHarness';
 const SyncAccountsModal = lazy(() => import('../components/ui/SyncAccountsModal'));
 const preloadSyncModal = () => import('../components/ui/SyncAccountsModal');
 
 export default function AccountsTracker() {
+
+  usePerfMilestone("accounts:mounted");
 
   const accounts = useBudgetStore((s) => s.accounts);
   const clearAllAccounts = useBudgetStore((s) => s.clearAllAccounts);
