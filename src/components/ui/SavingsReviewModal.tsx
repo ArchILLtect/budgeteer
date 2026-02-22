@@ -4,6 +4,7 @@ import { useBudgetStore } from '../../store/budgetStore';
 import { AppSelect } from './AppSelect';
 import { DialogModal } from './DialogModal';
 import { normalizeMoney } from "../../services/inputNormalization";
+import { fireToast } from "../../hooks/useFireToast";
 
 export default function SavingsReviewModal() {
   const savingsGoals = useBudgetStore((s) => s.savingsGoals);
@@ -76,19 +77,28 @@ export default function SavingsReviewModal() {
   }
 
   const handleSubmit = () => {
-    queue.forEach((entry) => {
-      const goalId = selectedGoals[entry.id] || null; // allow null
-      addSavingsLog(entry.month, {
-        goalId,
-        date: entry.date,
-        amount: entry.amount,
-        name: entry.name,
-        importSessionId: entry.importSessionId,
+    try {
+      queue.forEach((entry) => {
+        const goalId = selectedGoals[entry.id] || null; // allow null
+        addSavingsLog(entry.month, {
+          goalId,
+          date: entry.date,
+          amount: entry.amount,
+          name: entry.name,
+          importSessionId: entry.importSessionId,
+        });
       });
-    });
-    // Resolve and cleanup centrally
-    resolveSavingsLink(true);
-  
+      // Resolve and cleanup centrally
+      resolveSavingsLink(true);
+
+      fireToast(
+        "success",
+        "Savings transactions linked",
+        `Processed ${queue.length.toLocaleString("en-US")} savings transfer(s).`
+      );
+    } catch (err: unknown) {
+      fireToast("error", "Error linking savings transactions", err instanceof Error ? err.message : String(err));
+    }
   };
 
   if (!queue.length) return null;
