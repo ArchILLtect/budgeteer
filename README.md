@@ -2,8 +2,23 @@
 
 # Budgeteer
 
-[![Docs Index](https://img.shields.io/badge/Docs-developer%20hub-blue)](docs/index.md)
-[![Contributing](https://img.shields.io/badge/Contributing-guide-brightgreen)](CONTRIBUTING.md)
+<p align="center">
+  <a href="https://vitejs.dev/"><img alt="Vite" src="https://img.shields.io/badge/Vite-7.x-646CFF?logo=vite&logoColor=white"></a>
+  <a href="https://react.dev/"><img alt="React" src="https://img.shields.io/badge/React-19.x-087EA4?logo=react&logoColor=white"></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white"></a>
+  <a href="https://chakra-ui.com/"><img alt="Chakra UI" src="https://img.shields.io/badge/Chakra%20UI-3.x-319795?logo=chakraui&logoColor=white"></a>
+  <a href="https://zustand-demo.pmnd.rs/"><img alt="Zustand" src="https://img.shields.io/badge/Zustand-5.x-000000"></a>
+  <a href="https://docs.amplify.aws/"><img alt="AWS Amplify" src="https://img.shields.io/badge/AWS%20Amplify-Gen%201-FF9900?logo=amazonaws&logoColor=white"></a>
+  <a href="https://www.apollographql.com/docs/react/"><img alt="Apollo GraphQL" src="https://img.shields.io/badge/Apollo%20GraphQL-3.x-311C87?logo=apollographql&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <a href="docs/index.md"><img alt="Developer Hub" src="https://img.shields.io/badge/Docs-developer%20hub-blue"></a>
+  <a href="CONTRIBUTING.md"><img alt="Contributing Guide" src="https://img.shields.io/badge/Contributing-guide-brightgreen"></a>
+  <a href="docs/API.md"><img alt="API Reference" src="https://img.shields.io/badge/API-reference-orange"></a>
+  <a href="CHANGELOG.md"><img alt="Changelog" src="https://img.shields.io/badge/Changelog-yellow"></a>
+  <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/License-MIT-lightgrey"></a>
+</p>
 
 Budgeteer is a privacy-aware personal finance app focused on:
 
