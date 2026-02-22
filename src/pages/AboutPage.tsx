@@ -157,8 +157,8 @@ export function AboutPage() {
         </Heading>
         <VStack align="start" gap={2} color="fg.muted">
           <Text>
-            Near-term work focuses on tightening the product surface (copy/routes/UX correctness), hardening types, and
-            polishing Planner + Tracker without changing the core architecture.
+            The current MVP is local-first: planning, CSV import (stage/apply/undo), and monthly tracking are usable end-to-end.
+            Next work is mostly polish, performance tuning, and documentation—cloud sync remains explicitly optional.
           </Text>
 
           <Text>
@@ -166,8 +166,8 @@ export function AboutPage() {
           </Text>
 
           <Box pl={4}>
-            <Text>• Fix remaining UI correctness issues and clean up runtime console warnings/errors.</Text>
-            <Text>• Keep the ingestion pipeline fast and explainable, then improve review tooling later.</Text>
+            <Text>• Keep imports explainable and reliable as data grows (performance + UX clarity).</Text>
+            <Text>• Improve accessibility and resilience (startup/storage guardrails).</Text>
           </Box>
         </VStack>
       </Box>
