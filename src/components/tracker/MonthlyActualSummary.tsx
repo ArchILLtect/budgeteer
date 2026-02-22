@@ -1,5 +1,5 @@
 import { Box, Text, Heading, Stat, Stack,
-  StatGroup, Progress, Flex,
+  StatGroup, Progress, Flex, Badge,
   useMediaQuery, 
 } from '@chakra-ui/react';
 import { useBudgetStore } from '../../store/budgetStore';
@@ -7,7 +7,7 @@ import ExpenseTracker from '../planner/ExpenseTracker';
 import IncomeCalculator from '../planner/IncomeCalculator';
 import { AppCollapsible } from '../ui/AppCollapsible';
 import { formatCurrency } from '../../utils/formatters';
-import { getYearFromMonthKey } from '../../services/dateTime';
+import { formatLocalIsoDate, formatUtcMonthYear, getYearFromMonthKey } from '../../services/dateTime';
 import type { PlannerSlice } from '../../store/slices/plannerSlice';
 
 type MonthlyActual = PlannerSlice["monthlyActuals"][string];
@@ -36,6 +36,7 @@ export default function MonthlyActualSummary() {
     : 0;
   const actuals = useBudgetStore((s) => s.monthlyActuals);
   const savingsLogs = useBudgetStore((s) => s.savingsLogs);
+  const appliedToBudgetAt = useBudgetStore((s) => s.budgetAppliedAtByMonth?.[selectedMonth]);
 
   const selectedYear = getYearFromMonthKey(selectedMonth) ?? (selectedMonth || '').slice(0, 4);
   const actualEntries = (Object.entries(actuals) as Array<[string, MonthlyActual]>).filter(([key]) =>
@@ -63,33 +64,42 @@ export default function MonthlyActualSummary() {
   return (
     <Box p={4} borderBottomRadius="lg" boxShadow="md" bg="bg" borderWidth={2}>
       {actual &&
-      <Box mb={4}>
-        <Flex justifyContent="space-between" alignItems="center" mb={isPortraitWidth ? 0 : 3}>
-          <Heading size="lg">This Month's Summary</Heading>
-        </Flex>
+        <Box mb={4}>
+          <Flex justifyContent="space-between" alignItems="center" mb={isPortraitWidth ? 0 : 3}>
+            <Heading size="lg">This Month's Summary</Heading>
+            {appliedToBudgetAt && (
+              <Badge px={3} py={1} colorPalette="teal" fontSize="xs" borderRadius="4xl">
+                <Text fontSize="xs" color="fg.muted" mb={0.5}>
+                  Applied to budget on: {formatLocalIsoDate(appliedToBudgetAt)}
+                </Text>
+              </Badge>
+            )}
+          </Flex>
 
-        <Stack gap={3}>
-          <AppCollapsible
-            title="Actual Inputs"
-            fontSize={isPortraitWidth ? "md" : "lg"}
-            noRight={isPortraitWidth ? true : false}
-            pxContent={isPortraitWidth ? 0 : 4}
-            mb={6}
-            defaultOpen={showActualInputs}
-            open={showActualInputs}
-            onOpenChange={(open) => setShowActualInputs(open)}
-            headerCenter={
-              <Text fontSize="xs" colorScheme="blue" onClick={() => setShowActualInputs(!showActualInputs)}>
-                {showActualInputs ? '▲ Hide All Inputs ▲' : '▼ Show All Inputs ▼'}
-              </Text>
-            }
-          >
-            <IncomeCalculator origin='Tracker' selectedMonth={selectedMonth} />
-            <ExpenseTracker origin='Tracker' selectedMonth={selectedMonth} />
-          </AppCollapsible>
-        </Stack>
-      </Box>
+          <Stack gap={3}>
+            <AppCollapsible
+              title="Actual Inputs"
+              fontSize={isPortraitWidth ? "md" : "lg"}
+              noRight={isPortraitWidth ? true : false}
+              pxContent={isPortraitWidth ? 0 : 4}
+              mb={6}
+              defaultOpen={showActualInputs}
+              open={showActualInputs}
+              onOpenChange={(open) => setShowActualInputs(open)}
+              headerRight={
+                <Text fontSize="md" color="fg.info" onClick={() => setShowActualInputs(!showActualInputs)}>
+                  {showActualInputs ? '▲ Hide All Inputs ▲' : '▼ Show All Inputs ▼'}
+                </Text>
+              }
+            >
+              <IncomeCalculator origin='Tracker' selectedMonth={selectedMonth} />
+              <ExpenseTracker origin='Tracker' selectedMonth={selectedMonth} />
+            </AppCollapsible>
+          </Stack>
+        </Box>
       }
+
+      <Heading size="md" my={3}>{formatUtcMonthYear(selectedMonth, { month: 'long' })} Summary</Heading>
       <Box px={4} py={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
         <StatGroup>
           <Stat.Root textAlign={'center'}>
@@ -114,7 +124,7 @@ export default function MonthlyActualSummary() {
       {(plan?.totalSavings ?? 0) > 0 ? (
         <Box mt={4}>
           <Text fontSize="sm" color="fg.muted">Savings progress toward this month's savings plan:</Text>
-          <Progress.Root value={percentComplete} size="sm" colorScheme="green" mt={1} borderRadius="md">
+          <Progress.Root value={percentComplete} size="sm" colorPalette="green" mt={1} borderRadius="md">
             <Progress.Track borderRadius="md">
               <Progress.Range borderRadius="md" />
             </Progress.Track>

@@ -61,6 +61,7 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   const updateProgress = useBudgetStore(s => s.updateProgress);
   const closeProgress = useBudgetStore(s => s.closeProgress);
   const markTransactionsBudgetApplied = useBudgetStore(s => s.markTransactionsBudgetApplied);
+  const recordBudgetAppliedAt = useBudgetStore(s => s.recordBudgetAppliedAt);
   const clearPendingSavingsForAccountMonths = useBudgetStore(s => s.clearPendingSavingsForAccountMonths);
   const awaitSavingsLink = useBudgetStore(s => s.awaitSavingsLink);
   const isSavingsModalOpen = useBudgetStore(s => s.isSavingsModalOpen);
@@ -165,6 +166,7 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       // Mark staged transactions as applied for selected scope
       const monthsApplied = targets;
       markTransactionsBudgetApplied(resolvedAccountNumber, monthsApplied);
+      recordBudgetAppliedAt(monthsApplied);
       // Savings linking is handled once at the end (single aggregated modal).
       // Clear pending import savings entries for these months so they can't be processed a second time.
       clearPendingSavingsForAccountMonths?.(resolvedAccountNumber, monthsApplied);
@@ -227,7 +229,7 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
             value={scope}
             onValueChange={(details) => setScope(((details.value ?? "month") as ApplyScope))}
           >
-            <Text color={'GrayText'} fontSize={'sm'}>Make sure you have selected desired month or year before proceeding</Text>
+            <Text color={'GrayText'} fontSize={'sm'} mb={2}>Make sure you have selected desired month or year before proceeding</Text>
             <Stack gap={3}>
               {applyTimelineOptions.map((opt) => (
                 <RadioGroup.Item key={opt.value} value={opt.value as ApplyScope} disabled={opt.disabled}>

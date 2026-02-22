@@ -49,6 +49,7 @@ export default function ImportHistoryPage() {
   const undoStagedImport = useBudgetStore(s => s.undoStagedImport);
   const markImportSessionBudgetApplied = useBudgetStore((s) => s.markImportSessionBudgetApplied as (accountNumber: string, sessionId: string, months: string[]) => void);
   const processPendingSavingsForImportSession = useBudgetStore((s) => s.processPendingSavingsForImportSession as (accountNumber: string, sessionId: string, months: string[]) => void);
+  const recordBudgetAppliedAt = useBudgetStore((s) => s.recordBudgetAppliedAt as (months: string[]) => void);
   const clearImportSessionEverywhere = useBudgetStore((s) => s.clearImportSessionEverywhere as (accountNumber: string, sessionId: string) => void);
 
   const [filterAccount, setFilterAccount] = useState<string>('');
@@ -109,6 +110,7 @@ export default function ImportHistoryPage() {
 
   const doApplySelected = () => {
     let appliedSessions = 0;
+    const appliedMonthsAll = new Set<string>();
     selectedEntries.forEach(({ entry, runtime }) => {
       if (runtime.status === 'active' && runtime.stagedNow > 0) {
         const acct = accounts[entry.accountNumber];
@@ -122,10 +124,15 @@ export default function ImportHistoryPage() {
         if (months.size) {
           markImportSessionBudgetApplied(entry.accountNumber, entry.sessionId, [...months]);
           processPendingSavingsForImportSession(entry.accountNumber, entry.sessionId, [...months]);
+          for (const m of months) appliedMonthsAll.add(m);
           appliedSessions++;
         }
       }
     });
+
+    if (appliedMonthsAll.size) {
+      recordBudgetAppliedAt([...appliedMonthsAll]);
+    }
     if (appliedSessions > 0) {
       fireToast("success", 'Apply complete', `${appliedSessions} session(s) applied`);
     } else {
@@ -184,8 +191,8 @@ export default function ImportHistoryPage() {
         {someSelected ? (
           <>
             <Text fontSize='sm'>{selectedEntries.length} selected</Text>
-            <Button size='xs' onClick={doUndoSelected} colorScheme='red' variant='outline'>Undo</Button>
-            <Button size='xs' onClick={doApplySelected} colorScheme='teal' variant='outline'>Apply</Button>
+            <Button size='xs' onClick={doUndoSelected} colorPalette='red' variant='outline'>Undo</Button>
+            <Button size='xs' onClick={doApplySelected} colorPalette='teal' variant='outline'>Apply</Button>
             <Button size='xs' onClick={() => { doUndoSelected(); doApplySelected(); }} variant='outline'>Resolve (Undo + Apply)</Button>
             <Button size='xs' onClick={exportSelected} variant='outline'>
               <TiDownloadOutline  />
@@ -337,7 +344,7 @@ export default function ImportHistoryPage() {
                         aria-label="Clear import session"
                         size="xs"
                         variant="ghost"
-                        colorScheme="red"
+                        colorPalette="red"
                         onClick={() =>
                           setClearTarget({
                             accountNumber: entry.accountNumber,

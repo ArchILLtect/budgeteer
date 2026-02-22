@@ -180,6 +180,7 @@ export function formatUtcMonthKey(
     noneLabel?: string;
     locale?: string | string[];
     month?: "short" | "long";
+    includeYear?: boolean;
   }
 ): string {
   const parsed = parseMonthKey(monthKey);
@@ -187,7 +188,7 @@ export function formatUtcMonthKey(
 
   const date = new Date(Date.UTC(parsed.y, parsed.m - 1, 1));
   return date.toLocaleDateString(opts?.locale ?? "en-US", {
-    year: "numeric",
+    ...(opts?.includeYear === false ? {} : { year: "numeric" as const }),
     month: opts?.month ?? "long",
     timeZone: "UTC",
   });
@@ -290,17 +291,20 @@ export function formatUtcDayKeyMonthDay(
  * @returns A formatted month and year string, or a fallback if the input is invalid.
  */
 export function formatUtcMonthYear(
-  dayKey: string,
+  monthOrDayKey: string,
   opts?: {
     noneLabel?: string;
     locale?: string | string[];
     month?: "short" | "long";
   }
 ): string {
-  const parsed = parseDayKey(dayKey);
-  if (!parsed) return opts?.noneLabel ?? dayKey;
+  const parsedMonth = parseMonthKey(monthOrDayKey);
+  const parsedDay = parsedMonth ? null : parseDayKey(monthOrDayKey);
+  const y = parsedMonth?.y ?? parsedDay?.y;
+  const m = parsedMonth?.m ?? parsedDay?.m;
+  if (!y || !m) return opts?.noneLabel ?? monthOrDayKey;
 
-  const date = new Date(Date.UTC(parsed.y, parsed.m - 1, 1));
+  const date = new Date(Date.UTC(y, m - 1, 1));
   return date.toLocaleDateString(opts?.locale, {
     year: "numeric",
     month: opts?.month ?? "long",
