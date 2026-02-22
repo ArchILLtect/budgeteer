@@ -6,7 +6,7 @@ import Header from "./Header.tsx";
 import Footer from "./Footer.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import type { AuthUserLike } from "../types";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { WelcomeModal } from "../components/ui/WelcomeModal";
@@ -18,6 +18,8 @@ import { useSidebarWidthPreset } from "../store/localSettingsStore";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { useBudgetStore } from "../store/budgetStore";
 import IngestionMetricsPanel from "../components/accounts/IngestionMetricsPanel";
+import { fireToast } from "../hooks/useFireToast";
+import { STORAGE_REPAIR_NOTICE_KEY } from "../services/userScopedStorage";
 
 type AppShellProps = {
   user?: AuthUserLike | null;
@@ -42,6 +44,21 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
   const lastIngestionBenchmarkSessionId = useBudgetStore((s) => s.lastIngestionBenchmarkSessionId);
 
   useBootstrapUserProfile(user);
+
+  useEffect(() => {
+    try {
+      const repairedAt = localStorage.getItem(STORAGE_REPAIR_NOTICE_KEY);
+      if (!repairedAt) return;
+      localStorage.removeItem(STORAGE_REPAIR_NOTICE_KEY);
+      fireToast(
+        "warning",
+        "Local data was reset",
+        "Some saved app data was unreadable and has been cleared to keep Budgeteer working."
+      );
+    } catch {
+      // ignore
+    }
+  }, []);
 
   return (
     <Flex direction="column" h="100vh" bg="bg.subtle" color="fg" overflow={"hidden"} className="AppShell" position="relative">
