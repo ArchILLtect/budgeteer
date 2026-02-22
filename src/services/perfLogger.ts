@@ -1,5 +1,16 @@
 import { usePerfLogStore, type PerfEvent, type PerfEventKind } from "../store/perfLogStore";
 
+function getCurrentRoute(): string | undefined {
+  try {
+    if (typeof window === "undefined") return undefined;
+    const { pathname, search, hash } = window.location;
+    const route = `${pathname ?? ""}${search ?? ""}${hash ?? ""}`.trim();
+    return route || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function makeId(): string {
   try {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -89,6 +100,7 @@ export function recordGenericTiming(args: {
   recordPerfEvent({
     kind: args.kind,
     name: args.name,
+    route: getCurrentRoute(),
     durationMs: Math.max(0, Math.round(args.durationMs)),
     ok: args.ok,
     message: args.message,

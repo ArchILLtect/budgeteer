@@ -12,6 +12,7 @@ import { DialogModal } from '../components/ui/DialogModal';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { formatLocalIsoMonthDayTime24 } from "../services/dateTime";
+import { recordGenericTiming } from "../services/perfLogger";
 import type {
   ImportHistoryEntry,
   ImportSessionRuntime,
@@ -109,6 +110,7 @@ export default function ImportHistoryPage() {
   };
 
   const doApplySelected = () => {
+    const perfStartedAt = performance.now();
     let appliedSessions = 0;
     const appliedMonthsAll = new Set<string>();
     selectedEntries.forEach(({ entry, runtime }) => {
@@ -138,6 +140,18 @@ export default function ImportHistoryPage() {
     } else {
       fireToast("info", 'Nothing to apply', 'No selected sessions had staged transactions to apply.');
     }
+
+    recordGenericTiming({
+      kind: "apply",
+      name: "apply-to-budget:import-history",
+      durationMs: performance.now() - perfStartedAt,
+      ok: appliedSessions > 0,
+      data: {
+        sessionsSelected: selectedEntries.length,
+        sessionsApplied: appliedSessions,
+        monthsApplied: appliedMonthsAll.size,
+      },
+    });
   };
 
   const exportSelected = () => {

@@ -8,6 +8,7 @@ import { fireToast } from "../../hooks/useFireToast";
 import { DialogModal } from "./DialogModal";
 import { useApplyAlwaysExtractVendorName, useExpenseNameOverrides, useIncomeNameOverrides } from "../../store/localSettingsStore";
 import { formatUtcMonthKey, getTodayDateInputValue, getYearFromMonthKey } from "../../services/dateTime";
+import { recordGenericTiming } from "../../services/perfLogger";
 
 type ApplyToBudgetModalProps = {
   isOpen: boolean;
@@ -187,6 +188,21 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
       const elapsed = applyStartMsRef.current != null ? performance.now() - applyStartMsRef.current : 0;
       applyStartMsRef.current = null;
       setElapsedMs(elapsed);
+
+      recordGenericTiming({
+        kind: "apply",
+        name: "apply-to-budget",
+        durationMs: elapsed,
+        ok: didSucceed,
+        data: {
+          scope,
+          months: targets.length,
+          expenses: total.e,
+          income: total.i,
+          savings: total.s,
+          savingsReviewEntries: savingsReviewEntriesAll.length,
+        },
+      });
 
       setLoading(false);
       closeProgress();

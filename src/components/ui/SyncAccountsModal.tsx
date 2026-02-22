@@ -5,6 +5,7 @@ import { useBudgetStore } from "../../store/budgetStore";
 import { analyzeImport } from "../../ingest/analyzeImport";
 import IngestionMetricsPanel from "../accounts/IngestionMetricsPanel";
 import { fireToast } from "../../hooks/useFireToast";
+import { recordGenericTiming } from "../../services/perfLogger";
 import type { ImportPlan } from "../../ingest/importPlan";
 import type { AccountMapping, Transaction } from "../../types";
 
@@ -340,6 +341,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
 
   const applyAllPlans = () => {
     if (!ingestionResults.length) return;
+    const perfStartedAt = performance.now();
     try {
 
       // Capture a representative benchmark snapshot for the top-of-screen dev panel.
@@ -411,11 +413,34 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         });
       }
       fireToast("success", "Import applied (staged)", "Transactions are staged until you Apply to Budget.");
+
+      recordGenericTiming({
+        kind: "import",
+        name: "import:staged-batch",
+        durationMs: performance.now() - perfStartedAt,
+        ok: true,
+        data: {
+          accounts: ingestionResults.length,
+          totalNewCount: telemetry?.newCount ?? null,
+          totalDupesExisting: telemetry?.dupesExisting ?? null,
+          totalDupesIntraFile: telemetry?.dupesIntraFile ?? null,
+          totalSavingsDeferred: telemetry?.savings ?? null,
+        },
+      });
       onClose();
       resetState();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       fireToast("error", "Apply failed", msg);
+
+      recordGenericTiming({
+        kind: "import",
+        name: "import:staged-batch",
+        durationMs: performance.now() - perfStartedAt,
+        ok: false,
+        message: msg,
+        data: { accounts: ingestionResults.length },
+      });
     }
   };
 

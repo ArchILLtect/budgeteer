@@ -9,6 +9,7 @@ import { fireToast } from '../../hooks/useFireToast';
 import { AppSelect } from './AppSelect';
 import type { ImportPlan } from '../../ingest/importPlan';
 import type { Transaction } from '../../types';
+import { recordGenericTiming } from "../../services/perfLogger";
 import type {
   AcceptedTxnPreview,
   DuplicateSample,
@@ -213,6 +214,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
     }
     setIngesting(true);
     setStreaming(false);
+    const perfStartedAt = performance.now();
     try {
       const wallStart = (performance && performance.now) ? performance.now() : Date.now();
       let ingestionInput: { fileText?: string; parsedRows?: ParsedRowsContainer } = { fileText };
@@ -325,8 +327,30 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         );
       } catch {/* noop */}
       fireToast("info", "Dry run complete", `New: ${r.stats.newCount} | DupEx: ${r.stats.dupesExisting} | DupIntra: ${r.stats.dupesIntraFile} | Ingest: ${r.stats.ingestMs}ms` + (timing.parseMs ? ` | Parse: ${timing.parseMs}ms` : ''));
+
+      recordGenericTiming({
+        kind: "import",
+        name: "import:dry-run",
+        durationMs: performance.now() - perfStartedAt,
+        ok: true,
+        data: {
+          streaming: useStreaming,
+          rowsProcessed: r.stats.rowsProcessed,
+          newCount: r.stats.newCount,
+          dupesExisting: r.stats.dupesExisting,
+          dupesIntraFile: r.stats.dupesIntraFile,
+        },
+      });
     } catch (e: unknown) {
       fireToast("error", "Ingestion failed", errorToMessage(e));
+      recordGenericTiming({
+        kind: "import",
+        name: "import:dry-run",
+        durationMs: performance.now() - perfStartedAt,
+        ok: false,
+        message: errorToMessage(e),
+        data: { streaming: useStreaming },
+      });
     } finally {
       setIngesting(false);
     }
@@ -341,6 +365,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
   
   const applyPatch = () => {
     if (!result?.plan) return;
+    const perfStartedAt = performance.now();
     try {
       commitImportPlan(result.plan);
       setApplied(true);
@@ -349,8 +374,30 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
       if (result.savingsQueue && result.savingsQueue.length) {
         fireToast("info", "Savings deferred", `${result.savingsQueue.length} potential savings transactions will be reviewed after budget apply.`);
       }
+
+      recordGenericTiming({
+        kind: "import",
+        name: "import:staged",
+        durationMs: performance.now() - perfStartedAt,
+        ok: true,
+        data: {
+          accountSuffix: accountNumber ? accountNumber.slice(-4) : null,
+          newCount: result.plan.stats.newCount,
+          dupesExisting: result.plan.stats.dupesExisting,
+          dupesIntraFile: result.plan.stats.dupesIntraFile,
+          savingsDeferred: result.savingsQueue?.length ?? 0,
+        },
+      });
     } catch (e: unknown) {
       fireToast("error", "Apply failed", errorToMessage(e));
+      recordGenericTiming({
+        kind: "import",
+        name: "import:staged",
+        durationMs: performance.now() - perfStartedAt,
+        ok: false,
+        message: errorToMessage(e),
+        data: { accountSuffix: accountNumber ? accountNumber.slice(-4) : null },
+      });
     }
   };
 
@@ -598,7 +645,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                               const a = document.createElement('a');
                               a.href = url;
                               a.download = `ingestion-errors-${result.stats.hash}.csv`;
-                              document.body.appendChild(a);
+                              (document.body ?? document.documentElement)?.appendChild(a);
                               a.click();
                               setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
                             } catch {/* ignore */}
