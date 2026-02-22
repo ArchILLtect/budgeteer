@@ -69,4 +69,44 @@ describe("CSV ingestion supports /samples patterns", () => {
     const transfer = plan.accepted.find((t) => (t.description || "").toLowerCase().includes("tfr to sv"));
     expect(transfer?.type).toBe("savings");
   });
+
+  it("ingests History_Showcase_Tiny.csv (bank History export format)", async () => {
+    const csv = readSample("History_Showcase_Tiny.csv");
+
+    const plan = await analyzeImport({
+      fileText: csv,
+      accountNumber: "0001112223",
+      existingTxns: [],
+      sessionId: "s1",
+      importedAt: "2026-02-14T00:00:00.000Z",
+    });
+
+    expect(plan.accepted.length).toBeGreaterThan(5);
+
+    const rent = plan.accepted.find((t) => (t.description || "").toLowerCase().includes("rent"));
+    expect(rent?.rawAmount).toBeLessThan(0);
+
+    const paycheck = plan.accepted.find((t) => (t.description || "").toLowerCase().includes("payroll"));
+    expect(paycheck?.rawAmount).toBeGreaterThan(0);
+
+    const orig = plan.accepted[0]?.original as Record<string, unknown> | undefined;
+    expect(orig && ("Balance" in orig || "balance" in orig)).toBe(true);
+  });
+
+  it("ingests History_Showcase_Medium.csv (bank History export format)", async () => {
+    const csv = readSample("History_Showcase_Medium.csv");
+
+    const plan = await analyzeImport({
+      fileText: csv,
+      accountNumber: "0001112223",
+      existingTxns: [],
+      sessionId: "s1",
+      importedAt: "2026-02-14T00:00:00.000Z",
+    });
+
+    expect(plan.accepted.length).toBeGreaterThan(10);
+
+    const transfer = plan.accepted.find((t) => (t.description || "").toLowerCase().includes("tfr to sv"));
+    expect(transfer?.type).toBe("savings");
+  });
 });
