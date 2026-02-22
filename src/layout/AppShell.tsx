@@ -16,6 +16,8 @@ import { PublicSidebar } from "./PublicSidebar.tsx";
 import { SIDEBAR_WIDTH } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { useBudgetStore } from "../store/budgetStore";
+import IngestionMetricsPanel from "../components/accounts/IngestionMetricsPanel";
 
 type AppShellProps = {
   user?: AuthUserLike | null;
@@ -34,6 +36,10 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
     // Chakra's default `md` breakpoint is 48em (768px). No SSR in this app.
     return window.matchMedia?.("(min-width: 48em)")?.matches ?? true;
   });
+
+  const showIngestionBenchmark = useBudgetStore((s) => s.showIngestionBenchmark);
+  const lastIngestionBenchmarkMetrics = useBudgetStore((s) => s.lastIngestionBenchmarkMetrics);
+  const lastIngestionBenchmarkSessionId = useBudgetStore((s) => s.lastIngestionBenchmarkSessionId);
 
   useBootstrapUserProfile(user);
 
@@ -117,6 +123,31 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
         {/* Main area is the primary scroll container */}
         <Box flex="1" minW={0} h="100%" overflow="auto" className="Main" id="main-content" tabIndex={-1}>
           <ErrorBoundary title="Page Crashed">
+            {import.meta.env.DEV && showIngestionBenchmark ? (
+              <Box
+                position="sticky"
+                top={0}
+                zIndex={1500}
+                px={4}
+                py={3}
+                borderBottomWidth={1}
+                borderColor="border"
+                bg="bg.subtle"
+              >
+                <Box maxW="6xl" mx="auto" w="full">
+                  {lastIngestionBenchmarkMetrics ? (
+                    <IngestionMetricsPanel
+                      metrics={lastIngestionBenchmarkMetrics}
+                      sessionId={lastIngestionBenchmarkSessionId ?? undefined}
+                    />
+                  ) : (
+                    <Box fontSize="sm" color="fg.muted">
+                      Ingestion benchmark panel is enabled, but no ingestion run has been captured yet.
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            ) : null}
             <Suspense fallback={<BasicSpinner />}>
               <Outlet />
             </Suspense>

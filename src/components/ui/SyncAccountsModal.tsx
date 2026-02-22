@@ -68,6 +68,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const [telemetry, setTelemetry] = useState<AggregateTelemetry | null>(null); // aggregate
   const [metricsAccount, setMetricsAccount] = useState('');
   const setLastIngestionTelemetry = useBudgetStore(s => s.setLastIngestionTelemetry);
+  const setLastIngestionBenchmark = useBudgetStore(s => s.setLastIngestionBenchmark);
   const [dryRunStarted, setDryRunStarted] = useState(false);
 
   const primaryActionButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -341,6 +342,34 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     if (!ingestionResults.length) return;
     try {
 
+      // Capture a representative benchmark snapshot for the top-of-screen dev panel.
+      try {
+        const chosen = ingestionResults.find((r) => r.accountNumber === metricsAccount) || ingestionResults[0];
+        const s = chosen?.plan?.stats;
+        if (s) {
+          setLastIngestionBenchmark(
+            {
+              ingestMs: s.ingestMs,
+              parseMs: 0,
+              processMs: s.processMs,
+              totalMs: s.ingestMs,
+              rowsProcessed: s.rowsProcessed,
+              rowsPerSec: s.rowsPerSec,
+              duplicatesRatio: s.duplicatesRatio,
+              stageTimings: s.stageTimings,
+              earlyShortCircuits: {
+                total: s.earlyShortCircuits.total,
+                byStage: {
+                  existing: s.earlyShortCircuits.existing,
+                  intraFile: s.earlyShortCircuits.intraFile,
+                },
+              },
+            },
+            s.importSessionId
+          );
+        }
+      } catch {/* noop */}
+
       ingestionResults.forEach(({ accountNumber, plan }) => {
         if (!plan) return;
         commitImportPlan(plan);
@@ -367,7 +396,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           render: ({ onClose }) => (
             <Box p={3} bg='gray.800' color='white' borderRadius='md' boxShadow='md'>
               <Text fontSize='sm' mb={1}>Imported {plan.stats.newCount} new transactions in {accountNumber}</Text>
-              <Button size='xs' colorScheme='red' variant='outline'>Undo</Button>
+              <Button size='xs' colorPalette='red' variant='outline'>Undo</Button>
             </Box>
           )*/
       });
@@ -559,7 +588,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 <Button
                   ref={primaryActionButtonRef}
                   onClick={handleStartAccounts}
-                  colorScheme="teal"
+                  colorPalette="teal"
                   loading={ingesting}
                   disabled={!fileTypes.includes(sourceType)}
                 >
@@ -568,7 +597,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
               </>
             ) : step === 'mapping' ? (
               <Button
-                colorScheme="teal"
+                colorPalette="teal"
                 onClick={() => {
                 // Save new mappings
                 const additions: Record<string, { label: string; institution: string }> = {};
@@ -596,7 +625,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 <Button onClick={() => { onClose(); resetState(); }} variant="ghost" mr={3}>
                   Cancel Import
                 </Button>
-                <Button ref={primaryActionButtonRef} colorScheme='teal' onClick={beginTransactionsStep}>
+                <Button ref={primaryActionButtonRef} colorPalette='teal' onClick={beginTransactionsStep}>
                   Continue to Transactions
                 </Button>
               </>
@@ -604,7 +633,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
               <>
                 <Button
                   ref={(!dryRunStarted || ingestionResults.length === 0) ? primaryActionButtonRef : undefined}
-                  colorScheme='teal'
+                  colorPalette='teal'
                   onClick={runDryRun}
                   loading={ingesting}
                   disabled={ingesting || (!pendingData.length)}
@@ -612,7 +641,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                   {dryRunStarted ? 'Re-Run Dry Run' : 'Run Dry Run'}
                 </Button>
                 {ingestionResults.length > 0 && !ingesting && (
-                  <Button ref={(dryRunStarted && ingestionResults.length > 0) ? primaryActionButtonRef : undefined} ml={3} colorScheme='purple' onClick={applyAllPlans}>
+                  <Button ref={(dryRunStarted && ingestionResults.length > 0) ? primaryActionButtonRef : undefined} ml={3} colorPalette='purple' onClick={applyAllPlans}>
                     Apply All ({telemetry?.newCount || 0} new)
                   </Button>
                 )}

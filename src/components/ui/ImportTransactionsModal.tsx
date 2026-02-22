@@ -62,6 +62,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
   const importManifests = useBudgetStore((s) => s.importManifests || {});
   const registerImportManifest = useBudgetStore((s) => s.registerImportManifest);
   const setLastIngestionTelemetry = useBudgetStore((s) => s.setLastIngestionTelemetry);
+  const setLastIngestionBenchmark = useBudgetStore((s) => s.setLastIngestionBenchmark);
   const lastIngestionTelemetry = useBudgetStore((s) => s.lastIngestionTelemetry);
   const streamingAutoLineThreshold = useBudgetStore((s) => s.streamingAutoLineThreshold);
   const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
@@ -298,7 +299,31 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         });
       } catch {/* noop */}
       const wallEnd = (performance && performance.now) ? performance.now() : Date.now();
-      setTiming((t) => ({ ...t, ingestMs: r.stats.ingestMs, totalMs: +(wallEnd - wallStart).toFixed(2) }));
+      const totalMs = +(wallEnd - wallStart).toFixed(2);
+      setTiming((t) => ({ ...t, ingestMs: r.stats.ingestMs, totalMs }));
+
+      try {
+        setLastIngestionBenchmark(
+          {
+            ingestMs: r.stats.ingestMs,
+            parseMs: timing.parseMs ?? 0,
+            processMs: r.stats.processMs,
+            totalMs,
+            rowsProcessed: r.stats.rowsProcessed,
+            rowsPerSec: r.stats.rowsPerSec,
+            duplicatesRatio: r.stats.duplicatesRatio,
+            stageTimings: r.stats.stageTimings,
+            earlyShortCircuits: {
+              total: r.stats.earlyShortCircuits.total,
+              byStage: {
+                existing: r.stats.earlyShortCircuits.existing,
+                intraFile: r.stats.earlyShortCircuits.intraFile,
+              },
+            },
+          },
+          r.stats.importSessionId
+        );
+      } catch {/* noop */}
       fireToast("info", "Dry run complete", `New: ${r.stats.newCount} | DupEx: ${r.stats.dupesExisting} | DupIntra: ${r.stats.dupesIntraFile} | Ingest: ${r.stats.ingestMs}ms` + (timing.parseMs ? ` | Parse: ${timing.parseMs}ms` : ''));
     } catch (e: unknown) {
       fireToast("error", "Ingestion failed", errorToMessage(e));
@@ -379,12 +404,12 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
             )}
 
             <HStack>
-              <Button size="sm" colorScheme="teal" onClick={runPipeline} loading={ingesting} disabled={!fileText}>Run Dry Run</Button>
+              <Button size="sm" colorPalette="teal" onClick={runPipeline} loading={ingesting} disabled={!fileText}>Run Dry Run</Button>
               <HStack gap={2}>
                 <Button
                   size="sm"
                   variant={useStreaming ? 'solid' : 'outline'}
-                  colorScheme={useStreaming ? 'purple' : 'gray'}
+                  colorPalette={useStreaming ? 'purple' : 'gray'}
                   onClick={() => setUseStreaming(s => {
                     const next = !s;
                     if (!next) { setAutoStreaming(false); setAutoStreamingReason(''); }
@@ -397,21 +422,21 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                   {useStreaming ? (autoStreaming ? 'Streaming AUTO' : 'Streaming ON') : 'Streaming OFF'}
                 </Button>
                 {autoStreaming && (
-                  <Badge colorScheme="purple" variant="subtle" fontSize="0.6rem">auto</Badge>
+                  <Badge colorPalette="purple" variant="subtle" fontSize="0.6rem">auto</Badge>
                 )}
               </HStack>
               {!showConfirm && (
                 <Button size="sm" variant="outline" onClick={() => setShowConfirm(true)} disabled={!result?.plan || applied}>Review & Apply</Button>
               )}
               {showConfirm && (
-                <Button size="sm" colorScheme="green" onClick={applyPatch} disabled={applied}>Confirm Apply</Button>
+                <Button size="sm" colorPalette="green" onClick={applyPatch} disabled={applied}>Confirm Apply</Button>
               )}
               {showConfirm && (
                 <Button size="sm" variant="ghost" onClick={() => setShowConfirm(false)} disabled={applied}>Cancel</Button>
               )}
-              {applied && <Badge colorScheme="green">Applied</Badge>}
+              {applied && <Badge colorPalette="green">Applied</Badge>}
               {ingesting && streaming && !streamFinished && !streamAborted && (
-                <Button size="sm" colorScheme="red" variant="outline" onClick={cancelStreaming}>Abort</Button>
+                <Button size="sm" colorPalette="red" variant="outline" onClick={cancelStreaming}>Abort</Button>
               )}
             </HStack>
 
@@ -422,11 +447,11 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                   <HStack gap={3}>
                     <Text>{streamRows} rows{totalLines ? ` / ${totalLines.toLocaleString()}` : ''}</Text>
                     {totalLines && (
-                      <Badge colorScheme={streamAborted ? 'red' : (streamFinished ? 'green' : 'purple')}>
+                      <Badge colorPalette={streamAborted ? 'red' : (streamFinished ? 'green' : 'purple')}>
                         {Math.min(100, ((streamRows / totalLines) * 100) || 0).toFixed(1)}%
                       </Badge>
                     )}
-                    {streamAborted && <Badge colorScheme='red'>aborted</Badge>}
+                    {streamAborted && <Badge colorPalette='red'>aborted</Badge>}
                   </HStack>
                 </HStack>
                 <Box mt={1} h="4px" bg="gray.200" borderRadius="sm" overflow="hidden">
@@ -504,7 +529,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                               {entries.map(([k, v]) => {
                                 const pct = ((v / total) * 100).toFixed(1);
                                 return (
-                                  <Badge key={k} title={tooltipMap[k] || k} colorScheme={k === 'none' ? 'gray' : (k === 'consensus' ? 'purple' : 'blue')} fontSize="0.6rem">
+                                  <Badge key={k} title={tooltipMap[k] || k} colorPalette={k === 'none' ? 'gray' : (k === 'consensus' ? 'purple' : 'blue')} fontSize="0.6rem">
                                     {k}: {v} ({pct}%)
                                   </Badge>
                                 );
@@ -623,7 +648,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                           return entries.map(([k, v]) => {
                             const pctPrev = ((v / totalPrev) * 100).toFixed(1);
                             return (
-                              <Badge key={k} fontSize="0.55rem" colorScheme={k === 'none' ? 'gray' : (k === 'consensus' ? 'purple' : 'blue')}>
+                              <Badge key={k} fontSize="0.55rem" colorPalette={k === 'none' ? 'gray' : (k === 'consensus' ? 'purple' : 'blue')}>
                                 {k}:{v} ({pctPrev}%)
                               </Badge>
                             );
@@ -661,7 +686,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
               </Box>
             )}
             {result && useStreaming && !ingesting && (
-              <Badge colorScheme={streamAborted ? 'red' : 'purple'} alignSelf='flex-start'>
+              <Badge colorPalette={streamAborted ? 'red' : 'purple'} alignSelf='flex-start'>
                 {(() => {
                   if (streamAborted) return `Aborted after ${streamRows}`;
                   const bytes = typeof streamBytes === 'number' ? streamBytes : null;
@@ -681,8 +706,8 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         </Dialog.CloseTrigger>
         <Dialog.Footer>
           <Button mr={3} onClick={closeAndReset}>Close</Button>
-          {!showConfirm && <Button colorScheme="blue" onClick={() => setShowConfirm(true)} disabled={!result?.plan || applied}>Review & Apply</Button>}
-          {showConfirm && <Button colorScheme="green" onClick={applyPatch} disabled={applied}>Confirm Apply</Button>}
+          {!showConfirm && <Button colorPalette="blue" onClick={() => setShowConfirm(true)} disabled={!result?.plan || applied}>Review & Apply</Button>}
+          {showConfirm && <Button colorPalette="green" onClick={applyPatch} disabled={applied}>Confirm Apply</Button>}
           {showConfirm && <Button variant="ghost" onClick={() => setShowConfirm(false)} disabled={applied}>Cancel</Button>}
         </Dialog.Footer>
       </Dialog.Content>
