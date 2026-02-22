@@ -1,0 +1,25 @@
+date,description,amount,type,category
+2026-01-01,Rent,-1500.00,expense,Housing
+2026-01-02,Paycheck (ACME),2500.00,income,Salary
+2026-01-03,Grocery Store,-132.18,expense,Groceries
+2026-01-03,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-04,Gas Station,-41.22,expense,Transportation
+2026-01-05,Internet Bill,-65.00,expense,Utilities
+2026-01-06,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-07,Mobile Phone,-55.00,expense,Utilities
+2026-01-08,Streaming Subscription,-15.49,expense,Subscriptions
+2026-01-09,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-10,Gym Membership,-35.00,expense,Health
+2026-01-10,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-11,Pharmacy,-12.63,expense,Health
+2026-01-12,Electric Bill,-92.14,expense,Utilities
+2026-01-13,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-14,Restaurant,-38.60,expense,Dining
+2026-01-16,Paycheck (ACME),2500.00,income,Salary
+2026-01-17,Grocery Store,-118.47,expense,Groceries
+2026-01-18,Car Insurance,-110.00,expense,Insurance
+2026-01-20,Savings Transfer,-300.00,savings,Savings
+2026-01-21,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-22,Water Bill,-28.33,expense,Utilities
+2026-01-23,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-25,Refund: Grocery Store,18.42,income,Refunds

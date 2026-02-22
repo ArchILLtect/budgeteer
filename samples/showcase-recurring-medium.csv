@@ -1,0 +1,68 @@
+date,description,amount,type,category
+2026-01-01,Rent,-1500.00,expense,Housing
+2026-01-01,Parking Pass,-65.00,expense,Transportation
+2026-01-02,Paycheck (ACME),2500.00,income,Salary
+2026-01-02,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-02,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-03,Grocery Store,-132.18,expense,Groceries
+2026-01-03,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-04,Gas Station,-41.22,expense,Transportation
+2026-01-05,Internet Bill,-65.00,expense,Utilities
+2026-01-05,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-05,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-06,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-06,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-07,Mobile Phone,-55.00,expense,Utilities
+2026-01-07,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-07,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-08,Streaming Subscription,-15.49,expense,Subscriptions
+2026-01-08,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-08,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-09,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-09,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-10,Gym Membership,-35.00,expense,Health
+2026-01-10,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-11,Pharmacy,-12.63,expense,Health
+2026-01-12,Electric Bill,-92.14,expense,Utilities
+2026-01-12,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-12,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-13,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-13,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-14,Restaurant,-38.60,expense,Dining
+2026-01-14,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-14,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-15,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-15,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-16,Paycheck (ACME),2500.00,income,Salary
+2026-01-16,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-16,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-17,Grocery Store,-118.47,expense,Groceries
+2026-01-17,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-18,Car Insurance,-110.00,expense,Insurance
+2026-01-19,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-19,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-20,Savings Transfer,-300.00,savings,Savings
+2026-01-20,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-20,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-21,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-21,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-22,Water Bill,-28.33,expense,Utilities
+2026-01-22,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-22,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-23,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-23,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-24,Gas Station,-39.88,expense,Transportation
+2026-01-25,Refund: Grocery Store,18.42,income,Refunds
+2026-01-26,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-26,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-27,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-27,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-28,Restaurant,-42.10,expense,Dining
+2026-01-28,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-28,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-29,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-29,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-30,Paycheck (ACME),2500.00,income,Salary
+2026-01-30,Coffee Shop,-4.75,expense,Food & Drink
+2026-01-30,Lunch Spot,-12.40,expense,Food & Drink
+2026-01-31,Grocery Store,-141.09,expense,Groceries
