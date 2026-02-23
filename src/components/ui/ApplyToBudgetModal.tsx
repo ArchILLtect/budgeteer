@@ -15,6 +15,7 @@ type ApplyToBudgetModalProps = {
   onClose: () => void;
   acct: AccountLike;
   months: string[]; // list of all months with transactions for this account, in "YYYY-MM" format
+  selectedMonth: string;
 };
 
 type ApplyTransaction = Parameters<typeof applyOneMonth>[2]["transactions"][number];
@@ -38,7 +39,7 @@ const formatElapsed = (ms: number) => {
   return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 };
 
-export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: ApplyToBudgetModalProps) {
+export default function ApplyToBudgetModal({ isOpen, onClose, acct, months, selectedMonth }: ApplyToBudgetModalProps) {
   const [loading, setLoading] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const applyStartMsRef = useRef<number | null>(null);
@@ -52,7 +53,6 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   const setIsLoading = useBudgetStore(s => s.setIsLoading);
   const openLoading = useBudgetStore(s => s.openLoading);
   const closeLoading = useBudgetStore(s => s.closeLoading);
-  const selectedMonth = useBudgetStore(s => s.selectedMonth);
   const selectedYearFromStore = getYearFromMonthKey(selectedMonth) ?? '';
   const yearFromSelected = (selectedMonth || '').slice(0, 4);
   const transactionsThisMonth = acct.transactions.filter((tx) => tx.date?.startsWith(selectedMonth));
@@ -77,7 +77,7 @@ export default function ApplyToBudgetModal({ isOpen, onClose, acct, months }: Ap
   }, []);
 
   const applyTimelineOptions = [
-    { value: "month", label: `Current Month ${formatUtcMonthKey(selectedMonth, { noneLabel: 'n/a', month: 'long' })} = (${transactionsThisMonth?.length.toLocaleString('en-US')})`, disabled: !selectedMonth || transactionsThisMonth?.length <= 0 },
+    { value: "month", label: `Current Month (${formatUtcMonthKey(selectedMonth, { noneLabel: 'n/a', month: 'long' })}) = (${transactionsThisMonth?.length.toLocaleString('en-US')})`, disabled: !selectedMonth || transactionsThisMonth?.length <= 0 },
     { value: "year", label: `Current Year (${selectedYearFromStore || 'year not set'}) = (${transactionsThisYear?.length.toLocaleString('en-US') || 0})`, disabled: !selectedYearFromStore || transactionsThisYear.length <= 0 },
     { value: "all", label: `All Transactions (${acct?.transactions?.length.toLocaleString('en-US') || 0})`, disabled: !months || months?.length <= 0 },
   ];

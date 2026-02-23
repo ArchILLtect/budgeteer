@@ -80,7 +80,6 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
   const accounts = useBudgetStore((s) => (s as BudgetStoreAccountState).accounts);
   const importHistory = useBudgetStore((s) => (s as BudgetStoreAccountState).importHistory);
   const removeAccount = useBudgetStore((s) => (s as BudgetStoreAccountState).removeAccount);
-  const setGlobalSelectedMonth = useBudgetStore((s) => (s as BudgetStoreAccountState).setSelectedMonth);
   const currentAccount = accounts[acctNumber];
   const currentTransactions = useMemo(
     () => (currentAccount?.transactions ?? []) as Transaction[],
@@ -165,6 +164,14 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
     monthsForYear.includes(selectedMonth)
       ? selectedMonth
       : (monthsForYear.at(-1) as BudgetMonthKey | undefined) ?? selectedMonth;
+
+  // Normalize this account's local selected month (important for single-month accounts
+  // where the user can't "change" tabs to trigger onValueChange).
+  useEffect(() => {
+    if (activeMonth && activeMonth !== selectedMonth && monthsForYear.includes(activeMonth)) {
+      onSelectedMonthChange(activeMonth);
+    }
+  }, [activeMonth, monthsForYear, onSelectedMonthChange, selectedMonth]);
 
   return (
     <>
@@ -538,9 +545,6 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
                   size="sm"
                   colorPalette="teal"
                   onClick={() => {
-                    if (activeMonth && activeMonth !== selectedMonth && monthsForYear.includes(activeMonth)) {
-                      setGlobalSelectedMonth(activeMonth);
-                    }
                     onOpen();
                   }}
                 >
@@ -553,6 +557,7 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
                   onClose={onClose}
                   acct={{ ...acct, transactions: currentTransactions }}
                   months={months}
+                  selectedMonth={activeMonth}
                 />
                 <SavingsReviewModal />
                 <ConfirmModal />

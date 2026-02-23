@@ -39,10 +39,11 @@ export default function AccountsTracker() {
         if (next[accountNumber]) continue;
 
         const months = getAvailableMonths({ ...acct, transactions: acct.transactions ?? [] }) as string[];
+        const latestForAccount = months.length > 0 ? (months.slice().sort().at(-1) as BudgetMonthKey) : null;
         const initial =
           months.includes(globalSelectedMonth)
             ? globalSelectedMonth
-            : (months.at(-1) as BudgetMonthKey | undefined) ?? globalSelectedMonth;
+            : latestForAccount ?? globalSelectedMonth;
 
         next[accountNumber] = initial;
         changed = true;
