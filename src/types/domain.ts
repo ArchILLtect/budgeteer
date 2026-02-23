@@ -39,6 +39,28 @@ export type BudgeteerDirective =
       source: BudgeteerDirectiveSource;
     };
 
+export type BudgeteerProposalStatus = "pending" | "approved" | "rejected";
+
+export type BudgeteerProposalSource = "directive" | "ui" | "suggestion";
+
+export type BudgeteerProposal =
+  | {
+      id: string;
+      field: "name";
+      next: string;
+      source: BudgeteerProposalSource;
+      status: BudgeteerProposalStatus;
+      directiveKind?: "rename";
+    }
+  | {
+      id: string;
+      field: "category";
+      next: string;
+      source: BudgeteerProposalSource;
+      status: BudgeteerProposalStatus;
+      directiveKind?: "category";
+    };
+
 // Local-first transaction shape used throughout ingestion + store.
 // This is intentionally tolerant (allows extra fields) while we harden types.
 export type Transaction = {
@@ -60,6 +82,9 @@ export type Transaction = {
   bankNote?: string | null;
   note?: string | null;
   directives?: BudgeteerDirective[];
+
+  // Pending/approved/rejected changes that require review.
+  proposals?: BudgeteerProposal[];
 
   accountNumber?: string;
 

@@ -83,6 +83,10 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function normalizeDisplayText(value: unknown) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
 function coerceParsedRowsContainer(fileText: string, externalParsedRows?: unknown): ParsedRowsContainer {
   if (externalParsedRows) {
     if (Array.isArray(externalParsedRows)) {
@@ -363,6 +367,44 @@ export async function analyzeImport({
         const tAfterShortDup = nowMs();
         tDedupe += tAfterShortDup - tEarlyKeyEnd;
         continue;
+      }
+
+      if (!(autoApplyExplicitDirectives ?? true) && noteInfo.directives.length) {
+        const proposals: NonNullable<Transaction["proposals"]> = [];
+
+        const rename = noteInfo.directives.filter((d) => d.kind === "rename").at(-1)?.value;
+        if (rename) {
+          const current = normalizeDisplayText(norm.name);
+          const next = normalizeDisplayText(rename);
+          if (next && next !== current) {
+            proposals.push({
+              id: `${earlyKey}|directive:rename`,
+              field: "name",
+              next,
+              source: "directive",
+              status: "pending",
+              directiveKind: "rename",
+            });
+          }
+        }
+
+        const category = noteInfo.directives.filter((d) => d.kind === "category").at(-1)?.value;
+        if (category) {
+          const current = normalizeDisplayText(norm.category);
+          const next = normalizeDisplayText(category);
+          if (next && next !== current) {
+            proposals.push({
+              id: `${earlyKey}|directive:category`,
+              field: "category",
+              next,
+              source: "directive",
+              status: "pending",
+              directiveKind: "category",
+            });
+          }
+        }
+
+        if (proposals.length) norm.proposals = proposals;
       }
     }
 

@@ -165,4 +165,43 @@ describe("analyzeImport", () => {
       note: "Prefer organic",
     });
   });
+
+  it("when auto-apply directives is OFF, creates pending proposals instead of mutating fields", async () => {
+    const now = makeDeterministicNow();
+
+    const csv = [
+      "date,description,amount,Note",
+      "2026-02-01,Paycheck,100.00,\"budgeteer:rename=Work\"",
+    ].join("\n");
+
+    const accountNumber = "1234";
+    const key = `${accountNumber}|2026-02-01|100.00|paycheck`;
+
+    const plan = await analyzeImport({
+      fileText: csv,
+      accountNumber,
+      existingTxns: [],
+      sessionId: "s1",
+      importedAt: "2026-02-14T00:00:00.000Z",
+      now,
+      autoApplyExplicitDirectives: false,
+    });
+
+    expect(plan.accepted).toHaveLength(1);
+    expect(plan.accepted[0].key).toBe(key);
+    expect(plan.accepted[0].name).toBeUndefined();
+    expect(plan.accepted[0].directives).toMatchObject([
+      { kind: "rename", value: "Work", source: "bankNote" },
+    ]);
+    expect(plan.accepted[0].proposals).toMatchObject([
+      {
+        id: `${key}|directive:rename`,
+        field: "name",
+        next: "Work",
+        source: "directive",
+        status: "pending",
+        directiveKind: "rename",
+      },
+    ]);
+  });
 });

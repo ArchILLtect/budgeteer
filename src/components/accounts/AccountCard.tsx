@@ -441,6 +441,10 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                               ? parseFiniteNumber(tx.amount, { fallback: 0 })
                               : 0;
 
+                      const pendingProposals = Array.isArray(tx.proposals)
+                        ? tx.proposals.filter((p) => p?.status === "pending").length
+                        : 0;
+
                       const stripedBg =
                         idx % 2 === 1
                           ? ({ base: "gray.50", _dark: "gray.800" } as const)
@@ -464,18 +468,25 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                             ${Math.abs(signedAmount).toFixed(2)}
                           </Table.Cell>
                           <Table.Cell>
-                            <Tag.Root
-                              size="sm"
-                              colorPalette={
-                                tx.type === "income"
-                                  ? "green"
-                                  : tx.type === "savings"
-                                    ? "blue"
-                                    : "orange"
-                              }
-                            >
-                              {tx.type}{tx.staged ? '*' : ''}
-                            </Tag.Root>
+                            <HStack gap={2}>
+                              <Tag.Root
+                                size="sm"
+                                colorPalette={
+                                  tx.type === "income"
+                                    ? "green"
+                                    : tx.type === "savings"
+                                      ? "blue"
+                                      : "orange"
+                                }
+                              >
+                                {tx.type}{tx.staged ? '*' : ''}
+                              </Tag.Root>
+                              {pendingProposals > 0 && (
+                                <Badge colorPalette="orange" variant="subtle" fontSize="0.65rem">
+                                  Needs review
+                                </Badge>
+                              )}
+                            </HStack>
                           </Table.Cell>
                           <Table.Cell>{tx.category || "—"}</Table.Cell>
                           <Table.Cell textAlign="right">
