@@ -220,7 +220,7 @@ type ExpenseNameOptions = {
     incomeNameOverrides?: { match: string; displayName: string }[];
 };
 
-function getNonEmptyExpenseName(tx: Transaction, options?: ExpenseNameOptions) {
+function getNonEmptyExpenseNameBase(tx: Transaction, options?: ExpenseNameOptions) {
     const rawDesc = normalizeDisplayText(tx.description);
     const rawName = normalizeDisplayText(tx.name);
     const rawPreferred = rawDesc || rawName;
@@ -232,17 +232,26 @@ function getNonEmptyExpenseName(tx: Transaction, options?: ExpenseNameOptions) {
     });
     if (known) {
         const base = normalizeDisplayText(known);
-        return applyExactNameOverrides(base, options?.expenseNameOverrides);
+        return base;
     }
 
     if (options?.alwaysExtractVendorName) {
         const extracted = normalizeDisplayText(extractVendorHeuristicOnly(rawPreferred));
         const base = extracted || '(no description)';
-        return applyExactNameOverrides(base, options?.expenseNameOverrides);
+        return base;
     }
 
     const maxLen = options?.rawMaxLen ?? 80;
     const base = clampDisplayText(rawPreferred, maxLen) || '(no description)';
+    return base;
+}
+
+export function getExpenseNameOverrideMatchKey(tx: Transaction, options?: ExpenseNameOptions): string {
+    return getNonEmptyExpenseNameBase(tx, options);
+}
+
+function getNonEmptyExpenseName(tx: Transaction, options?: ExpenseNameOptions) {
+    const base = getNonEmptyExpenseNameBase(tx, options);
     return applyExactNameOverrides(base, options?.expenseNameOverrides);
 }
 
@@ -261,11 +270,20 @@ function applyExactNameOverrides(value: string, rules: { match: string; displayN
     return current;
 }
 
-function getNonEmptyIncomeDescription(tx: Transaction, options?: ExpenseNameOptions) {
+function getNonEmptyIncomeDescriptionBase(tx: Transaction, options?: ExpenseNameOptions) {
     const raw = normalizeDisplayText(tx.description) || normalizeDisplayText(tx.name);
     if (!raw) return '(no description)';
     const maxLen = options?.rawMaxLen ?? 80;
     const base = clampDisplayText(raw, maxLen) || '(no description)';
+    return base;
+}
+
+export function getIncomeNameOverrideMatchKey(tx: Transaction, options?: ExpenseNameOptions): string {
+    return getNonEmptyIncomeDescriptionBase(tx, options);
+}
+
+function getNonEmptyIncomeDescription(tx: Transaction, options?: ExpenseNameOptions) {
+    const base = getNonEmptyIncomeDescriptionBase(tx, options);
     return applyExactNameOverrides(base, options?.incomeNameOverrides);
 }
 

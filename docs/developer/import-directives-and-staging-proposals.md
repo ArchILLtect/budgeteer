@@ -229,23 +229,23 @@ UI tests (if present) or manual scripts:
 ## Implementation checklist (step-by-step)
 
 1) Types
-- [ ] Add `Directive` and proposal/change types
-- [ ] Add transaction fields: `name`, `bankNote`, `note`, `directives`
+- [ ] Add `Directive` and proposal/change types (Directive done; proposals pending)
+- [x] ~~Add transaction fields: `name`, `bankNote`, `note`, `directives`~~
 
 2) Parsing
-- [ ] Implement directive token parser for `budgeteer:*` (strict whitelist)
-- [ ] Implement `cleanNote(bankNote)` that strips directive tokens
+- [x] ~~Implement directive token parser for `budgeteer:*` (strict whitelist)~~
+- [x] ~~Implement `cleanNote(bankNote)` that strips directive tokens~~
 
 3) Ingestion integration
-- [ ] Populate `bankNote` from imported rows when present
-- [ ] Populate `note` + `directives` on staged transactions
+- [x] ~~Populate `bankNote` from imported rows when present~~
+- [x] ~~Populate `note` + `directives` on staged transactions~~
 
 4) Persistence helpers
-- [ ] Add store/service to persist `strongKey -> overrides` mapping
-- [ ] Rehydrate staged txns from strongKey mapping on re-import
+- [x] ~~Add store/service to persist `strongKey -> overrides` mapping~~
+- [x] ~~Rehydrate staged txns from strongKey mapping on re-import~~
 
 5) Settings integration (Name Overrides)
-- [ ] Wire “Apply rename to similar” to create Name Override exact-match entry
+- [x] ~~Wire “Apply rename to similar” to create Name Override exact-match entry~~
 - [ ] Ensure it reuses the same SettingsPage infrastructure (single source of truth)
 
 6) Staging proposals
@@ -254,12 +254,12 @@ UI tests (if present) or manual scripts:
 - [ ] Ensure “Approve all” includes manual edits
 
 7) UI: Accounts staged table
-- [ ] Add Name/Note/Directives columns and status badges
+- [ ] Add Name/Note/Directives columns and status badges (Name/Note edit + Name display done; Directives/proposals badges pending)
 - [ ] Add filters: “Needs review” (auto-on) and “Has directives”
 - [ ] Add row highlighting for “Needs review”
 
 8) UI: Edit staged transaction modal
-- [ ] Implement modal with Name + Note editing
+- [x] ~~Implement modal with Name + Note editing~~
 - [ ] Add directive UI (explicit controls; no raw text editing)
 - [ ] Add “Apply rename to similar” checkbox + preview
 
@@ -268,11 +268,11 @@ UI tests (if present) or manual scripts:
 - [ ] Demo-mode: allow auto-approve / reduced friction (later)
 
 10) Tracker
-- [ ] Use `name ?? description` for display
-- [ ] Inline edits update `name`
+- [x] ~~Use `name ?? description` for display~~
+- [ ] Inline edits update `name` (no inline edit UI exists yet)
 
 11) Tests + docs
-- [ ] Add unit tests for parser + import behaviors
+- [x] ~~Add unit tests for parser + import behaviors~~
 - [ ] Update any ingestion docs if needed
 - [ ] Keep `npm run check` green
 

@@ -36,6 +36,9 @@ export type LocalSettingsState = {
 
   setExpenseNameOverrides: (rules: NameOverrideRule[]) => void;
   setIncomeNameOverrides: (rules: NameOverrideRule[]) => void;
+
+  upsertExpenseNameOverride: (rule: NameOverrideRule) => void;
+  upsertIncomeNameOverride: (rule: NameOverrideRule) => void;
 };
 
 function normalizeBoolean(value: unknown, defaultValue: boolean): boolean {
@@ -131,6 +134,40 @@ export const useLocalSettingsStore = create<LocalSettingsState>()(
       setIncomeNameOverrides: (rules) => {
         set({ incomeNameOverrides: normalizeNameOverrideRules(rules) });
       },
+
+      upsertExpenseNameOverride: (rule) => {
+        const normalized = normalizeNameOverrideRules([rule])[0];
+        if (!normalized) return;
+        set((state) => {
+          const current = Array.isArray(state.expenseNameOverrides) ? state.expenseNameOverrides : [];
+          const match = normalizeDisplayText(normalized.match);
+          const next = [...current];
+          const idx = next.findIndex((r) => normalizeDisplayText(r.match) === match);
+          if (idx >= 0) {
+            next[idx] = normalized;
+          } else {
+            next.unshift(normalized);
+          }
+          return { expenseNameOverrides: next };
+        });
+      },
+
+      upsertIncomeNameOverride: (rule) => {
+        const normalized = normalizeNameOverrideRules([rule])[0];
+        if (!normalized) return;
+        set((state) => {
+          const current = Array.isArray(state.incomeNameOverrides) ? state.incomeNameOverrides : [];
+          const match = normalizeDisplayText(normalized.match);
+          const next = [...current];
+          const idx = next.findIndex((r) => normalizeDisplayText(r.match) === match);
+          if (idx >= 0) {
+            next[idx] = normalized;
+          } else {
+            next.unshift(normalized);
+          }
+          return { incomeNameOverrides: next };
+        });
+      },
     }),
     {
       name: "budgeteer:localSettings",
@@ -224,10 +261,18 @@ export function useSetExpenseNameOverrides(): LocalSettingsState["setExpenseName
   return useLocalSettingsStore((s) => s.setExpenseNameOverrides);
 }
 
+export function useUpsertExpenseNameOverride(): LocalSettingsState["upsertExpenseNameOverride"] {
+  return useLocalSettingsStore((s) => s.upsertExpenseNameOverride);
+}
+
 export function useIncomeNameOverrides(): NameOverrideRule[] {
   return useLocalSettingsStore((s) => s.incomeNameOverrides);
 }
 
 export function useSetIncomeNameOverrides(): LocalSettingsState["setIncomeNameOverrides"] {
   return useLocalSettingsStore((s) => s.setIncomeNameOverrides);
+}
+
+export function useUpsertIncomeNameOverride(): LocalSettingsState["upsertIncomeNameOverride"] {
+  return useLocalSettingsStore((s) => s.upsertIncomeNameOverride);
 }

@@ -1,6 +1,6 @@
 import {
   Box, Tabs, Text, Flex, HStack, VStack, Tag, Button, Table,
-  Center, ButtonGroup, useDisclosure, Menu, Badge, Input, Textarea
+  Center, ButtonGroup, useDisclosure, Menu, Badge, Input, Textarea, Checkbox
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import InlineSpinner from '../ui/InlineSpinner';
@@ -15,10 +15,11 @@ import {
   formatUtcMonthKey,
   getYearFromMonthKey,
 } from '../../services/dateTime';
-import { getUniqueOrigins } from "../../utils/accountUtils";
+import { getExpenseNameOverrideMatchKey, getIncomeNameOverrideMatchKey, getUniqueOrigins } from "../../utils/accountUtils";
 import { getMonthlyTotals, getAvailableMonths } from '../../utils/storeHelpers';
 import { maskAccountNumber } from "../../utils/maskAccountNumber";
 import { useBudgetStore } from "../../store/budgetStore";
+import { useApplyAlwaysExtractVendorName, useUpsertExpenseNameOverride, useUpsertIncomeNameOverride } from "../../store/localSettingsStore";
 import type { Account, Transaction, BudgetMonthKey } from "../../types";
 import type { ImportHistoryEntry } from "../../store/slices/importLogic";
 import { parseFiniteNumber } from "../../services/inputNormalization";
@@ -91,6 +92,9 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   const undoStagedImport = useBudgetStore((s) => (s as BudgetStoreAccountState).undoStagedImport);
   const patchTransactionByStrongKey = useBudgetStore((s) => (s as BudgetStoreAccountState).patchTransactionByStrongKey);
   const upsertTxStrongKeyOverride = useUpsertTxStrongKeyOverride();
+  const applyAlwaysExtractVendorName = useApplyAlwaysExtractVendorName();
+  const upsertExpenseNameOverride = useUpsertExpenseNameOverride();
+  const upsertIncomeNameOverride = useUpsertIncomeNameOverride();
   const resolvedAccountNumber = acct.accountNumber || acctNumber;
   const sessionEntries = getAccountStagedSessionSummaries(resolvedAccountNumber);
   const latestImportedAt = useMemo(() => {
@@ -117,6 +121,9 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   const [editingStrongKey, setEditingStrongKey] = useState<string | null>(null);
   const [editingName, setEditingName] = useState<string>("");
   const [editingNote, setEditingNote] = useState<string>("");
+  const [editingTxType, setEditingTxType] = useState<Transaction["type"] | null>(null);
+  const [applyRenameToSimilar, setApplyRenameToSimilar] = useState<boolean>(false);
+  const [renameMatchKey, setRenameMatchKey] = useState<string | null>(null);
 
   // Keep countdown-style UI deterministic during render.
   const [nowMs, setNowMs] = useState<number | null>(null);
@@ -175,6 +182,9 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
             setEditingStrongKey(null);
             setEditingName("");
             setEditingNote("");
+            setEditingTxType(null);
+            setApplyRenameToSimilar(false);
+            setRenameMatchKey(null);
           }
           editTxDialog.setOpen(v);
         }}
@@ -191,11 +201,27 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
             name: name === undefined ? undefined : name,
             note: note === undefined ? undefined : note,
           });
+
+          if (
+            applyRenameToSimilar &&
+            renameMatchKey &&
+            renameMatchKey !== "(no description)" &&
+            typeof name === "string" &&
+            name.trim() &&
+            (editingTxType === "expense" || editingTxType === "income")
+          ) {
+            const rule = { match: renameMatchKey, displayName: name.trim() };
+            if (editingTxType === "expense") upsertExpenseNameOverride(rule);
+            else upsertIncomeNameOverride(rule);
+          }
         }}
         onCancel={() => {
           setEditingStrongKey(null);
           setEditingName("");
           setEditingNote("");
+          setEditingTxType(null);
+          setApplyRenameToSimilar(false);
+          setRenameMatchKey(null);
         }}
         acceptLabel="Save"
         cancelLabel="Cancel"
@@ -226,6 +252,30 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                 placeholder="Optional"
               />
             </Box>
+
+            {(editingTxType === "expense" || editingTxType === "income") ? (
+              <Box>
+                <Checkbox.Root
+                  checked={applyRenameToSimilar}
+                  disabled={!renameMatchKey || renameMatchKey === "(no description)"}
+                  onCheckedChange={(details) => setApplyRenameToSimilar(details.checked === true)}
+                >
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control />
+                  <Checkbox.Label>
+                    <Text fontSize="sm">Apply this rename to similar future transactions</Text>
+                  </Checkbox.Label>
+                </Checkbox.Root>
+                <Text fontSize="xs" color="fg.muted" mt={1}>
+                  Exact-match key: {renameMatchKey || "—"}
+                </Text>
+              </Box>
+            ) : (
+              <Text fontSize="xs" color="fg.muted">
+                "Apply rename to similar" is currently supported for expense/income transactions.
+              </Text>
+            )}
+
             <Text fontSize="xs" color="fg.muted">
               Saved edits persist across delete/re-import (by strong transaction key).
             </Text>
@@ -442,6 +492,15 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                                   setEditingStrongKey(key);
                                   setEditingName(String(tx.name ?? ""));
                                   setEditingNote(String(tx.note ?? ""));
+                                  setEditingTxType(tx.type ?? null);
+                                  setApplyRenameToSimilar(false);
+                                  if (tx.type === "expense") {
+                                    setRenameMatchKey(getExpenseNameOverrideMatchKey(tx, { alwaysExtractVendorName: applyAlwaysExtractVendorName }));
+                                  } else if (tx.type === "income") {
+                                    setRenameMatchKey(getIncomeNameOverrideMatchKey(tx));
+                                  } else {
+                                    setRenameMatchKey(null);
+                                  }
                                   editTxDialog.onOpen();
                                 }}
                               >
