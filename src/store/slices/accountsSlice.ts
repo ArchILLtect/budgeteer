@@ -22,6 +22,7 @@ export type AccountsSlice = {
       name?: string | null;
       note?: string | null;
       category?: string | null;
+      directives?: Transaction["directives"];
       proposals?: Transaction["proposals"];
     }
   ) => void;
@@ -104,6 +105,7 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
       const note = normalizeOptionalText(patch?.note);
       const categoryRaw = normalizeOptionalText(patch?.category);
       const category = categoryRaw === null ? undefined : categoryRaw;
+      const directives = patch?.directives;
       const proposals = patch?.proposals;
 
       let changed = false;
@@ -118,6 +120,7 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
         if (name !== undefined) next.name = name;
         if (note !== undefined) next.note = note;
         if (category !== undefined) next.category = category;
+        if (directives !== undefined) next.directives = directives;
         if (proposals !== undefined) next.proposals = proposals;
         changed = true;
         return next;

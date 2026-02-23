@@ -260,11 +260,11 @@ UI tests (if present) or manual scripts:
 
 8) UI: Edit staged transaction modal
 - [x] ~~Implement modal with Name + Note editing~~
-- [ ] Add directive UI (explicit controls; no raw text editing)
-- [ ] Add “Apply rename to similar” checkbox + preview
+- [x] ~~Add directive UI (explicit controls; no raw text editing)~~
+- [x] ~~Add “Apply rename to similar” checkbox + preview~~
 
 9) Apply-to-budget safeguards
-- [ ] If pending proposals exist, require confirm modal before applying
+- [x] ~~If pending proposals exist, require confirm modal before applying~~ (currently `window.confirm`; can upgrade to `ConfirmModal` later)
 - [ ] Demo-mode: allow auto-approve / reduced friction (later)
 
 10) Tracker

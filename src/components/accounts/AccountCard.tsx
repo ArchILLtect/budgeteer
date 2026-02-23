@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import InlineSpinner from '../ui/InlineSpinner';
 import { Tooltip } from "../ui/Tooltip";
 import { DialogModal } from "../ui/DialogModal";
+import { AppSelect } from "../ui/AppSelect";
 import { buildTxKey } from "../../ingest/buildTxKey";
 import { useUpsertTxStrongKeyOverride } from "../../store/txStrongKeyOverridesStore";
 import {
@@ -20,7 +21,7 @@ import { getMonthlyTotals, getAvailableMonths } from '../../utils/storeHelpers';
 import { maskAccountNumber } from "../../utils/maskAccountNumber";
 import { useBudgetStore } from "../../store/budgetStore";
 import { useApplyAlwaysExtractVendorName, useUpsertExpenseNameOverride, useUpsertIncomeNameOverride } from "../../store/localSettingsStore";
-import type { Account, Transaction, BudgetMonthKey, BudgeteerProposal } from "../../types";
+import type { Account, Transaction, BudgetMonthKey, BudgeteerProposal, BudgeteerDirective } from "../../types";
 import type { ImportHistoryEntry } from "../../store/slices/importLogic";
 import { parseFiniteNumber } from "../../services/inputNormalization";
 // Used for DEV only:
@@ -69,6 +70,7 @@ type BudgetStoreAccountState = {
       name?: string | null;
       note?: string | null;
       category?: string | null;
+      directives?: Transaction["directives"];
       proposals?: Transaction["proposals"];
     }
   ) => void;
@@ -129,6 +131,9 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   const [editingTxType, setEditingTxType] = useState<Transaction["type"] | null>(null);
   const [applyRenameToSimilar, setApplyRenameToSimilar] = useState<boolean>(false);
   const [renameMatchKey, setRenameMatchKey] = useState<string | null>(null);
+
+  const [newDirectiveKind, setNewDirectiveKind] = useState<BudgeteerDirective["kind"]>("rename");
+  const [newDirectiveValue, setNewDirectiveValue] = useState<string>("");
 
   const [selectedMonth, setSelectedMonth] = useState<BudgetMonthKey>("" as BudgetMonthKey);
 
@@ -228,6 +233,77 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
     }
   };
 
+  const addDirectiveToEditingTx = () => {
+    if (!editingStrongKey || !txForEditing) return;
+
+    const value = normalizeOptionalText(newDirectiveValue);
+    if (typeof value !== "string" || !value.trim()) return;
+
+    const existingDirectives = Array.isArray(txForEditing.directives) ? txForEditing.directives : [];
+    const nextDirectives: BudgeteerDirective[] = [
+      ...existingDirectives.filter((d) => d?.kind !== newDirectiveKind),
+      { kind: newDirectiveKind, value: value.trim(), source: "ui" } as BudgeteerDirective,
+    ];
+
+    const existingProposals = Array.isArray(txForEditing.proposals) ? txForEditing.proposals : [];
+    let nextProposals: BudgeteerProposal[] = existingProposals;
+
+    if (newDirectiveKind === "rename" || newDirectiveKind === "category") {
+      const field = newDirectiveKind === "rename" ? ("name" as const) : ("category" as const);
+
+      // If we add a UI directive that affects a field, reject any other pending proposals for that field
+      // so the user has a single clear thing to approve.
+      nextProposals = existingProposals.map((p) =>
+        p?.status === "pending" && p.field === field ? ({ ...p, status: "rejected" } as BudgeteerProposal) : p
+      );
+
+      const id = `ui:${editingStrongKey}:${newDirectiveKind}`;
+      nextProposals = nextProposals.filter((p) => p?.id !== id);
+      nextProposals = [
+        ...nextProposals,
+        {
+          id,
+          field,
+          next: value.trim(),
+          source: "ui",
+          status: "pending",
+          directiveKind: newDirectiveKind,
+        } as BudgeteerProposal,
+      ];
+    }
+
+    patchTransactionByStrongKey(resolvedAccountNumber, editingStrongKey, {
+      directives: nextDirectives,
+      proposals: nextProposals,
+    });
+    setNewDirectiveValue("");
+  };
+
+  const removeDirectiveFromEditingTx = (index: number) => {
+    if (!editingStrongKey || !txForEditing) return;
+
+    const existingDirectives = Array.isArray(txForEditing.directives) ? txForEditing.directives : [];
+    const target = existingDirectives[index];
+    if (!target) return;
+
+    const nextDirectives = existingDirectives.filter((_, i) => i !== index);
+    const existingProposals = Array.isArray(txForEditing.proposals) ? txForEditing.proposals : [];
+
+    let nextProposals: BudgeteerProposal[] = existingProposals;
+    if (target.kind === "rename" || target.kind === "category") {
+      nextProposals = existingProposals.map((p) =>
+        p?.status === "pending" && p.directiveKind === target.kind
+          ? ({ ...p, status: "rejected" } as BudgeteerProposal)
+          : p
+      );
+    }
+
+    patchTransactionByStrongKey(resolvedAccountNumber, editingStrongKey, {
+      directives: nextDirectives,
+      proposals: nextProposals,
+    });
+  };
+
   const rejectProposal = (strongKey: string, proposalId: string) => {
     const acctTxs = currentTransactions;
     const tx = acctTxs.find((t) => {
@@ -277,19 +353,15 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
     }
   };
 
-  const txForEditing = useMemo(() => {
-    if (!editingStrongKey) return null;
-    const key = String(editingStrongKey);
-    return (
-      currentTransactions.find((t) => {
+  const txForEditing = editingStrongKey
+    ? (currentTransactions.find((t) => {
         const k =
           typeof (t as { key?: unknown }).key === "string" && (t as { key?: string }).key
             ? (t as { key: string }).key
             : buildTxKey({ ...t, accountNumber: resolvedAccountNumber });
-        return k === key;
-      }) ?? null
-    );
-  }, [currentTransactions, editingStrongKey, resolvedAccountNumber]);
+        return k === String(editingStrongKey);
+      }) ?? null)
+    : null;
 
   return (
     <>
@@ -304,6 +376,8 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
             setEditingTxType(null);
             setApplyRenameToSimilar(false);
             setRenameMatchKey(null);
+            setNewDirectiveKind("rename");
+            setNewDirectiveValue("");
           }
           editTxDialog.setOpen(v);
         }}
@@ -341,6 +415,8 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
           setEditingTxType(null);
           setApplyRenameToSimilar(false);
           setRenameMatchKey(null);
+          setNewDirectiveKind("rename");
+          setNewDirectiveValue("");
         }}
         acceptLabel="Save"
         cancelLabel="Cancel"
@@ -370,6 +446,78 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                 onChange={(e) => setEditingNote(e.target.value)}
                 placeholder="Optional"
               />
+            </Box>
+
+            <Box>
+              <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                Directives
+              </Text>
+              {txForEditing && Array.isArray(txForEditing.directives) && txForEditing.directives.length > 0 ? (
+                <VStack align="stretch" gap={2}>
+                  {txForEditing.directives.map((d, i) => (
+                    <Flex key={`${d.kind}-${d.source}-${i}`} justifyContent="space-between" alignItems="center" gap={2}>
+                      <HStack gap={2} wrap="wrap">
+                        <Tag.Root size="sm" colorPalette="gray">
+                          {d.kind}{d.value ? `:${String(d.value).slice(0, 40)}` : ""}
+                        </Tag.Root>
+                        <Badge colorPalette="gray" variant="subtle" fontSize="0.65rem">
+                          {d.source}
+                        </Badge>
+                      </HStack>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        colorPalette="red"
+                        onClick={() => removeDirectiveFromEditingTx(i)}
+                      >
+                        Remove
+                      </Button>
+                    </Flex>
+                  ))}
+                </VStack>
+              ) : (
+                <Text fontSize="sm" color="fg.muted">
+                  No directives
+                </Text>
+              )}
+
+              <Flex mt={3} gap={2} alignItems="end" wrap="wrap">
+                <Box>
+                  <Text fontSize="xs" color="fg.muted" mb={1}>
+                    Kind
+                  </Text>
+                  <AppSelect
+                    size="sm"
+                    width="180px"
+                    value={newDirectiveKind}
+                    onChange={(e) => setNewDirectiveKind(e.target.value as BudgeteerDirective["kind"])}
+                  >
+                    <option value="rename">rename</option>
+                    <option value="category">category</option>
+                    <option value="goal">goal</option>
+                    <option value="apply">apply</option>
+                  </AppSelect>
+                </Box>
+                <Box flex={1} minW="220px">
+                  <Text fontSize="xs" color="fg.muted" mb={1}>
+                    Value
+                  </Text>
+                  <Input
+                    size="sm"
+                    value={newDirectiveValue}
+                    onChange={(e) => setNewDirectiveValue(e.target.value)}
+                    placeholder={newDirectiveKind === "rename" ? "New name" : newDirectiveKind === "category" ? "Category" : "Directive value"}
+                  />
+                </Box>
+                <Button size="sm" variant="outline" colorPalette="teal" onClick={addDirectiveToEditingTx}>
+                  Add
+                </Button>
+              </Flex>
+              {(newDirectiveKind === "goal" || newDirectiveKind === "apply") ? (
+                <Text fontSize="xs" color="fg.muted" mt={2}>
+                  Note: goal/apply directives are stored and shown for review, but are not enforced in Apply-to-Budget yet.
+                </Text>
+              ) : null}
             </Box>
 
             {(editingTxType === "expense" || editingTxType === "income") ? (
