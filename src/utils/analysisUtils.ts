@@ -94,7 +94,7 @@ export function findRecurringTransactions<TTx extends RecurringTxLike>(
     transactions.forEach((tx) => {
         if (!tx.date) return;
 
-        const baseLabel = (typeof tx.name === 'string' && tx.name.trim()) ? tx.name : tx.description;
+        const baseLabel = tx.description || ((typeof tx.name === 'string' && tx.name.trim()) ? tx.name : undefined);
         if (!baseLabel) return;
 
         const desc = normalizeDescription(baseLabel);
