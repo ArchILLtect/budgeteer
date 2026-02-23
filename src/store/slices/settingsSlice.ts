@@ -16,6 +16,19 @@ export type SettingsSlice = {
 
   isConfirmModalOpen: boolean;
 
+  confirmModalConfig: {
+    title: string;
+    message: string;
+    acceptLabel?: string;
+    cancelLabel?: string;
+    acceptColorPalette?: string;
+    isDanger?: boolean;
+    initialFocus?: "accept" | "cancel" | "none";
+    enterKeyAction?: "accept" | "cancel" | "none";
+    onAccept?: (() => void) | null;
+    onCancel?: (() => void) | null;
+  } | null;
+
   isProgressOpen: boolean;
   progressHeader: string;
   progressCount: number;
@@ -36,6 +49,8 @@ export type SettingsSlice = {
   closeLoading: () => void;
 
   setConfirmModalOpen: (open: boolean) => void;
+  openConfirmModal: (config: NonNullable<SettingsSlice["confirmModalConfig"]>) => void;
+  closeConfirmModal: () => void;
   setSavingsModalOpen: (open: boolean) => void;
 
   setSessionExpired: (value: boolean) => void;
@@ -66,6 +81,7 @@ export const createSettingsSlice: SliceCreator<SettingsSlice> = (set, get) => ({
   loadingHeader: "",
 
   isConfirmModalOpen: false,
+  confirmModalConfig: null,
 
   isProgressOpen: false,
   progressHeader: "",
@@ -129,7 +145,17 @@ export const createSettingsSlice: SliceCreator<SettingsSlice> = (set, get) => ({
       loadingHeader: "",
     }),
 
-  setConfirmModalOpen: (open) => set({ isConfirmModalOpen: open }),
+  // Legacy API: used by SavingsReviewModal to open the cancel-confirm.
+  // This intentionally clears any custom config so ConfirmModal falls back to legacy behavior.
+  setConfirmModalOpen: (open) => set({ isConfirmModalOpen: open, confirmModalConfig: null }),
+
+  openConfirmModal: (config) =>
+    set({
+      isConfirmModalOpen: true,
+      confirmModalConfig: config,
+    }),
+
+  closeConfirmModal: () => set({ isConfirmModalOpen: false, confirmModalConfig: null }),
   setSavingsModalOpen: (open) => set({ isSavingsModalOpen: open }),
 
   setSessionExpired: (value) => set({ sessionExpired: value }),

@@ -98,6 +98,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   );
   const undoStagedImport = useBudgetStore((s) => (s as BudgetStoreAccountState).undoStagedImport);
   const patchTransactionByStrongKey = useBudgetStore((s) => (s as BudgetStoreAccountState).patchTransactionByStrongKey);
+  const openConfirmModal = useBudgetStore((s) => (s as { openConfirmModal: (config: { title: string; message: string; acceptLabel?: string; cancelLabel?: string; acceptColorPalette?: string; isDanger?: boolean; initialFocus?: "accept" | "cancel" | "none"; enterKeyAction?: "accept" | "cancel" | "none"; onAccept?: (() => void) | null; onCancel?: (() => void) | null; }) => void }).openConfirmModal);
   const upsertTxStrongKeyOverride = useUpsertTxStrongKeyOverride();
   const applyAlwaysExtractVendorName = useApplyAlwaysExtractVendorName();
   const upsertExpenseNameOverride = useUpsertExpenseNameOverride();
@@ -343,14 +344,20 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
     const categoryCount = pending.filter((x) => x.proposal.field === "category").length;
     if (pending.length === 0) return;
 
-    const ok = window.confirm(
-      `Approve all pending proposals for this account?\n\nPending: ${pending.length}\n- Name: ${renameCount}\n- Category: ${categoryCount}`
-    );
-    if (!ok) return;
-
-    for (const { strongKey, proposal } of pending) {
-      approveProposal(strongKey, proposal.id);
-    }
+    openConfirmModal({
+      title: "Approve all pending proposals?",
+      message: `Approve all pending proposals for this account?\n\nPending: ${pending.length}\n- Name: ${renameCount}\n- Category: ${categoryCount}`,
+      acceptLabel: "Approve all",
+      cancelLabel: "Cancel",
+      acceptColorPalette: "teal",
+      initialFocus: "cancel",
+      enterKeyAction: "cancel",
+      onAccept: () => {
+        for (const { strongKey, proposal } of pending) {
+          approveProposal(strongKey, proposal.id);
+        }
+      },
+    });
   };
 
   const txForEditing = editingStrongKey
@@ -913,10 +920,17 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                   colorPalette="teal"
                   onClick={() => {
                     if (pendingProposalsCountAll > 0) {
-                      const ok = window.confirm(
-                        `There are ${pendingProposalsCountAll} pending proposal(s) that need review.\n\nApply-to-Budget will use the current staged state.\n\nContinue?`
-                      );
-                      if (!ok) return;
+                      openConfirmModal({
+                        title: "Pending proposals",
+                        message: `There are ${pendingProposalsCountAll} pending proposal(s) that need review.\n\nApply-to-Budget will use the current staged state.\n\nContinue?`,
+                        acceptLabel: "Continue",
+                        cancelLabel: "Cancel",
+                        acceptColorPalette: "teal",
+                        initialFocus: "cancel",
+                        enterKeyAction: "cancel",
+                        onAccept: () => onOpen(),
+                      });
+                      return;
                     }
                     onOpen();
                   }}

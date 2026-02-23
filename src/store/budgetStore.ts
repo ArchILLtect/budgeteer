@@ -49,6 +49,7 @@ export const useBudgetStore = create<BudgetStoreState>()(
                 delete clone.savingsReviewQueue;
                 delete clone.resolveSavingsPromise;
                 delete clone.isConfirmModalOpen;
+                delete clone.confirmModalConfig;
                 delete clone.isLoadingModalOpen;
                 delete clone.isProgressOpen;
                 delete clone.progressHeader;

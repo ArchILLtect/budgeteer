@@ -264,7 +264,7 @@ UI tests (if present) or manual scripts:
 - [x] ~~Add “Apply rename to similar” checkbox + preview~~
 
 9) Apply-to-budget safeguards
-- [x] ~~If pending proposals exist, require confirm modal before applying~~ (currently `window.confirm`; can upgrade to `ConfirmModal` later)
+- [x] ~~If pending proposals exist, require confirm modal before applying~~ (uses `ConfirmModal`)
 - [ ] Demo-mode: allow auto-approve / reduced friction (later)
 
 10) Tracker
