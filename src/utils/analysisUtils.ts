@@ -3,6 +3,7 @@ import { parseFiniteNumber, normalizeMoney } from "../services/inputNormalizatio
 
 export type RecurringTxLike = {
     date?: string;
+    name?: string | null;
     description?: string;
     category?: string | null;
     amount?: number | string;
@@ -24,6 +25,7 @@ type GroupEntry<TTx extends RecurringTxLike> = {
 
 export type RecurringFinding =
     | {
+          name?: string | null;
           description: string;
           frequency: 'monthly?';
           status: 'possible';
@@ -34,6 +36,7 @@ export type RecurringFinding =
       }
     | {
           id: string;
+          name?: string | null;
           description: string;
           frequency: 'monthly';
           status: 'confirmed' | 'possible';
@@ -76,11 +79,25 @@ export function findRecurringTransactions<TTx extends RecurringTxLike>(
             .trim();
     }
 
+    function getBestDisplayName(entries: Array<GroupEntry<TTx>>): string | null {
+        for (let i = entries.length - 1; i >= 0; i--) {
+            const candidate = entries[i]?.original?.name;
+            if (typeof candidate === 'string') {
+                const trimmed = candidate.trim();
+                if (trimmed) return trimmed;
+            }
+        }
+        return null;
+    }
+
     // Group by normalized description
     transactions.forEach((tx) => {
-        if (!tx.description || !tx.date) return;
+        if (!tx.date) return;
 
-        const desc = normalizeDescription(tx.description);
+        const baseLabel = (typeof tx.name === 'string' && tx.name.trim()) ? tx.name : tx.description;
+        if (!baseLabel) return;
+
+        const desc = normalizeDescription(baseLabel);
         const descKey = extractVendorDescription(desc.trim().toLowerCase());
 
         if (!groups[descKey]) groups[descKey] = [];
@@ -101,6 +118,8 @@ export function findRecurringTransactions<TTx extends RecurringTxLike>(
         const entries = groups[desc].sort((a, b) => a.date.getTime() - b.date.getTime());
         if (entries.length < 6) continue;
 
+        const displayName = getBestDisplayName(entries);
+
         // Step: Filter out rare outlier amounts using mode
         const rounded = entries.map((e) => Math.round(e.amount * 100));
         const countMap: Record<string, number> = {};
@@ -119,6 +138,7 @@ export function findRecurringTransactions<TTx extends RecurringTxLike>(
             if (entries.length >= 3 && closeToMode.length >= 2) {
                 const last = closeToMode[closeToMode.length - 1];
                 recurring.push({
+                    name: displayName,
                     description: desc,
                     frequency: 'monthly?',
                     status: 'possible',
@@ -193,6 +213,7 @@ export function findRecurringTransactions<TTx extends RecurringTxLike>(
             amountVariance <= varianceThreshold;
 
         recurring.push({
+            name: displayName,
             description: desc,
             frequency: 'monthly',
             status: isMonthly ? 'confirmed' : 'possible',

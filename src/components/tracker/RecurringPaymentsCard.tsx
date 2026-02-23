@@ -72,7 +72,7 @@ export default function RecurringPaymentsCard({ account }: RecurringPaymentsCard
 
               return (
                 <Table.Row key={`${currentAccount.accountNumber}:${rtx.description}:${rtx.dayOfMonth ?? 'n'}`} bg={stripedBg}>
-                  <Table.Cell borderRightWidth="2px" borderRightColor="border">{rtx.description}</Table.Cell>
+                  <Table.Cell borderRightWidth="2px" borderRightColor="border">{rtx.name || rtx.description}</Table.Cell>
                   <Table.Cell borderRightWidth="2px" borderRightColor="border">{rtx.category || "—"}</Table.Cell>
                   <Table.Cell borderRightWidth="2px" borderRightColor="border" textTransform="capitalize">{rtx.frequency}</Table.Cell>
                   <Table.Cell borderRightWidth="2px" borderRightColor="border">
