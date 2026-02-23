@@ -35,8 +35,6 @@ import { FiChevronDown } from "react-icons/fi";
 type AccountCardProps = {
   acct: Account & { importedAt?: string };
   acctNumber: string;
-  selectedMonth: BudgetMonthKey;
-  onSelectedMonthChange: (month: BudgetMonthKey) => void;
 };
 
 type OriginColorMap = Record<string, string>;
@@ -62,7 +60,6 @@ type BudgetStoreAccountState = {
   accounts: Record<string, Account>;
   importHistory: ImportHistoryEntry[];
   removeAccount: (acctNumber: string) => void;
-  setSelectedMonth: (month: BudgetMonthKey) => void;
   getAccountStagedSessionSummaries: (accountNumber: string) => StagedSessionEntry[];
   undoStagedImport: (accountNumber: string, sessionId: string) => void;
   patchTransactionByStrongKey: (accountNumber: string, strongKey: string, patch: { name?: string | null; note?: string | null }) => void;
@@ -75,7 +72,7 @@ function normalizeOptionalText(value: unknown): string | null | undefined {
   return s ? s : null;
 }
 
-export default function AccountCard({ acct, acctNumber, selectedMonth, onSelectedMonthChange }: AccountCardProps) {
+export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   const ORIGIN_COLOR_MAP = useBudgetStore((s) => (s as BudgetStoreAccountState).ORIGIN_COLOR_MAP);
   const accounts = useBudgetStore((s) => (s as BudgetStoreAccountState).accounts);
   const importHistory = useBudgetStore((s) => (s as BudgetStoreAccountState).importHistory);
@@ -124,6 +121,8 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
   const [applyRenameToSimilar, setApplyRenameToSimilar] = useState<boolean>(false);
   const [renameMatchKey, setRenameMatchKey] = useState<string | null>(null);
 
+  const [selectedMonth, setSelectedMonth] = useState<BudgetMonthKey>("" as BudgetMonthKey);
+
   // Keep countdown-style UI deterministic during render.
   const [nowMs, setNowMs] = useState<number | null>(null);
   useEffect(() => {
@@ -169,9 +168,9 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
   // where the user can't "change" tabs to trigger onValueChange).
   useEffect(() => {
     if (activeMonth && activeMonth !== selectedMonth && monthsForYear.includes(activeMonth)) {
-      onSelectedMonthChange(activeMonth);
+      setSelectedMonth(activeMonth);
     }
-  }, [activeMonth, monthsForYear, onSelectedMonthChange, selectedMonth]);
+  }, [activeMonth, monthsForYear, selectedMonth]);
 
   return (
     <>
@@ -388,7 +387,7 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
       </Flex>
 
       <ButtonGroup attached={false} gap={2}>
-	      <YearPill months={months} selectedMonth={selectedMonth} onSelectedMonthChange={onSelectedMonthChange} />
+	      <YearPill months={months} selectedMonth={selectedMonth} onSelectedMonthChange={setSelectedMonth} />
       </ButtonGroup>
 
       {/* Monthly Tabbed View */}
@@ -396,7 +395,7 @@ export default function AccountCard({ acct, acctNumber, selectedMonth, onSelecte
         variant="enclosed"
         mt={4}
         value={activeMonth}
-        onValueChange={(details) => onSelectedMonthChange(details.value as BudgetMonthKey)}
+        onValueChange={(details) => setSelectedMonth(details.value as BudgetMonthKey)}
       >
         <Tabs.List
           gap={monthsForYear.length < 10 ? 10 : 0}
