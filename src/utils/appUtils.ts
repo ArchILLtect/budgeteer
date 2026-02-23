@@ -1,15 +1,47 @@
 export const waitForIdleAndPaint = () =>
-    new Promise((resolve) => {
-        const scheduleIdle =
-            window.requestIdleCallback ||
-            ((cb) =>
-                setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 }), 50));
+  new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      resolve(() => {});
+    };
 
-        scheduleIdle(() => {
-            // ensure at least one paint after idle
-            requestAnimationFrame(() => resolve(() => {}));
-        });
+    // Safety net: never hang forever (e.g. background tab can throttle rAF).
+    const hardTimeoutId = window.setTimeout(finish, 750);
+
+    type IdleDeadlineLike = { didTimeout: boolean; timeRemaining: () => number };
+    type ScheduleIdle = (cb: (deadline: IdleDeadlineLike) => void) => number;
+
+    const scheduleIdle: typeof window.requestIdleCallback | ScheduleIdle =
+      window.requestIdleCallback ||
+      ((cb: (deadline: IdleDeadlineLike) => void) =>
+        window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 }), 50));
+
+    scheduleIdle(() => {
+      if (done) return;
+
+      // If the document is hidden, rAF may not fire; resolve once idle.
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        window.clearTimeout(hardTimeoutId);
+        finish();
+        return;
+      }
+
+      let rafId: number | null = null;
+      const softTimeoutId = window.setTimeout(() => {
+        if (rafId != null) window.cancelAnimationFrame(rafId);
+        window.clearTimeout(hardTimeoutId);
+        finish();
+      }, 250);
+
+      rafId = window.requestAnimationFrame(() => {
+        window.clearTimeout(softTimeoutId);
+        window.clearTimeout(hardTimeoutId);
+        finish();
+      });
     });
+  });
 
 export const errorToMessage = (err: unknown): string => {
   if (typeof err === "string") return err;
