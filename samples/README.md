@@ -19,10 +19,14 @@ Going forward, any newly generated sample files should match that header/column 
 
 - `History_Showcase_Tiny.csv`
   - Small “showcase” file in the canonical bank History export format.
-  - Includes clean recurring deposits/charges (rent, paychecks, utilities) plus a few daily transactions.
+  - Uses an “average American” flavored pattern (semi-monthly pay on the 1st + 15th, housing-heavy spend, common subscriptions) plus a few daily transactions.
+  - Includes a handful of non-empty `Note` values:
+    - Some are realistic human notes.
+    - Some are explicit `budgeteer:*` directive-style tags intended for a future opt-in “Note directives” feature.
 
 - `History_Showcase_Medium.csv`
   - Medium “showcase” file in the canonical bank History export format.
+  - Spans multiple months to feel like real account history.
   - Intended for realistic stage/apply demos without taking too long.
 
 - `showcase-recurring-tiny.csv` / `showcase-recurring-medium.csv`
