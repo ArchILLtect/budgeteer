@@ -20,7 +20,7 @@ import { getMonthlyTotals, getAvailableMonths } from '../../utils/storeHelpers';
 import { maskAccountNumber } from "../../utils/maskAccountNumber";
 import { useBudgetStore } from "../../store/budgetStore";
 import { useApplyAlwaysExtractVendorName, useUpsertExpenseNameOverride, useUpsertIncomeNameOverride } from "../../store/localSettingsStore";
-import type { Account, Transaction, BudgetMonthKey } from "../../types";
+import type { Account, Transaction, BudgetMonthKey, BudgeteerProposal } from "../../types";
 import type { ImportHistoryEntry } from "../../store/slices/importLogic";
 import { parseFiniteNumber } from "../../services/inputNormalization";
 // Used for DEV only:
@@ -62,7 +62,16 @@ type BudgetStoreAccountState = {
   removeAccount: (acctNumber: string) => void;
   getAccountStagedSessionSummaries: (accountNumber: string) => StagedSessionEntry[];
   undoStagedImport: (accountNumber: string, sessionId: string) => void;
-  patchTransactionByStrongKey: (accountNumber: string, strongKey: string, patch: { name?: string | null; note?: string | null }) => void;
+  patchTransactionByStrongKey: (
+    accountNumber: string,
+    strongKey: string,
+    patch: {
+      name?: string | null;
+      note?: string | null;
+      category?: string | null;
+      proposals?: Transaction["proposals"];
+    }
+  ) => void;
 };
 
 function normalizeOptionalText(value: unknown): string | null | undefined {
@@ -123,6 +132,10 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
 
   const [selectedMonth, setSelectedMonth] = useState<BudgetMonthKey>("" as BudgetMonthKey);
 
+  const [filterNeedsReview, setFilterNeedsReview] = useState<boolean>(false);
+  const [filterHasDirectives, setFilterHasDirectives] = useState<boolean>(false);
+  const [filtersInitialized, setFiltersInitialized] = useState<boolean>(false);
+
   // Keep countdown-style UI deterministic during render.
   const [nowMs, setNowMs] = useState<number | null>(null);
   useEffect(() => {
@@ -171,6 +184,112 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
       setSelectedMonth(activeMonth);
     }
   }, [activeMonth, monthsForYear, selectedMonth]);
+
+  const pendingProposalsCountAll = useMemo(() => {
+    let count = 0;
+    for (const tx of currentTransactions) {
+      if (!Array.isArray(tx.proposals)) continue;
+      count += tx.proposals.filter((p) => p?.status === "pending").length;
+    }
+    return count;
+  }, [currentTransactions]);
+
+  useEffect(() => {
+    if (filtersInitialized) return;
+    if (pendingProposalsCountAll > 0) {
+      setFilterNeedsReview(true);
+    }
+    setFiltersInitialized(true);
+  }, [filtersInitialized, pendingProposalsCountAll]);
+
+  const approveProposal = (strongKey: string, proposalId: string) => {
+    const acctTxs = currentTransactions;
+    const tx = acctTxs.find((t) => {
+      const k =
+        typeof (t as { key?: unknown }).key === "string" && (t as { key?: string }).key
+          ? (t as { key: string }).key
+          : buildTxKey({ ...t, accountNumber: resolvedAccountNumber });
+      return k === strongKey;
+    });
+    if (!tx || !Array.isArray(tx.proposals) || tx.proposals.length === 0) return;
+
+    const proposal = tx.proposals.find((p) => p?.id === proposalId);
+    if (!proposal || proposal.status !== "pending") return;
+
+    const nextProposals: BudgeteerProposal[] = tx.proposals.map((p) =>
+      p?.id === proposalId ? ({ ...p, status: "approved" } as BudgeteerProposal) : p
+    );
+
+    if (proposal.field === "name") {
+      patchTransactionByStrongKey(resolvedAccountNumber, strongKey, { name: proposal.next, proposals: nextProposals });
+      upsertTxStrongKeyOverride(strongKey, { name: proposal.next });
+    } else if (proposal.field === "category") {
+      patchTransactionByStrongKey(resolvedAccountNumber, strongKey, { category: proposal.next, proposals: nextProposals });
+    }
+  };
+
+  const rejectProposal = (strongKey: string, proposalId: string) => {
+    const acctTxs = currentTransactions;
+    const tx = acctTxs.find((t) => {
+      const k =
+        typeof (t as { key?: unknown }).key === "string" && (t as { key?: string }).key
+          ? (t as { key: string }).key
+          : buildTxKey({ ...t, accountNumber: resolvedAccountNumber });
+      return k === strongKey;
+    });
+    if (!tx || !Array.isArray(tx.proposals) || tx.proposals.length === 0) return;
+
+    const proposal = tx.proposals.find((p) => p?.id === proposalId);
+    if (!proposal || proposal.status !== "pending") return;
+
+    const nextProposals: BudgeteerProposal[] = tx.proposals.map((p) =>
+      p?.id === proposalId ? ({ ...p, status: "rejected" } as BudgeteerProposal) : p
+    );
+
+    patchTransactionByStrongKey(resolvedAccountNumber, strongKey, { proposals: nextProposals });
+  };
+
+  const approveAllPendingProposals = () => {
+    const pending: Array<{ strongKey: string; proposal: BudgeteerProposal }> = [];
+    for (const tx of currentTransactions) {
+      if (!Array.isArray(tx.proposals) || tx.proposals.length === 0) continue;
+      const strongKey =
+        typeof (tx as { key?: unknown }).key === "string" && (tx as { key?: string }).key
+          ? (tx as { key: string }).key
+          : buildTxKey({ ...tx, accountNumber: resolvedAccountNumber });
+
+      for (const p of tx.proposals) {
+        if (p?.status === "pending") pending.push({ strongKey, proposal: p });
+      }
+    }
+
+    const renameCount = pending.filter((x) => x.proposal.field === "name").length;
+    const categoryCount = pending.filter((x) => x.proposal.field === "category").length;
+    if (pending.length === 0) return;
+
+    const ok = window.confirm(
+      `Approve all pending proposals for this account?\n\nPending: ${pending.length}\n- Name: ${renameCount}\n- Category: ${categoryCount}`
+    );
+    if (!ok) return;
+
+    for (const { strongKey, proposal } of pending) {
+      approveProposal(strongKey, proposal.id);
+    }
+  };
+
+  const txForEditing = useMemo(() => {
+    if (!editingStrongKey) return null;
+    const key = String(editingStrongKey);
+    return (
+      currentTransactions.find((t) => {
+        const k =
+          typeof (t as { key?: unknown }).key === "string" && (t as { key?: string }).key
+            ? (t as { key: string }).key
+            : buildTxKey({ ...t, accountNumber: resolvedAccountNumber });
+        return k === key;
+      }) ?? null
+    );
+  }, [currentTransactions, editingStrongKey, resolvedAccountNumber]);
 
   return (
     <>
@@ -279,6 +398,33 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
             <Text fontSize="xs" color="fg.muted">
               Saved edits persist across delete/re-import (by strong transaction key).
             </Text>
+
+            {txForEditing && Array.isArray(txForEditing.proposals) && txForEditing.proposals.some((p) => p?.status === "pending") ? (
+              <Box>
+                <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                  Proposals
+                </Text>
+                <VStack align="stretch" gap={2}>
+                  {txForEditing.proposals
+                    .filter((p) => p?.status === "pending")
+                    .map((p) => (
+                      <Flex key={p.id} justifyContent="space-between" alignItems="center" gap={2} wrap="wrap">
+                        <Text fontSize="sm">
+                          {p.field}: <Text as="span" fontWeight="semibold">{p.next}</Text>
+                        </Text>
+                        <HStack gap={2}>
+                          <Button size="xs" colorPalette="teal" variant="outline" onClick={() => approveProposal(editingStrongKey ?? "", p.id)}>
+                            Approve
+                          </Button>
+                          <Button size="xs" colorPalette="red" variant="outline" onClick={() => rejectProposal(editingStrongKey ?? "", p.id)}>
+                            Reject
+                          </Button>
+                        </HStack>
+                      </Flex>
+                    ))}
+                </VStack>
+              </Box>
+            ) : null}
           </VStack>
         }
       />
@@ -412,20 +558,55 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
         </Tabs.List>
 
         {monthsForYear.map((monthRaw) => {
-          const monthRows = currentTransactions.filter((tx) => tx.date?.startsWith(monthRaw));
+          const monthRowsBase = currentTransactions.filter((tx) => tx.date?.startsWith(monthRaw));
+          const monthRows = monthRowsBase.filter((tx) => {
+            const hasPending = Array.isArray(tx.proposals) && tx.proposals.some((p) => p?.status === "pending");
+            const hasDirectives = Array.isArray(tx.directives) && tx.directives.length > 0;
+            if (filterNeedsReview && !hasPending) return false;
+            if (filterHasDirectives && !hasDirectives) return false;
+            return true;
+          });
           const totals = getMonthlyTotals({ ...acct, transactions: currentTransactions }, monthRaw as BudgetMonthKey);
 
           return (
             <Tabs.Content value={monthRaw} key={monthRaw} p={0} m={2}>
+              <Flex justifyContent="space-between" alignItems="center" gap={3} wrap="wrap" mb={2}>
+                <HStack gap={4}>
+                  <Checkbox.Root checked={filterNeedsReview} onCheckedChange={(d) => setFilterNeedsReview(d.checked === true)}>
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control />
+                    <Checkbox.Label>
+                      <Text fontSize="sm">Needs review</Text>
+                    </Checkbox.Label>
+                  </Checkbox.Root>
+                  <Checkbox.Root checked={filterHasDirectives} onCheckedChange={(d) => setFilterHasDirectives(d.checked === true)}>
+                    <Checkbox.HiddenInput />
+                    <Checkbox.Control />
+                    <Checkbox.Label>
+                      <Text fontSize="sm">Has directives</Text>
+                    </Checkbox.Label>
+                  </Checkbox.Root>
+                </HStack>
+                {pendingProposalsCountAll > 0 ? (
+                  <Button size="xs" variant="outline" colorPalette="teal" onClick={approveAllPendingProposals}>
+                    Approve all ({pendingProposalsCountAll})
+                  </Button>
+                ) : null}
+              </Flex>
+
               <Box maxHeight={'md'} overflowY={'scroll'}>
                 <Table.Root size="sm" striped bg="bg.panel" borderWidth={1} borderColor="border" borderRadius="md">
                   <Table.Header>
                     <Table.Row>
                       <Table.ColumnHeader>Date</Table.ColumnHeader>
                       <Table.ColumnHeader>Description</Table.ColumnHeader>
+                      <Table.ColumnHeader>Name</Table.ColumnHeader>
+                      <Table.ColumnHeader>Note</Table.ColumnHeader>
+                      <Table.ColumnHeader>Directives</Table.ColumnHeader>
                       <Table.ColumnHeader>Amount</Table.ColumnHeader>
                       <Table.ColumnHeader>Type</Table.ColumnHeader>
                       <Table.ColumnHeader>Category</Table.ColumnHeader>
+                      <Table.ColumnHeader>Status</Table.ColumnHeader>
                       <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
@@ -445,6 +626,8 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                         ? tx.proposals.filter((p) => p?.status === "pending").length
                         : 0;
 
+                      const hasDirectives = Array.isArray(tx.directives) && tx.directives.length > 0;
+
                       const stripedBg =
                         idx % 2 === 1
                           ? ({ base: "gray.50", _dark: "gray.800" } as const)
@@ -461,9 +644,32 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                           key={tx.id}
                           bg={rowBg}
                           opacity={tx.staged ? 0.85 : 1}
+                          borderLeftWidth={pendingProposals > 0 ? "4px" : undefined}
+                          borderLeftColor={pendingProposals > 0 ? "orange.400" : undefined}
                         >
                           <Table.Cell whiteSpace={'nowrap'}>{formatUtcDayKeyMonthDay(tx.date ?? "")}</Table.Cell>
-                          <Table.Cell>{tx.name || tx.description}</Table.Cell>
+                          <Table.Cell>{tx.description || "—"}</Table.Cell>
+                          <Table.Cell>
+                            {tx.name ? (
+                              tx.name
+                            ) : (
+                              <Text as="span" fontSize="sm" color="fg.muted">
+                                {tx.description || "—"}
+                              </Text>
+                            )}
+                          </Table.Cell>
+                          <Table.Cell>{tx.note || "—"}</Table.Cell>
+                          <Table.Cell>
+                            <HStack gap={1} wrap="wrap">
+                              {hasDirectives
+                                ? tx.directives!.map((d, i) => (
+                                    <Tag.Root key={`${d.kind}-${i}`} size="sm" colorPalette="gray">
+                                      {d.kind}{d.value ? `:${String(d.value).slice(0, 16)}` : ""}
+                                    </Tag.Root>
+                                  ))
+                                : "—"}
+                            </HStack>
+                          </Table.Cell>
                           <Table.Cell color={signedAmount < 0 ? "red.500" : "green.600"}>
                             ${Math.abs(signedAmount).toFixed(2)}
                           </Table.Cell>
@@ -489,6 +695,20 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                             </HStack>
                           </Table.Cell>
                           <Table.Cell>{tx.category || "—"}</Table.Cell>
+                          <Table.Cell>
+                            <HStack gap={2}>
+                              {pendingProposals > 0 ? (
+                                <Badge colorPalette="orange" variant="subtle" fontSize="0.65rem">
+                                  Needs review
+                                </Badge>
+                              ) : null}
+                              {hasDirectives ? (
+                                <Badge colorPalette="gray" variant="subtle" fontSize="0.65rem">
+                                  Has directives
+                                </Badge>
+                              ) : null}
+                            </HStack>
+                          </Table.Cell>
                           <Table.Cell textAlign="right">
                             {tx.staged ? (
                               <Button
@@ -515,7 +735,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                                   editTxDialog.onOpen();
                                 }}
                               >
-                                Edit
+                                Edit / Review
                               </Button>
                             ) : null}
                           </Table.Cell>
@@ -544,6 +764,12 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                   size="sm"
                   colorPalette="teal"
                   onClick={() => {
+                    if (pendingProposalsCountAll > 0) {
+                      const ok = window.confirm(
+                        `There are ${pendingProposalsCountAll} pending proposal(s) that need review.\n\nApply-to-Budget will use the current staged state.\n\nContinue?`
+                      );
+                      if (!ok) return;
+                    }
                     onOpen();
                   }}
                 >

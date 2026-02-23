@@ -18,7 +18,12 @@ export type AccountsSlice = {
   patchTransactionByStrongKey: (
     accountNumber: string,
     strongKey: string,
-    patch: { name?: string | null; note?: string | null }
+    patch: {
+      name?: string | null;
+      note?: string | null;
+      category?: string | null;
+      proposals?: Transaction["proposals"];
+    }
   ) => void;
   setAccountMapping: (accountNumber: string, mapping: AccountMapping) => void;
   removeAccount: (accountNumber: string) => void;
@@ -97,6 +102,9 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
 
       const name = normalizeOptionalText(patch?.name);
       const note = normalizeOptionalText(patch?.note);
+      const categoryRaw = normalizeOptionalText(patch?.category);
+      const category = categoryRaw === null ? undefined : categoryRaw;
+      const proposals = patch?.proposals;
 
       let changed = false;
       const updated = existing.map((tx) => {
@@ -109,6 +117,8 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
         const next: Transaction = { ...tx };
         if (name !== undefined) next.name = name;
         if (note !== undefined) next.note = note;
+        if (category !== undefined) next.category = category;
+        if (proposals !== undefined) next.proposals = proposals;
         changed = true;
         return next;
       });

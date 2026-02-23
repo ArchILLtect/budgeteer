@@ -250,13 +250,13 @@ UI tests (if present) or manual scripts:
 
 6) Staging proposals
 - [x] ~~Add proposal generation from directives when auto-apply toggle is OFF~~
-- [ ] Add proposal approval actions (single + batch)
-- [ ] Ensure “Approve all” includes manual edits
+- [x] ~~Add proposal approval actions (single + batch)~~
+- [x] ~~Ensure “Approve all” includes manual edits~~ (approves all pending proposals regardless of source)
 
 7) UI: Accounts staged table
-- [ ] Add Name/Note/Directives columns and status badges (Name/Note edit + Name display done; Directives/proposals badges pending)
-- [ ] Add filters: “Needs review” (auto-on) and “Has directives”
-- [ ] Add row highlighting for “Needs review”
+- [x] ~~Add Name/Note/Directives columns and status badges~~
+- [x] ~~Add filters: “Needs review” (auto-on) and “Has directives”~~
+- [x] ~~Add row highlighting for “Needs review”~~
 
 8) UI: Edit staged transaction modal
 - [x] ~~Implement modal with Name + Note editing~~
