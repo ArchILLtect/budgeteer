@@ -15,6 +15,11 @@ export type AccountsSlice = {
   clearAllAccountMappings: () => void;
   addOrUpdateAccount: (accountNumber: string, data: Partial<Account>) => void;
   addTransactionsToAccount: (accountNumber: string, transactions: Transaction[]) => void;
+  patchTransactionByStrongKey: (
+    accountNumber: string,
+    strongKey: string,
+    patch: { name?: string | null; note?: string | null }
+  ) => void;
   setAccountMapping: (accountNumber: string, mapping: AccountMapping) => void;
   removeAccount: (accountNumber: string) => void;
 };
@@ -24,6 +29,13 @@ type AccountsSliceStoreState = AccountsSlice & {
 };
 
 type SliceCreator<T> = StateCreator<AccountsSliceStoreState, [], [], T>;
+
+function normalizeOptionalText(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (value === undefined) return undefined;
+  const s = String(value).replace(/\s+/g, " ").trim();
+  return s ? s : null;
+}
 
 export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
   accountMappings: {},
@@ -70,6 +82,42 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
             ...(state.accounts[accountNumber] || {}),
             transactions: updated,
           },
+        },
+      };
+    }),
+
+  patchTransactionByStrongKey: (accountNumber, strongKey, patch) =>
+    set((state) => {
+      const acct = state.accounts[accountNumber];
+      const existing: Transaction[] = acct?.transactions ?? [];
+      if (!existing.length) return {};
+
+      const key = String(strongKey ?? "").trim();
+      if (!key) return {};
+
+      const name = normalizeOptionalText(patch?.name);
+      const note = normalizeOptionalText(patch?.note);
+
+      let changed = false;
+      const updated = existing.map((tx) => {
+        const txKey = typeof (tx as { key?: unknown }).key === "string" && (tx as { key?: string }).key
+          ? (tx as { key: string }).key
+          : getStrongTransactionKey(tx, accountNumber);
+
+        if (txKey !== key) return tx;
+
+        const next: Transaction = { ...tx };
+        if (name !== undefined) next.name = name;
+        if (note !== undefined) next.note = note;
+        changed = true;
+        return next;
+      });
+
+      if (!changed) return {};
+      return {
+        accounts: {
+          ...state.accounts,
+          [accountNumber]: { ...acct, transactions: updated },
         },
       };
     }),

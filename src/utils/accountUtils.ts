@@ -6,7 +6,7 @@ import type { SavingsReviewEntry } from "../types/savingsReview";
 
 type Transaction = TxKeyInput & {
     id?: string;
-    name?: string;
+    name?: string | null;
     type?: 'expense' | 'income' | 'savings';
     origin?: string;
     importSessionId?: string;

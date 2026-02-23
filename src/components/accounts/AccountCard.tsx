@@ -1,10 +1,13 @@
 import {
   Box, Tabs, Text, Flex, HStack, VStack, Tag, Button, Table,
-  Center, ButtonGroup, useDisclosure, Menu, Badge
+  Center, ButtonGroup, useDisclosure, Menu, Badge, Input, Textarea
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import InlineSpinner from '../ui/InlineSpinner';
 import { Tooltip } from "../ui/Tooltip";
+import { DialogModal } from "../ui/DialogModal";
+import { buildTxKey } from "../../ingest/buildTxKey";
+import { useUpsertTxStrongKeyOverride } from "../../store/txStrongKeyOverridesStore";
 import {
   formatLocalIsoDateAtTime,
   formatLocalIsoMonthDayTime24,
@@ -60,7 +63,15 @@ type BudgetStoreAccountState = {
   setSelectedMonth: (month: BudgetMonthKey) => void;
   getAccountStagedSessionSummaries: (accountNumber: string) => StagedSessionEntry[];
   undoStagedImport: (accountNumber: string, sessionId: string) => void;
+  patchTransactionByStrongKey: (accountNumber: string, strongKey: string, patch: { name?: string | null; note?: string | null }) => void;
 };
+
+function normalizeOptionalText(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (value === undefined) return undefined;
+  const s = String(value).replace(/\s+/g, " ").trim();
+  return s ? s : null;
+}
 
 export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   const ORIGIN_COLOR_MAP = useBudgetStore((s) => (s as BudgetStoreAccountState).ORIGIN_COLOR_MAP);
@@ -78,6 +89,8 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
     (s) => (s as BudgetStoreAccountState).getAccountStagedSessionSummaries
   );
   const undoStagedImport = useBudgetStore((s) => (s as BudgetStoreAccountState).undoStagedImport);
+  const patchTransactionByStrongKey = useBudgetStore((s) => (s as BudgetStoreAccountState).patchTransactionByStrongKey);
+  const upsertTxStrongKeyOverride = useUpsertTxStrongKeyOverride();
   const resolvedAccountNumber = acct.accountNumber || acctNumber;
   const sessionEntries = getAccountStagedSessionSummaries(resolvedAccountNumber);
   const latestImportedAt = useMemo(() => {
@@ -99,6 +112,11 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
   const institution = acct.institution || "Institution Unknown";
 
   const { open, onOpen, onClose } = useDisclosure();
+
+  const editTxDialog = useDisclosure();
+  const [editingStrongKey, setEditingStrongKey] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>("");
+  const [editingNote, setEditingNote] = useState<string>("");
 
   // Keep countdown-style UI deterministic during render.
   const [nowMs, setNowMs] = useState<number | null>(null);
@@ -149,6 +167,71 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
 
   return (
     <>
+      <DialogModal
+        title="Edit staged transaction"
+        open={editTxDialog.open}
+        setOpen={(v) => {
+          if (!v) {
+            setEditingStrongKey(null);
+            setEditingName("");
+            setEditingNote("");
+          }
+          editTxDialog.setOpen(v);
+        }}
+        onAccept={() => {
+          if (!editingStrongKey) return;
+          const name = normalizeOptionalText(editingName);
+          const note = normalizeOptionalText(editingNote);
+
+          patchTransactionByStrongKey(resolvedAccountNumber, editingStrongKey, {
+            name: name === undefined ? undefined : name,
+            note: note === undefined ? undefined : note,
+          });
+          upsertTxStrongKeyOverride(editingStrongKey, {
+            name: name === undefined ? undefined : name,
+            note: note === undefined ? undefined : note,
+          });
+        }}
+        onCancel={() => {
+          setEditingStrongKey(null);
+          setEditingName("");
+          setEditingNote("");
+        }}
+        acceptLabel="Save"
+        cancelLabel="Cancel"
+        acceptColorPalette="teal"
+        initialFocus="accept"
+        enterKeyAction="none"
+        body={
+          <VStack align="stretch" gap={3}>
+            <Box>
+              <Text fontSize="sm" fontWeight="semibold" mb={1}>
+                Name
+              </Text>
+              <Input
+                size="sm"
+                value={editingName}
+                onChange={(e) => setEditingName(e.target.value)}
+                placeholder="Leave blank to use bank description"
+              />
+            </Box>
+            <Box>
+              <Text fontSize="sm" fontWeight="semibold" mb={1}>
+                Note
+              </Text>
+              <Textarea
+                size="sm"
+                value={editingNote}
+                onChange={(e) => setEditingNote(e.target.value)}
+                placeholder="Optional"
+              />
+            </Box>
+            <Text fontSize="xs" color="fg.muted">
+              Saved edits persist across delete/re-import (by strong transaction key).
+            </Text>
+          </VStack>
+        }
+      />
       <Flex key={acct.id} justifyContent="space-between" alignItems="center" mb={3}>
         <VStack align="start" gap={0}>
           <Text fontWeight="bold">{displayLabel}</Text>
@@ -293,6 +376,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                       <Table.ColumnHeader>Amount</Table.ColumnHeader>
                       <Table.ColumnHeader>Type</Table.ColumnHeader>
                       <Table.ColumnHeader>Category</Table.ColumnHeader>
+                      <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
@@ -325,7 +409,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                           opacity={tx.staged ? 0.85 : 1}
                         >
                           <Table.Cell whiteSpace={'nowrap'}>{formatUtcDayKeyMonthDay(tx.date ?? "")}</Table.Cell>
-                          <Table.Cell>{tx.description}</Table.Cell>
+                          <Table.Cell>{tx.name || tx.description}</Table.Cell>
                           <Table.Cell color={signedAmount < 0 ? "red.500" : "green.600"}>
                             ${Math.abs(signedAmount).toFixed(2)}
                           </Table.Cell>
@@ -344,6 +428,27 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                             </Tag.Root>
                           </Table.Cell>
                           <Table.Cell>{tx.category || "—"}</Table.Cell>
+                          <Table.Cell textAlign="right">
+                            {tx.staged ? (
+                              <Button
+                                size="xs"
+                                variant="outline"
+                                colorPalette="teal"
+                                onClick={() => {
+                                  const key =
+                                    typeof (tx as { key?: unknown }).key === "string" && (tx as { key?: string }).key
+                                      ? (tx as { key: string }).key
+                                      : buildTxKey({ ...tx, accountNumber: resolvedAccountNumber });
+                                  setEditingStrongKey(key);
+                                  setEditingName(String(tx.name ?? ""));
+                                  setEditingNote(String(tx.note ?? ""));
+                                  editTxDialog.onOpen();
+                                }}
+                              >
+                                Edit
+                              </Button>
+                            ) : null}
+                          </Table.Cell>
                         </Table.Row>
                       );
                     })}
