@@ -35,6 +35,8 @@ import { FiChevronDown } from "react-icons/fi";
 type AccountCardProps = {
   acct: Account & { importedAt?: string };
   acctNumber: string;
+  selectedMonth: BudgetMonthKey;
+  onSelectedMonthChange: (month: BudgetMonthKey) => void;
 };
 
 type OriginColorMap = Record<string, string>;
@@ -60,7 +62,6 @@ type BudgetStoreAccountState = {
   accounts: Record<string, Account>;
   importHistory: ImportHistoryEntry[];
   removeAccount: (acctNumber: string) => void;
-  selectedMonth: BudgetMonthKey;
   setSelectedMonth: (month: BudgetMonthKey) => void;
   getAccountStagedSessionSummaries: (accountNumber: string) => StagedSessionEntry[];
   undoStagedImport: (accountNumber: string, sessionId: string) => void;
@@ -74,13 +75,12 @@ function normalizeOptionalText(value: unknown): string | null | undefined {
   return s ? s : null;
 }
 
-export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
+export default function AccountCard({ acct, acctNumber, selectedMonth, onSelectedMonthChange }: AccountCardProps) {
   const ORIGIN_COLOR_MAP = useBudgetStore((s) => (s as BudgetStoreAccountState).ORIGIN_COLOR_MAP);
   const accounts = useBudgetStore((s) => (s as BudgetStoreAccountState).accounts);
   const importHistory = useBudgetStore((s) => (s as BudgetStoreAccountState).importHistory);
   const removeAccount = useBudgetStore((s) => (s as BudgetStoreAccountState).removeAccount);
-  const selectedMonth = useBudgetStore((s) => (s as BudgetStoreAccountState).selectedMonth);
-  const setSelectedMonth = useBudgetStore((s) => (s as BudgetStoreAccountState).setSelectedMonth);
+  const setGlobalSelectedMonth = useBudgetStore((s) => (s as BudgetStoreAccountState).setSelectedMonth);
   const currentAccount = accounts[acctNumber];
   const currentTransactions = useMemo(
     () => (currentAccount?.transactions ?? []) as Transaction[],
@@ -381,7 +381,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
       </Flex>
 
       <ButtonGroup attached={false} gap={2}>
-          <YearPill months={months} />
+	      <YearPill months={months} selectedMonth={selectedMonth} onSelectedMonthChange={onSelectedMonthChange} />
       </ButtonGroup>
 
       {/* Monthly Tabbed View */}
@@ -389,7 +389,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
         variant="enclosed"
         mt={4}
         value={activeMonth}
-        onValueChange={(details) => setSelectedMonth(details.value as BudgetMonthKey)}
+        onValueChange={(details) => onSelectedMonthChange(details.value as BudgetMonthKey)}
       >
         <Tabs.List
           gap={monthsForYear.length < 10 ? 10 : 0}
@@ -539,7 +539,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                   colorPalette="teal"
                   onClick={() => {
                     if (activeMonth && activeMonth !== selectedMonth && monthsForYear.includes(activeMonth)) {
-                      setSelectedMonth(activeMonth);
+                      setGlobalSelectedMonth(activeMonth);
                     }
                     onOpen();
                   }}

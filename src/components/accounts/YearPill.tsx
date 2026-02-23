@@ -1,14 +1,14 @@
 import { Button, ButtonGroup } from '@chakra-ui/react';
 import { useMemo } from 'react';
-import { useBudgetStore } from '../../store/budgetStore';
+import type { BudgetMonthKey } from '../../types';
 
 type YearPillProps = {
   months: string[]; // array of "YYYY-MM" month keys available for the account
+  selectedMonth: BudgetMonthKey;
+  onSelectedMonthChange: (month: BudgetMonthKey) => void;
 };
 
-export function YearPill({ months }: YearPillProps) {
-  const selectedMonth = useBudgetStore((s) => s.selectedMonth);
-  const setSelectedMonth = useBudgetStore((s) => s.setSelectedMonth);
+export function YearPill({ months, selectedMonth, onSelectedMonthChange }: YearPillProps) {
 
   // years from "YYYY-MM" month keys
   const years = useMemo(() => {
@@ -27,7 +27,7 @@ export function YearPill({ months }: YearPillProps) {
       .at(-1);               // latest in that year
 
     const target = months.includes(sameMonthKey) ? sameMonthKey : fallback;
-    if (target) setSelectedMonth(target);
+    if (target) onSelectedMonthChange(target as BudgetMonthKey);
   };
 
   return (

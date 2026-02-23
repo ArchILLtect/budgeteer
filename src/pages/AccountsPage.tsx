@@ -1,9 +1,11 @@
 import { Button, Center, Heading, Box, useDisclosure, HStack, Text, VStack } from '@chakra-ui/react';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from "../store/budgetStore";
 import AccountCard from '../components/accounts/AccountCard';
 import { usePerfMilestone } from "../hooks/usePerfMilestone";
+import { getAvailableMonths } from '../utils/storeHelpers';
+import type { BudgetMonthKey } from '../types';
 // Dev harness can still be imported manually when needed
 // import IngestionDevHarness from '../../dev/IngestionDevHarness';
 const SyncAccountsModal = lazy(() => import('../components/ui/SyncAccountsModal'));
@@ -14,6 +16,7 @@ export default function AccountsTracker() {
   usePerfMilestone("accounts:mounted");
 
   const accounts = useBudgetStore((s) => s.accounts);
+  const globalSelectedMonth = useBudgetStore((s) => s.selectedMonth) as BudgetMonthKey;
   const clearAllAccounts = useBudgetStore((s) => s.clearAllAccounts);
   const clearAllAccountMappings = useBudgetStore((s) => s.clearAllAccountMappings);
   const clearAllImportData = useBudgetStore((s) => s.clearAllImportData);
@@ -21,6 +24,33 @@ export default function AccountsTracker() {
   const resetSavingsLogs = useBudgetStore((s) => s.resetSavingsLogs);
   const syncModal = useDisclosure();
   const isDev = import.meta.env.DEV;
+
+  const accountEntries = useMemo(() => Object.entries(accounts), [accounts]);
+  const [selectedMonthByAccount, setSelectedMonthByAccount] = useState<Record<string, BudgetMonthKey>>({});
+
+  useEffect(() => {
+    if (accountEntries.length === 0) return;
+
+    setSelectedMonthByAccount((prev) => {
+      let changed = false;
+      const next: Record<string, BudgetMonthKey> = { ...prev };
+
+      for (const [accountNumber, acct] of accountEntries) {
+        if (next[accountNumber]) continue;
+
+        const months = getAvailableMonths({ ...acct, transactions: acct.transactions ?? [] }) as string[];
+        const initial =
+          months.includes(globalSelectedMonth)
+            ? globalSelectedMonth
+            : (months.at(-1) as BudgetMonthKey | undefined) ?? globalSelectedMonth;
+
+        next[accountNumber] = initial;
+        changed = true;
+      }
+
+      return changed ? next : prev;
+    });
+  }, [accountEntries, globalSelectedMonth]);
   
 
   return (
@@ -67,9 +97,16 @@ export default function AccountsTracker() {
             Synced accounts
           </Heading>
 
-          {Object.entries(accounts).map(([accountNumber, acct]) => (
+          {accountEntries.map(([accountNumber, acct]) => (
             <Box key={accountNumber} borderWidth="1px" borderRadius="lg" p={4} mb={6} mx={4} bg={"bg.panel"}>
-              <AccountCard acct={acct} acctNumber={accountNumber} />
+              <AccountCard
+                acct={acct}
+                acctNumber={accountNumber}
+                selectedMonth={selectedMonthByAccount[accountNumber] ?? globalSelectedMonth}
+                onSelectedMonthChange={(month) =>
+                  setSelectedMonthByAccount((prev) => ({ ...prev, [accountNumber]: month }))
+                }
+              />
             </Box>
           ))}
         </Box>
