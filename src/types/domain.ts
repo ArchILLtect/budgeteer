@@ -15,6 +15,30 @@ export type ImportSession = {
 
 export type TransactionType = "income" | "expense" | "savings";
 
+export type BudgeteerDirectiveSource = "bankNote" | "ui";
+
+export type BudgeteerDirective =
+  | {
+      kind: "rename";
+      value: string;
+      source: BudgeteerDirectiveSource;
+    }
+  | {
+      kind: "category";
+      value: string;
+      source: BudgeteerDirectiveSource;
+    }
+  | {
+      kind: "goal";
+      value: string;
+      source: BudgeteerDirectiveSource;
+    }
+  | {
+      kind: "apply";
+      value: string;
+      source: BudgeteerDirectiveSource;
+    };
+
 // Local-first transaction shape used throughout ingestion + store.
 // This is intentionally tolerant (allows extra fields) while we harden types.
 export type Transaction = {
@@ -22,12 +46,20 @@ export type Transaction = {
   date?: BudgetDayKey;
   description?: string;
 
+  // User-facing label. If omitted, UI should display `description`.
+  name?: string | null;
+
   // In some legacy UI paths this can be a string; ingestion generally uses numbers.
   amount?: number | string;
   rawAmount?: number;
 
   type?: TransactionType;
   category?: string;
+
+  // Notes + directives
+  bankNote?: string | null;
+  note?: string | null;
+  directives?: BudgeteerDirective[];
 
   accountNumber?: string;
 

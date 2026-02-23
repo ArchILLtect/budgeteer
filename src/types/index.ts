@@ -6,6 +6,7 @@ export type {
 	AccountMapping,
 	Transaction,
 	TransactionType,
+  BudgeteerDirective,
 	BudgetDayKey,
 	BudgetMonthKey,
 	ImportSession,

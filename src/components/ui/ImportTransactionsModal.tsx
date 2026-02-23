@@ -10,6 +10,7 @@ import { AppSelect } from './AppSelect';
 import type { ImportPlan } from '../../ingest/importPlan';
 import type { Transaction } from '../../types';
 import { recordGenericTiming } from "../../services/perfLogger";
+import { useTxStrongKeyOverridesByKey } from "../../store/txStrongKeyOverridesStore";
 import type {
   AcceptedTxnPreview,
   DuplicateSample,
@@ -68,6 +69,8 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
   const streamingAutoLineThreshold = useBudgetStore((s) => s.streamingAutoLineThreshold);
   const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
   const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
+
+  const txStrongKeyOverridesByKey = useTxStrongKeyOverridesByKey();
 
   const [fileName, setFileName] = useState('');
   const [fileObj, setFileObj] = useState<File | null>(null);
@@ -262,6 +265,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         parsedRows: ingestionInput.parsedRows,
         accountNumber,
         existingTxns,
+        txStrongKeyOverridesByKey,
         yieldEvery: useStreaming ? 500 : undefined,
       });
 

@@ -89,6 +89,9 @@ describe("CSV ingestion supports /samples patterns", () => {
     const paycheck = plan.accepted.find((t) => (t.description || "").toLowerCase().includes("payroll"));
     expect(paycheck?.rawAmount).toBeGreaterThan(0);
 
+    const hasDirective = plan.accepted.some((t) => Array.isArray((t as { directives?: unknown }).directives) && (t as { directives?: unknown[] }).directives!.length > 0);
+    expect(hasDirective).toBe(true);
+
     const orig = plan.accepted[0]?.original as Record<string, unknown> | undefined;
     expect(orig && ("Balance" in orig || "balance" in orig)).toBe(true);
   });

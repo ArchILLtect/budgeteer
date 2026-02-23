@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { useBudgetStore } from "../../store/budgetStore";
 import { analyzeImport } from "../../ingest/analyzeImport";
+import { useTxStrongKeyOverridesByKey } from "../../store/txStrongKeyOverridesStore";
 import IngestionMetricsPanel from "../accounts/IngestionMetricsPanel";
 import { fireToast } from "../../hooks/useFireToast";
 import { recordGenericTiming } from "../../services/perfLogger";
@@ -55,6 +56,8 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const addOrUpdateAccount = useBudgetStore((s) => s.addOrUpdateAccount);
   const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
   const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
+
+  const txStrongKeyOverridesByKey = useTxStrongKeyOverridesByKey();
 
   const [sourceType, setSourceType] = useState<syncFileTypeMode>("csv");
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -319,6 +322,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           parsedRows: { rows: adaptedRows, errors: [] },
           accountNumber: acctNumber,
           existingTxns: existing,
+          txStrongKeyOverridesByKey,
         });
 
         results.push({ accountNumber: acctNumber, plan });

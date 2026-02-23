@@ -129,4 +129,40 @@ describe("analyzeImport", () => {
       expect(t).toMatchObject({ importSessionId: "s1", staged: true, budgetApplied: false });
     }
   });
+
+  it("rehydrates name/note by strong key via txStrongKeyOverridesByKey", async () => {
+    const now = makeDeterministicNow();
+
+    const csv = [
+      "date,description,amount",
+      "2026-02-02,Groceries,-20.50",
+    ].join("\n");
+
+    const accountNumber = "1234";
+
+    // buildTxKey format: account|YYYY-MM-DD|signedAmount|normalized description
+    const key = `${accountNumber}|2026-02-02|-20.50|groceries`;
+
+    const plan = await analyzeImport({
+      fileText: csv,
+      accountNumber,
+      existingTxns: [],
+      sessionId: "s1",
+      importedAt: "2026-02-14T00:00:00.000Z",
+      now,
+      txStrongKeyOverridesByKey: {
+        [key]: {
+          name: "Trader Joe's",
+          note: "Prefer organic",
+        },
+      },
+    });
+
+    expect(plan.accepted).toHaveLength(1);
+    expect(plan.accepted[0]).toMatchObject({
+      key,
+      name: "Trader Joe's",
+      note: "Prefer organic",
+    });
+  });
 });

@@ -17,6 +17,7 @@ import type {
 } from "./importPlan";
 import { parseCsv } from "./parseCsv";
 import type { CsvParseError } from "./parseCsv";
+import { deriveNoteAndDirectivesFromOriginal } from "./noteDirectives";
 import { normalizeRow } from "./normalizeRow";
 
 export type AnalyzeImportProps = {
@@ -25,6 +26,17 @@ export type AnalyzeImportProps = {
 
   accountNumber: string;
   existingTxns: Transaction[];
+
+  // Optional: rehydrate per-transaction user edits by strong transaction key.
+  // This allows delete/re-import flows to restore name/note edits.
+  txStrongKeyOverridesByKey?: Record<
+    string,
+    | {
+        name?: string | null;
+        note?: string | null;
+      }
+    | undefined
+  >;
 
   // Optional overrides for determinism in tests.
   sessionId?: string;
@@ -54,6 +66,13 @@ function isBudgetDayKey(value: unknown): value is string {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function normalizeOptionalText(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (value === undefined) return undefined;
+  const s = String(value).replace(/\s+/g, " ").trim();
+  return s ? s : null;
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -123,6 +142,7 @@ export async function analyzeImport({
   parsedRows: externalParsedRows,
   accountNumber,
   existingTxns,
+  txStrongKeyOverridesByKey,
   sessionId,
   importedAt,
   now,
@@ -241,6 +261,12 @@ export async function analyzeImport({
     }
 
     norm.accountNumber = accountNumber;
+
+    // Notes + directives (pure enrichment; does not affect classification/dedupe)
+    const noteInfo = deriveNoteAndDirectivesFromOriginal(norm.original);
+    if (noteInfo.bankNote) norm.bankNote = noteInfo.bankNote;
+    if (noteInfo.note) norm.note = noteInfo.note;
+    if (noteInfo.directives.length) norm.directives = noteInfo.directives;
 
     const tAfterNorm = nowMs();
     tNorm += tAfterNorm - tRowStart;
@@ -379,6 +405,16 @@ export async function analyzeImport({
 
     const tReKeyEnd = nowMs();
     tKey += tReKeyEnd - tAfterInfer;
+
+    // Rehydrate per-transaction user edits (name/note) by strong key.
+    // This is applied after key computation to guarantee it never affects dedupe.
+    const override = txStrongKeyOverridesByKey?.[key];
+    if (override) {
+      const name = normalizeOptionalText(override.name);
+      const note = normalizeOptionalText(override.note);
+      if (name !== undefined) norm.name = name;
+      if (note !== undefined) norm.note = note;
+    }
 
     const tDedupeStart = tReKeyEnd;
     const tAfterDedupe = nowMs();
