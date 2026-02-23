@@ -166,12 +166,6 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
       ? selectedMonth
       : (monthsForYear.at(-1) as BudgetMonthKey | undefined) ?? selectedMonth;
 
-  useEffect(() => {
-    if (activeMonth && activeMonth !== selectedMonth && monthsForYear.includes(activeMonth)) {
-      setSelectedMonth(activeMonth);
-    }
-  }, [activeMonth, monthsForYear, selectedMonth, setSelectedMonth]);
-
   return (
     <>
       <DialogModal
@@ -540,7 +534,16 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                 </Flex>
               </Box>
               <Center>
-                <Button size="sm" colorPalette="teal" onClick={onOpen}>
+                <Button
+                  size="sm"
+                  colorPalette="teal"
+                  onClick={() => {
+                    if (activeMonth && activeMonth !== selectedMonth && monthsForYear.includes(activeMonth)) {
+                      setSelectedMonth(activeMonth);
+                    }
+                    onOpen();
+                  }}
+                >
                   ✅ Apply to Budget
                 </Button>
               </Center>
