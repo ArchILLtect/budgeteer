@@ -246,7 +246,7 @@ UI tests (if present) or manual scripts:
 
 5) Settings integration (Name Overrides)
 - [x] ~~Wire “Apply rename to similar” to create Name Override exact-match entry~~
-- [ ] Ensure it reuses the same SettingsPage infrastructure (single source of truth)
+- [x] ~~Ensure it reuses the same SettingsPage infrastructure (single source of truth)~~ (uses `localSettingsStore`)
 
 6) Staging proposals
 - [x] ~~Add proposal generation from directives when auto-apply toggle is OFF~~
