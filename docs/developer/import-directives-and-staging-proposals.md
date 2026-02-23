@@ -249,7 +249,7 @@ UI tests (if present) or manual scripts:
 - [ ] Ensure it reuses the same SettingsPage infrastructure (single source of truth)
 
 6) Staging proposals
-- [ ] Add proposal generation from directives when auto-apply toggle is OFF
+- [x] ~~Add proposal generation from directives when auto-apply toggle is OFF~~
 - [ ] Add proposal approval actions (single + batch)
 - [ ] Ensure “Approve all” includes manual edits
 
