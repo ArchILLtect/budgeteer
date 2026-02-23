@@ -50,6 +50,9 @@ UI bugfixes (P1):
 - [x] TODO(P1): Planner — fix “Include savings in …” radio button not working
 - [x] TODO(P1): Tracker — fix “Total Override” checkbox not working
 - [ ] TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”
+- [ ] TODO(P1): Imports — add an “Advanced” toggle “Generate suggestions” (heuristics) (default OFF)
+  - When enabled, generate *proposals* even without explicit `budgeteer:*` directives (e.g., suggested rename/category/savings goal links)
+  - Must be reviewable/approvable in staging (never silently applied)
 
 Deployment (P1):
 
@@ -250,6 +253,28 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 - [ ] TODO(stretch): Tracker/Imports — add a row-level action “Promote to Planner income source” (safe MVP alternative to auto-detection)
   - Place: next to an actual income row in Tracker “Income Details” (and/or in Import session review), so the user can promote a known-good stream with one click
 - [ ] TODO(stretch): Planner — add "weekly" and "bi-weekly" as income types/frequency options in IncomeSourceForm to reduce manual salary conversions
+
+- [ ] TODO(stretch): Imports/Apply — derive optional apply-to-budget “instructions” from the `Note` column (opt-in)
+  - Scope: Only run when user explicitly enables “Note directives” and configures at least one directive
+  - Prefer explicit tags over fuzzy parsing (e.g. `budgeteer:goal=Auto Loan Down-payment`, `budgeteer:category=Groceries`, `budgeteer:rename=Paycheck`)
+  - Allow a small whitelist of supported actions:
+    - rename transaction
+    - set/override category (create category if missing)
+    - apply savings amounts to a named Savings Goal (create if missing)
+  - Consider (stretch within stretch): build a “note directive” -> “category rule” suggestion for future similar descriptions
+  - Add tests around parsing + safety (ignore normal human notes, reject unknown directives)
+
+- [ ] TODO(stretch): Accounts — add liabilities (Credit Cards + Loans) via the existing accounts model (avoid a new page until needed)
+  - Add/confirm `accountType` supports: checking, savings, creditCard, loan
+  - Ensure balances + transaction semantics work for owed balances (display + calculations)
+  - Add payment flows (checking -> credit card/loan) and treat them as transfers (avoid double-counting)
+  - Phase 1 UI: extend Accounts list/details to show liability accounts cleanly
+  - Phase 2 (optional): add a dedicated “Credit & Loans” page only if Accounts becomes crowded
+
+- [ ] TODO(stretch): Demo-mode — upgrade from single-account to multi-account demo bundle (after core demo flow is stable)
+  - Add a credit card account + savings account
+  - Add realistic cross-account transfers and credit card payments
+  - Update sample generator + curated sample files accordingly
 ---
 
 <a id="postmvp"></a>
