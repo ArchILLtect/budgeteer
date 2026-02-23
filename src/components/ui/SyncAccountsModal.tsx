@@ -1,4 +1,4 @@
-import { Button, RadioGroup, Stack, Input, Text, Box, Stat, SimpleGrid, Tag, Dialog } from "@chakra-ui/react";
+import { Button, RadioGroup, Stack, Input, Text, Box, Stat, SimpleGrid, Tag, Dialog, Checkbox } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { useBudgetStore } from "../../store/budgetStore";
@@ -74,6 +74,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const setLastIngestionTelemetry = useBudgetStore(s => s.setLastIngestionTelemetry);
   const setLastIngestionBenchmark = useBudgetStore(s => s.setLastIngestionBenchmark);
   const [dryRunStarted, setDryRunStarted] = useState(false);
+  const [autoApplyExplicitDirectives, setAutoApplyExplicitDirectives] = useState(true);
 
   const primaryActionButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -110,6 +111,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     setTelemetry(null);
     setMetricsAccount('');
     setDryRunStarted(false);
+    setAutoApplyExplicitDirectives(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,6 +325,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           accountNumber: acctNumber,
           existingTxns: existing,
           txStrongKeyOverridesByKey,
+          autoApplyExplicitDirectives,
         });
 
         results.push({ accountNumber: acctNumber, plan });
@@ -594,6 +597,18 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
 
             {step === 'transactions' && (
               <Stack gap={3}>
+                <Checkbox.Root
+                  checked={autoApplyExplicitDirectives}
+                  onCheckedChange={(details) => setAutoApplyExplicitDirectives(details.checked === true)}
+                  disabled={ingesting}
+                >
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control />
+                  <Checkbox.Label>
+                    <Text fontSize="sm">Auto-apply `budgeteer:*` directives</Text>
+                  </Checkbox.Label>
+                </Checkbox.Root>
+
                 {isLargeFile && !dryRunStarted && (
                   <Box borderWidth='1px' borderRadius='md' p={3}>
                     <Text fontSize='sm' fontWeight='bold'>Large import detected</Text>

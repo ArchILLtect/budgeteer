@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Button, Box, VStack, HStack, Input, Text, Stat, Alert, Badge, Dialog, Separator, Field } from '@chakra-ui/react';
+import { Button, Box, VStack, HStack, Input, Text, Stat, Alert, Badge, Dialog, Separator, Field, Checkbox } from '@chakra-ui/react';
 import { useBudgetStore } from '../../store/budgetStore';
 import { analyzeImport } from '../../ingest/analyzeImport';
 import { parseCsv } from '../../ingest/parseCsv';
@@ -81,6 +81,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
   const [ingesting, setIngesting] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [useStreaming, setUseStreaming] = useState(false);
+  const [autoApplyExplicitDirectives, setAutoApplyExplicitDirectives] = useState(true);
   const [streamRows, setStreamRows] = useState(0);
   const [streamBytes, setStreamBytes] = useState<number | null>(null);
   const [streamFinished, setStreamFinished] = useState(false);
@@ -109,6 +110,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
     setApplied(false);
     setStreaming(false);
     setUseStreaming(false);
+    setAutoApplyExplicitDirectives(true);
     setStreamRows(0);
     setStreamBytes(null);
     setStreamFinished(false);
@@ -266,6 +268,7 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
         accountNumber,
         existingTxns,
         txStrongKeyOverridesByKey,
+        autoApplyExplicitDirectives,
         yieldEvery: useStreaming ? 500 : undefined,
       });
 
@@ -476,6 +479,19 @@ export default function ImportTransactionsModal({ isOpen, onClose }: ImportTrans
                   <Badge colorPalette="purple" variant="subtle" fontSize="0.6rem">auto</Badge>
                 )}
               </HStack>
+
+              <Checkbox.Root
+                checked={autoApplyExplicitDirectives}
+                onCheckedChange={(details) => setAutoApplyExplicitDirectives(details.checked === true)}
+                disabled={ingesting}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+                <Checkbox.Label>
+                  <Text fontSize="sm">Auto-apply `budgeteer:*` directives</Text>
+                </Checkbox.Label>
+              </Checkbox.Root>
+
               {!showConfirm && (
                 <Button size="sm" variant="outline" onClick={() => setShowConfirm(true)} disabled={!result?.plan || applied}>Review & Apply</Button>
               )}

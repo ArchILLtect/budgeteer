@@ -38,6 +38,10 @@ export type AnalyzeImportProps = {
     | undefined
   >;
 
+  // Default: true. When true, explicit `budgeteer:*` directives are applied immediately.
+  // When false, directives are still parsed/attached but outcomes are not applied.
+  autoApplyExplicitDirectives?: boolean;
+
   // Optional overrides for determinism in tests.
   sessionId?: string;
   importedAt?: string;
@@ -143,6 +147,7 @@ export async function analyzeImport({
   accountNumber,
   existingTxns,
   txStrongKeyOverridesByKey,
+  autoApplyExplicitDirectives,
   sessionId,
   importedAt,
   now,
@@ -267,6 +272,16 @@ export async function analyzeImport({
     if (noteInfo.bankNote) norm.bankNote = noteInfo.bankNote;
     if (noteInfo.note) norm.note = noteInfo.note;
     if (noteInfo.directives.length) norm.directives = noteInfo.directives;
+
+    if ((autoApplyExplicitDirectives ?? true) && noteInfo.directives.length) {
+      for (const d of noteInfo.directives) {
+        if (d.kind === "rename") {
+          norm.name = d.value;
+        } else if (d.kind === "category") {
+          norm.category = d.value;
+        }
+      }
+    }
 
     const tAfterNorm = nowMs();
     tNorm += tAfterNorm - tRowStart;
