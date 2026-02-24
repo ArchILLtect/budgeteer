@@ -21,6 +21,7 @@ type TestActualExpense = {
 type TestActualIncomeSource = {
   id: string;
   amount: number;
+  name?: string | null;
   description?: string;
   createdAt?: string;
   [key: string]: unknown;
@@ -226,6 +227,7 @@ describe("applyOneMonth", () => {
     expect(expenses).toHaveLength(1);
     expect(expenses[0].name).toBe("Amazon Web Services");
     expect(income).toHaveLength(1);
-    expect(income[0].description).toBe("Work");
+    expect(income[0].description).toBe("Paycheck");
+    expect(income[0].name).toBe("Work");
   });
 });
