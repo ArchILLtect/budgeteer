@@ -1,4 +1,4 @@
-import { Button, Center, Heading, Box, useDisclosure, HStack, Text, VStack } from '@chakra-ui/react';
+import { Button, Heading, Box, useDisclosure, HStack, Text, VStack, useMediaQuery } from '@chakra-ui/react';
 import { Suspense, lazy } from 'react';
 import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from "../store/budgetStore";
@@ -11,54 +11,62 @@ const preloadSyncModal = () => import('../components/ui/SyncAccountsModal');
 
 export default function AccountsTracker() {
 
-  usePerfMilestone("accounts:mounted");
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
-  const accounts = useBudgetStore((s) => s.accounts);
   const clearAllAccounts = useBudgetStore((s) => s.clearAllAccounts);
   const clearAllImportData = useBudgetStore((s) => s.clearAllImportData);
   const resetMonthlyActuals = useBudgetStore((s) => s.resetMonthlyActuals);
   const resetSavingsLogs = useBudgetStore((s) => s.resetSavingsLogs);
+  const accounts = useBudgetStore((s) => s.accounts);
   const syncModal = useDisclosure();
   const isDev = import.meta.env.DEV;
-  
 
+  usePerfMilestone("accounts:mounted");
+  
   return (
-    <>
-      <VStack gap={2} mb={4} borderRadius="md">
-        <Heading size="xl" fontWeight={700}>Accounts</Heading>
-        <Text fontSize="sm" color="fg.muted" mx={3}>
-          Import a CSV in two steps: set up accounts, then import transactions.
-        </Text>
-        <Center>
-          <HStack gap={4}>
-            <Button colorPalette="teal" onClick={syncModal.onOpen} onMouseEnter={preloadSyncModal}>
-              Import Account Data
+    <Box bg="bg.subtle" p={isPortraitWidth ? 0 : 4} minH="100%">
+      <VStack
+        p={4}
+        maxW={isPortraitWidth ? "100%" : "80%"}
+        mx={isPortraitWidth ? "none" : "auto"}
+      >
+        <VStack mb={4} gap={1}>
+          <Heading size="xl" fontWeight={700}>
+            Accounts
+          </Heading>
+          <Text fontSize="sm" color="fg.muted" mx={3}>
+            Import a CSV in two steps: set up accounts, then import transactions.
+          </Text>
+        </VStack>
+
+        <HStack gap={4}>
+          <Button colorPalette="teal" onClick={syncModal.onOpen} onMouseEnter={preloadSyncModal}>
+            Import Account Data
+          </Button>
+          {isDev && (
+            <Button
+              colorPalette="red"
+              variant="outline"
+              onClick={() => {
+                const ok = window.confirm(
+                  'DEV only: Clear all imported data?\n\nThis will remove accounts, transactions, and import history for your current user scope.\n\nAccount label/institution mappings will be kept.'
+                );
+                if (!ok) return;
+                clearAllImportData?.();
+                clearAllAccounts?.();
+                resetMonthlyActuals?.();
+                resetSavingsLogs?.();
+              }}
+            >
+              DEV: Clear Imported Data
             </Button>
-            {isDev && (
-              <Button
-                colorPalette="red"
-                variant="outline"
-                onClick={() => {
-                  const ok = window.confirm(
-                    'DEV only: Clear all imported data?\n\nThis will remove accounts, transactions, and import history for your current user scope.\n\nAccount label/institution mappings will be kept.'
-                  );
-                  if (!ok) return;
-                  clearAllImportData?.();
-                  clearAllAccounts?.();
-                  resetMonthlyActuals?.();
-                  resetSavingsLogs?.();
-                }}
-              >
-                DEV: Clear Imported Data
-              </Button>
-            )}
-          </HStack>
-        </Center>
+          )}
+        </HStack>
       </VStack>
       <Suspense fallback={<InlineSpinner />}>
         <SyncAccountsModal isOpen={syncModal.open} onClose={syncModal.onClose} />
       </Suspense>
-      {/* ...rest of the AccountsTracker UI */}
+
       {Object.entries(accounts).length > 0 ? (
         <Box>
           <Heading size="md" mb={2} mx={4}>
@@ -78,6 +86,6 @@ export default function AccountsTracker() {
           </Text>
         </Box>
       )}
-    </>
+    </Box>
   );
 }

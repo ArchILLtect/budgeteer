@@ -714,6 +714,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
         mt={4}
         value={activeMonth}
         onValueChange={(details) => setSelectedMonth(details.value as BudgetMonthKey)}
+        width={'100%'}
       >
         <Tabs.List
           gap={monthsForYear.length < 10 ? 10 : 0}
@@ -721,12 +722,13 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
           mb={2}
           w={"100%"}
           justifyContent={monthsForYear.length > 8 ? "space-around" : "start"}
+          overflowX={monthsForYear.length > 8 ? "visible" : "auto"}
         >
           {monthsForYear.map((m) => (
             <Tabs.Trigger
               key={m}
               value={m}
-              minWidth={1}
+              minWidth={16}
               fontWeight="bold"
               fontSize={22}
               color={monthsWithPendingReview.has(m) ? "orange.500" : undefined}

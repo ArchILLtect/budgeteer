@@ -1,5 +1,6 @@
 import { Box, Button, Heading, HStack, VStack, Text, Checkbox, NumberInput, Badge,
-    Flex, Field, Separator, Input, Icon, IconButton } from "@chakra-ui/react";
+    Flex, Field, Separator, Input, Icon, IconButton, Center,
+    useMediaQuery} from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useSettingsPageData } from "./useSettingsPageData";
 import { BasicSpinner } from "../components/ui/BasicSpinner";
@@ -248,6 +249,8 @@ export default function SettingsPage() {
   const [removeSampleLoading, setRemoveSampleLoading] = useState(false);
   const [removeSampleError, setRemoveSampleError] = useState<string | null>(null);
 
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
+
   useEffect(() => {
     // Keep the UI in sync if some other screen changes the preference.
     setSeedOptedOut(isSeedDemoDisabled());
@@ -256,9 +259,27 @@ export default function SettingsPage() {
   if (loading) return <BasicSpinner />;
 
   return (
-    <Box p={6} mb={20}>
-      <Box p={4} maxW="80%" mx="auto" borderWidth={1} borderColor="border" borderRadius="lg" boxShadow="md" bg="bg.panel">
-        <Heading size="2xl" my={3}>Settings</Heading>
+    <Box bg="bg.subtle" p={isPortraitWidth ? 0 : 6} minH="100%">
+      <Box
+        p={4}
+        maxW={isPortraitWidth ? "100%" : "80%"}
+        mx={isPortraitWidth ? "none" : "auto"}
+        border={isPortraitWidth ? "none" : "1px solid"}
+        borderRadius={isPortraitWidth ? "none" : "lg"}
+        boxShadow={isPortraitWidth ? "none" : "md"}
+        borderColor={"border"}
+        bg="bg.panel"
+      >
+        <Center mb={4}>
+          <VStack gap={1}>
+            <Heading size="xl" fontWeight={700}>
+              Settings
+            </Heading>
+            <Text fontSize="sm" color="fg.muted">
+              Configure your preferences and customize how Budgeteer works for you. Changes to settings will be reflected across the app immediately.
+            </Text>
+          </VStack>
+        </Center>
 
         <Tip storageKey="tip:settings-local" title="Tip">
           Settings and dismissed tips are stored per user in this browser. If you switch devices or clear storage, you’ll
