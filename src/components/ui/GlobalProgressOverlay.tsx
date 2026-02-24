@@ -17,8 +17,8 @@ export function GlobalProgressOverlay() {
   return (
     <Box
       position="fixed"
-      top={"50%"}
-      left={"20%"}
+      top={"3%"}
+      left={"0%"}
       right={0}
       zIndex={3000}
       px={3}
