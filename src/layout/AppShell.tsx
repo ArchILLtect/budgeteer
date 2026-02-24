@@ -181,7 +181,7 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
                 top="50%"
                 left={sidebarOpen ? sidebarWidth : "0px"}
                 transform={sidebarOpen ? "translate(-50%, -50%)" : "translate(0, -50%)"}
-                zIndex={2000}
+                zIndex={1500} //TODO(continual): ensure this is above all sidebar elements but below the header after recent changes.
                 onClick={() => setSidebarOpen((v) => !v)}
               >
                 {sidebarOpen ? <MdChevronLeft /> : <MdChevronRight />}
