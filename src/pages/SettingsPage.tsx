@@ -11,6 +11,7 @@ import {
   useExpenseNameOverrides,
   useDefaultLandingRoute,
   useIncomeNameOverrides,
+  useLocalSettingsStore,
   useSetApplyAlwaysExtractVendorName,
   useSetDefaultLandingRoute,
   useSetExpenseNameOverrides,
@@ -22,6 +23,10 @@ import {
   type SidebarWidthPreset,
 } from "../store/localSettingsStore";
 import { clearUserScopedKeysByPrefix } from "../services/userScopedStorage";
+import { usePerfLogStore } from "../store/perfLogStore";
+import { useTxStrongKeyOverridesStore } from "../store/txStrongKeyOverridesStore";
+import { useUpdatesStore } from "../store/updatesStore";
+import { useUserUICacheStore } from "../services/userUICacheStore";
 import { Tip } from "../components/ui/Tip";
 import { FormSelect } from "../components/forms/FormSelect";
 import { fireToast } from "../hooks/useFireToast";
@@ -49,6 +54,30 @@ type ImportSettingsLocal = {
   streamingAutoLineThreshold: number;
   streamingAutoByteThreshold: number;
 };
+
+type StoreWithPersist = {
+  getInitialState: () => any;
+  setState: (...args: any[]) => any;
+  persist?: {
+    clearStorage?: () => void | Promise<void>;
+  };
+};
+
+async function clearPersistedStore(label: string, store: StoreWithPersist): Promise<void> {
+  try {
+    await store.persist?.clearStorage?.();
+  } catch {
+    // ignore
+  }
+
+  try {
+    store.setState(store.getInitialState(), true);
+  } catch {
+    // ignore
+  }
+
+  fireToast("success", `${label} cleared`, "Local persisted data was removed and in-memory state was reset.");
+}
 
 export default function SettingsPage() {
 
@@ -226,9 +255,8 @@ export default function SettingsPage() {
 
   return (
     <Box p={6} mb={20}>
-      {/*<VStack align="start" gap={2} minH="100%" p={4} bg="white" rounded="md" boxShadow="sm">*/}
       <Box p={4} maxW="80%" mx="auto" borderWidth={1} borderColor="border" borderRadius="lg" boxShadow="md" bg="bg.panel">
-        <Heading size="2xl">Settings</Heading>
+        <Heading size="2xl" my={3}>Settings</Heading>
 
         <Tip storageKey="tip:settings-local" title="Tip">
           Settings and dismissed tips are stored per user in this browser. If you switch devices or clear storage, you’ll
@@ -1003,20 +1031,122 @@ export default function SettingsPage() {
               </Text>
             </VStack>
             {import.meta.env.DEV && (
-              <Box mt={6} p={3} borderWidth={1} borderRadius="md" bg="bg.subtle">
-                <Heading size="sm" mb={2}>Developer / Debug</Heading>
-                <HStack justify="space-between">
-                  <Text fontSize="sm">Show Ingestion Benchmark Panel</Text>
-                  {/* <Switch size="md" isChecked={showIngestionBenchmark} onChange={(e: React.ChangeEvent<HTMLInputElement>)=> setShowIngestionBenchmark(e.target.checked)} /> */}
-                  <AppSwitch show={showIngestionBenchmark} setShow={setShowIngestionBenchmark} />
-                </HStack>
-                <Text fontSize="xs" mt={2} color="gray.500">Dev-only synthetic ingestion performance harness. Not persisted.</Text>
-              </Box>
+              <>
+                <Heading size="md" mt={8} mb={4}>Developer / Debug Settings</Heading>
+                <Box mt={6} p={3} borderWidth={1} borderRadius="md" bg="bg.subtle">
+                  <HStack justify="space-between">
+                    <Text fontSize="sm">Show Ingestion Benchmark Panel</Text>
+                    {/* <Switch size="md" isChecked={showIngestionBenchmark} onChange={(e: React.ChangeEvent<HTMLInputElement>)=> setShowIngestionBenchmark(e.target.checked)} /> */}
+                    <AppSwitch show={showIngestionBenchmark} setShow={setShowIngestionBenchmark} />
+                  </HStack>
+                  <Text fontSize="xs" mt={2} color="gray.500">Dev-only synthetic ingestion performance harness. Not persisted.</Text>
+                </Box>
+
+                <Box mt={6} p={3} borderWidth={1} borderRadius="md" bg="bg.subtle">
+                  <Heading size="sm" mb={2}>Clear Local Stores</Heading>
+                  <Text fontSize="xs" color="fg.muted" mb={3}>
+                    Dev-only: clears the full persisted store (user-scoped localStorage) and resets in-memory state.
+                    Useful for debugging import/directive behavior.
+                  </Text>
+                  <VStack align="stretch" gap={2} separator={<Separator />}>
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">Tx Strong Key Overrides (directive carryover)</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => void clearPersistedStore("Tx Strong Key Overrides", useTxStrongKeyOverridesStore)}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">Budget Store (accounts/import history/transactions)</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => void clearPersistedStore("Budget Store", useBudgetStore)}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">Local Settings Store</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => void clearPersistedStore("Local Settings", useLocalSettingsStore)}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">Updates Store</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => void clearPersistedStore("Updates Store", useUpdatesStore)}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">Perf Log Store</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => void clearPersistedStore("Perf Log", usePerfLogStore)}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">User UI Cache Store</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => void clearPersistedStore("User UI Cache", useUserUICacheStore)}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+
+                    <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                      <Text fontSize="sm">Demo Tour Store</Text>
+                      <Button
+                        size="xs"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => {
+                          try {
+                            useDemoTourStore.getState().resetDisabled();
+                            useDemoTourStore.setState({ open: false, disabled: false });
+                            fireToast("success", "Demo Tour Store cleared", "Demo tour state was reset.");
+                          } catch {
+                            fireToast("error", "Clear failed", "Unable to clear demo tour state.");
+                          }
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </HStack>
+                  </VStack>
+                </Box>
+              </>
             )}
           </Box>
         </AppCollapsible>
       </Box>
-      {/*</VStack>*/}
     </Box>
   );
 }
