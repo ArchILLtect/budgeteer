@@ -6,6 +6,7 @@ type DialogModalProps = {
   list?: { id: string; isFavorite: boolean };
   title: string;
   body: React.ReactNode;
+  modalMaxWidth?: string | number;
   open: boolean;
   setOpen: (open: boolean) => void;
   onAccept: (id?: string, isFavorite?: boolean) => void | Promise<void>;
@@ -37,6 +38,7 @@ export const DialogModal = ({
   list,
   title,
   body,
+  modalMaxWidth,
   open,
   setOpen,
   onAccept,
@@ -161,7 +163,12 @@ export const DialogModal = ({
       <Portal>
         <Dialog.Backdrop bg={isDanger ? "rgba(224, 84, 84, 0.7)" : "rgba(0, 0, 0, 0.7)"} />
         <Dialog.Positioner mt={10}>
-          <Dialog.Content onKeyDown={onDialogKeyDown} border={isDanger ? "5px solid" : "unset"} borderColor={isDanger ? "red.500" : "unset" }>
+          <Dialog.Content
+            onKeyDown={onDialogKeyDown}
+            border={isDanger ? "5px solid" : "unset"}
+            borderColor={isDanger ? "red.500" : "unset" }
+            maxWidth={modalMaxWidth ?? "undefined"}
+          >
             <Dialog.Header paddingX={4} paddingTop={4} paddingBottom={2}>
               <Dialog.Title>{title}</Dialog.Title>
             </Dialog.Header>
