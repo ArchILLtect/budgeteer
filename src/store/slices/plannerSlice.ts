@@ -35,6 +35,8 @@ export type IncomeSource = {
 
 export type ActualFixedIncomeSource = {
   id: string;
+  // User-facing label. If omitted, UI should display `description`.
+  name?: string | null;
   description?: string;
   amount: number;
   importSessionId?: string;
@@ -545,8 +547,12 @@ export const createPlannerSlice: SliceCreator<PlannerSlice> = (set, get) => {
           });
 
           const nextIncome = existing.actualFixedIncomeSources.map((src) => {
-            const nextDesc = applyExact(src?.description, incomeRules);
-            return nextDesc && nextDesc !== src?.description ? { ...src, description: nextDesc } : src;
+            // Preserve raw `description` and apply overrides into `name`.
+            const base = normalize(src?.name ?? src?.description);
+            if (!base) return src;
+
+            const nextName = applyExact(base, incomeRules);
+            return nextName && nextName !== base ? { ...src, name: nextName } : src;
           });
 
           if (nextExpenses !== existing.actualExpenses || nextIncome !== existing.actualFixedIncomeSources) {

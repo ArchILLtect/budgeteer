@@ -43,6 +43,8 @@ type ActualExpenseInState = TxKeyInput & {
 type ActualIncomeSourceInState = TxKeyInput & {
     id: string;
     amount: number;
+    // User-facing label. If omitted, UI should display `description`.
+    name?: string | null;
     description?: string;
     createdAt?: string;
 };
@@ -270,7 +272,7 @@ function applyExactNameOverrides(value: string, rules: { match: string; displayN
     return current;
 }
 
-function getNonEmptyIncomeDescriptionBase(tx: Transaction, options?: ExpenseNameOptions) {
+function getNonEmptyIncomeNameBase(tx: Transaction, options?: ExpenseNameOptions) {
     const raw = normalizeDisplayText(tx.description) || normalizeDisplayText(tx.name);
     if (!raw) return '(no description)';
     const maxLen = options?.rawMaxLen ?? 80;
@@ -279,11 +281,11 @@ function getNonEmptyIncomeDescriptionBase(tx: Transaction, options?: ExpenseName
 }
 
 export function getIncomeNameOverrideMatchKey(tx: Transaction, options?: ExpenseNameOptions): string {
-    return getNonEmptyIncomeDescriptionBase(tx, options);
+    return getNonEmptyIncomeNameBase(tx, options);
 }
 
-function getNonEmptyIncomeDescription(tx: Transaction, options?: ExpenseNameOptions) {
-    const base = getNonEmptyIncomeDescriptionBase(tx, options);
+function getNonEmptyIncomeName(tx: Transaction, options?: ExpenseNameOptions) {
+    const base = getNonEmptyIncomeNameBase(tx, options);
     return applyExactNameOverrides(base, options?.incomeNameOverrides);
 }
 
@@ -385,7 +387,8 @@ export const applyOneMonth = async <State extends BudgetStoreStateForApply>(
         ...src,
         id: src.id || crypto.randomUUID(),
         amount: normalizeTransactionAmount(src),
-        description: getNonEmptyIncomeDescription(src, options),
+        // Preserve raw bank description (immutable-ish) and store overrides in `name`.
+        name: getNonEmptyIncomeName(src, options),
     }));
     const newTotalNetIncome = combinedIncomeWithOverrides.reduce((sum, tx) => sum + tx.amount, 0);
 

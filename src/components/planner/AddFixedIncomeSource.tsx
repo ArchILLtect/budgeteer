@@ -32,7 +32,8 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
   const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
   const handleRemove = (id: string) => {
-    const label = String(sources.find((s) => s.id === id)?.description || '').trim();
+    const src = sources.find((s) => s.id === id);
+    const label = String(src?.name ?? src?.description ?? '').trim();
     const message = label
       ? `Are you sure you want to remove the income source "${label}"?`
       : 'Are you sure you want to remove this income source?';
@@ -90,11 +91,11 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
         {sources.map((source: ActualFixedIncomeSource) => (
             <HStack key={source.id}>
             <Input
-              value={source.description ?? ''}
-              aria-invalid={!source?.description?.trim()}
+              value={source.name ?? source.description ?? ''}
+              aria-invalid={!(source?.name ?? source?.description)?.trim()}
               _invalid={{ borderColor: "red.500" }}
               onChange={(e) =>
-                updateMonthlyIncomeActuals(selectedMonth, source.id, { description: e.target.value })
+                updateMonthlyIncomeActuals(selectedMonth, source.id, { name: e.target.value })
               }
               bg="bg.muted"
               placeholder="Source name"
@@ -104,7 +105,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
                 aria-label="Copy income name"
                 size="sm"
                 variant="outline"
-                onClick={() => void copyIncomeName(source.description ?? '')}
+                onClick={() => void copyIncomeName(String(source.name ?? source.description ?? ''))}
               >
                 <MdContentCopy />
               </IconButton>
@@ -136,7 +137,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
         <Flex justifyContent="space-between" alignItems="center" gap={4}>
             <Box width={'25%'} p={1}>
               <Button
-                onClick={() => addActualIncomeSource(selectedMonth, { description: '', amount: 0 })}
+                onClick={() => addActualIncomeSource(selectedMonth, { name: '', description: '', amount: 0 })}
                 size={isPortraitWidth ? "xs" : "sm"}
               >
                 <MdAdd />
