@@ -173,10 +173,12 @@ export default function ImportHistoryPage() {
   return (
     <Box p={6}>
       <Flex mb={4} align="center" gap={4} wrap="wrap">
-        <Heading size='md'>Import History</Heading>
+        <Box>
+        <Heading size="xl" fontWeight={700}>Import History</Heading>
         <Text fontSize="sm" color="fg.muted">
           Review recent import sessions, apply staged transactions, and undo within the undo window.
         </Text>
+        </Box>
         <Spacer />
         <HStack>
           <AppSelect size='sm' placeholder='Account' value={filterAccount} onChange={(e: event) => setFilterAccount(e.target.value)}>

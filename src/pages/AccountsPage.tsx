@@ -25,7 +25,7 @@ export default function AccountsTracker() {
   return (
     <>
       <VStack gap={2} mb={4} borderRadius="md">
-        <Heading size="lg">Accounts</Heading>
+        <Heading size="xl" fontWeight={700}>Accounts</Heading>
         <Text fontSize="sm" color="fg.muted" mx={3}>
           Import a CSV in two steps: set up accounts, then import transactions.
         </Text>
