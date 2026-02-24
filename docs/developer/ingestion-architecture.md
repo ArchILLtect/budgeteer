@@ -71,6 +71,17 @@ Pipeline stages (high level):
    - `src/ingest/normalizeRow.js`
    - Enforces date shape (`YYYY-MM-DD`) and amount parsing (signed/raw amount preserved)
 
+2.5. **Notes + directives enrichment (optional)**
+    - `src/ingest/noteDirectives.ts`
+    - Extracts `bankNote` from the original parsed row (when present)
+    - Derives:
+       - `note` (clean human note; directive tokens stripped)
+       - `directives` (structured `budgeteer:*` directives)
+    - Behavior depends on the import toggle `autoApplyExplicitDirectives`:
+       - ON (default): applies explicit directive outcomes immediately into staged fields (e.g., rename → `name`, category → `category`)
+       - OFF: keeps staged fields unchanged and emits `proposals` with `status: pending` for review/approval
+    - This enrichment does not affect classification or strong-key dedupe.
+
 3. **Early Dedupe Short-Circuit**
    - Build strong key early and skip classification/inference for duplicates
    - Saves time on re-imports and duplicate-heavy files

@@ -1,8 +1,8 @@
 # Import Directives + Staging Proposals (Design)
 
-Status: Draft (approved for implementation)
+Status: Implemented (v1) with a few deferred items
 
-Last updated: 2026-02-23
+Last updated: 2026-02-24
 
 ## Why this exists
 
@@ -229,7 +229,7 @@ UI tests (if present) or manual scripts:
 ## Implementation checklist (step-by-step)
 
 1) Types
-- [ ] Add `Directive` and proposal/change types (Directive done; proposals pending)
+- [x] ~~Add `Directive` and proposal/change types~~ (implemented as `BudgeteerDirective` + `BudgeteerProposal*` in `src/types/`)
 - [x] ~~Add transaction fields: `name`, `bankNote`, `note`, `directives`~~
 
 2) Parsing
@@ -269,12 +269,12 @@ UI tests (if present) or manual scripts:
 
 10) Tracker
 - [x] ~~Use `name ?? description` for display~~
-- [ ] Inline edits update `name` (no inline edit UI exists yet)
+- [ ] (Optional) If inline edit UI is added, ensure edits update `name` (not `description`)
 
 11) Tests + docs
 - [x] ~~Add unit tests for parser + import behaviors~~
-- [ ] Update any ingestion docs if needed
-- [ ] Keep `npm run check` green
+- [x] ~~Update any ingestion docs if needed~~ (see `docs/developer/ingestion-architecture.md`)
+- [x] ~~Keep `npm run check` green~~ (green as of 2026-02-24)
 
 ## Open questions (deferred)
 
