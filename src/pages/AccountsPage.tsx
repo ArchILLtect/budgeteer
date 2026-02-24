@@ -33,7 +33,7 @@ export default function AccountsTracker() {
         <Center>
           <HStack gap={4}>
             <Button colorPalette="teal" onClick={syncModal.onOpen} onMouseEnter={preloadSyncModal}>
-              Import CSV
+              Import Account Data
             </Button>
             {isDev && (
               <Button
@@ -76,7 +76,7 @@ export default function AccountsTracker() {
       ) : (
         <Box mx={4} borderWidth="1px" borderRadius="lg" p={4} bg={"bg.panel"}>
           <Text fontSize="sm" color="fg.muted">
-            No accounts yet. Click “Import CSV” to get started.
+            No accounts yet. Click “Import Account Data” to get started.
           </Text>
         </Box>
       )}
