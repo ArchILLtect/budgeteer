@@ -101,6 +101,7 @@ export type ImportSlice = {
   setLastIngestionTelemetry: (telemetry: LastIngestionTelemetry | null) => void;
   setLastIngestionBenchmark: (metrics: IngestionMetrics | null, sessionId?: string | null) => void;
   clearAllImportData: () => void;
+  clearImportManifests: () => void;
   registerImportManifest: (hash: string, accountNumber: string, meta?: ImportManifestMeta) => void;
 
   commitImportPlan: (plan: ImportPlan) => void;
@@ -187,6 +188,11 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
       budgetAppliedAtByMonth: {},
       lastIngestionBenchmarkMetrics: null,
       lastIngestionBenchmarkSessionId: null,
+    })),
+
+  clearImportManifests: () =>
+    set(() => ({
+      importManifests: {},
     })),
 
   registerImportManifest: (hash, accountNumber, meta) =>

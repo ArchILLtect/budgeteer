@@ -76,7 +76,6 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
   const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
   const importManifests = useBudgetStore((s) => s.importManifests || {});
-  const registerImportManifest = useBudgetStore((s) => s.registerImportManifest);
 
   const txStrongKeyOverridesByKey = useTxStrongKeyOverridesByKey();
 
@@ -425,18 +424,6 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           txStrongKeyOverridesByKey,
           autoApplyExplicitDirectives,
         });
-
-        // Record hash/account association at dry-run time so we can warn about re-imports.
-        try {
-          registerImportManifest(plan.stats.hash, acctNumber, {
-            size: csvFile?.size ?? 0,
-            sampleName: csvFile?.name ?? '',
-            newCount: plan.stats.newCount,
-            dupes: plan.stats.dupes,
-          });
-        } catch {
-          /* noop */
-        }
 
         results.push({ accountNumber: acctNumber, plan });
         aggregate.newCount += plan.stats.newCount;
