@@ -4,7 +4,11 @@ import { sidebarItems, SIDEBAR_WIDTH, publicSidebarItems } from "../config/sideb
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
 import { useUserUI } from "../hooks/useUserUI";
 
-export function Sidebar() {
+export type SidebarProps = {
+  onNavigate?: () => void;
+};
+
+export function Sidebar({ onNavigate }: SidebarProps) {
 
   const { userUI } = useUserUI();
   const isAdmin = userUI?.role === "Admin";
@@ -31,7 +35,7 @@ export function Sidebar() {
       <Box>
         {sidebarItems.map((item) => (
           <Box key={item.to}>
-            <SidebarItem key={item.to} to={item.to} label={item.label} />
+            <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
             <Separator my={3} />
           </Box>
         ))}
@@ -42,7 +46,7 @@ export function Sidebar() {
         ) : null}
         {import.meta.env.DEV ? (
           <>
-              <SidebarItem to="/dev" label="Dev" />
+              <SidebarItem to="/dev" label="Dev" onNavigate={onNavigate} />
           </>
         ) : null}
         {import.meta.env.DEV && isAdmin ? (
@@ -50,7 +54,7 @@ export function Sidebar() {
         ) : null}
         {isAdmin ? (
           <>
-            <SidebarItem to="/admin" label="Admin" />
+            <SidebarItem to="/admin" label="Admin" onNavigate={onNavigate} />
           </>
         ) : null}
         {import.meta.env.DEV || isAdmin ? (
@@ -61,7 +65,7 @@ export function Sidebar() {
         {publicSidebarItems.map((item) => (
           <Box key={item.to}>
             <Separator my={3} />
-            <SidebarItem key={item.to} to={item.to} label={item.label} />
+            <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
           </Box>
         ))}
       </Box>

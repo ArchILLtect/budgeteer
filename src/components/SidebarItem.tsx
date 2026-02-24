@@ -7,15 +7,31 @@ export const SidebarItem = (
     label,
     main,
     rightAdornment,
+    onNavigate,
   }: {
     to: string;
     label: string;
     main?: boolean;
     rightAdornment?: React.ReactNode;
+    onNavigate?: () => void;
   }
 ) => {
   return (
-    <RouterLink to={to}>
+    <RouterLink
+      to={to}
+      onClick={(e) => {
+        if (e.defaultPrevented) return;
+
+        // Match RouterLink behavior: only treat as in-app nav on normal left-clicks.
+        if (e.button !== 0) return;
+        if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) return;
+
+        const target = (e.currentTarget as HTMLAnchorElement | null)?.target;
+        if (target === "_blank") return;
+
+        onNavigate?.();
+      }}
+    >
       {({ isActive }) => (
         <Button
           as="span"

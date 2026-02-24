@@ -46,6 +46,12 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
     return window.matchMedia?.("(min-width: 48em)")?.matches ?? true;
   });
 
+  const handleSidebarNavigate = () => {
+    // Mobile-only: close sidebar after navigation so content is usable.
+    const isDesktop = window.matchMedia?.("(min-width: 48em)")?.matches ?? true;
+    if (!isDesktop) setSidebarOpen(false);
+  };
+
   const showIngestionBenchmark = useBudgetStore((s) => s.showIngestionBenchmark);
   const lastIngestionBenchmarkMetrics = useBudgetStore((s) => s.lastIngestionBenchmarkMetrics);
   const lastIngestionBenchmarkSessionId = useBudgetStore((s) => s.lastIngestionBenchmarkSessionId);
@@ -159,9 +165,9 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
                 <BasicSpinner height="100%" width="100%" size="md" />
               </Box>
             ) : signedIn ? (
-              <Sidebar />
+              <Sidebar onNavigate={handleSidebarNavigate} />
             ) : (
-              <PublicSidebar />
+              <PublicSidebar onNavigate={handleSidebarNavigate} />
             )}
           </Box>
         </Box>

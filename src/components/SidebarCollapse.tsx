@@ -7,9 +7,10 @@ type SidebarCollapseProps = {
   to: string;
   items: { to: string; label: string }[];
   defaultOpen?: boolean;
+  onNavigate?: () => void;
 };
 
-export const SidebarCollapse = ({ to, label, items, defaultOpen }: SidebarCollapseProps) => {
+export const SidebarCollapse = ({ to, label, items, defaultOpen, onNavigate }: SidebarCollapseProps) => {
   return (
 
     <Collapsible.Root defaultOpen={defaultOpen}>
@@ -22,7 +23,7 @@ export const SidebarCollapse = ({ to, label, items, defaultOpen }: SidebarCollap
           rounded="md"
           _hover={{ bg: "blackAlpha.50" }}
         >
-          <SidebarItem to={to} label={label} main={true} />
+          <SidebarItem to={to} label={label} main={true} onNavigate={onNavigate} />
 
           {/* rotate chevron when open */}
           <Collapsible.Indicator asChild>
@@ -35,7 +36,7 @@ export const SidebarCollapse = ({ to, label, items, defaultOpen }: SidebarCollap
       <Collapsible.Content>
         <VStack align="stretch" gap={1} mt={2} mb={3}>
           {items.map((item) => (
-            <SidebarItem key={item.to} to={item.to} label={item.label} />
+            <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
           ))}
         </VStack>
       </Collapsible.Content>

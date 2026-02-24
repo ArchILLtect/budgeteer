@@ -4,7 +4,11 @@ import { SidebarItem } from "../components/SidebarItem";
 import { publicSidebarItems, SIDEBAR_WIDTH } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
 
-export function PublicSidebar() {
+export type PublicSidebarProps = {
+  onNavigate?: () => void;
+};
+
+export function PublicSidebar({ onNavigate }: PublicSidebarProps) {
 
   const sidebarWidthPreset = useSidebarWidthPreset();
   const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH[sidebarWidthPreset] ?? SIDEBAR_WIDTH.small;
@@ -27,7 +31,7 @@ export function PublicSidebar() {
       <Box>
         {publicSidebarItems.map((item) => (
           <Box key={item.to}>
-            <SidebarItem key={item.to} to={item.to} label={item.label} />
+            <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
             <Separator my={3} />
           </Box>
         ))}
