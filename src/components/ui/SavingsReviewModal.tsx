@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, VStack, Text, Input, HStack, Box, Checkbox, Separator, Flex } from '@chakra-ui/react';
+import { Button, VStack, Text, Input, HStack, Box, Checkbox, Flex, Heading, useMediaQuery } from '@chakra-ui/react';
 import { useBudgetStore } from '../../store/budgetStore';
 import { AppSelect } from './AppSelect';
 import { DialogModal } from './DialogModal';
@@ -33,6 +33,8 @@ export default function SavingsReviewModal() {
   const [batchGoalId, setBatchGoalId] = useState<string>('');
   const [batchIsCreating, setBatchIsCreating] = useState(false);
   const [batchNewGoal, setBatchNewGoal] = useState<{ name?: string; target?: string }>({});
+
+  const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
   useEffect(() => {
     setSelectedGoals((prev) => {
@@ -103,6 +105,7 @@ export default function SavingsReviewModal() {
       return;
     }
     setBatchIsCreating(false);
+    setBatchNewGoal({});
     setBatchGoalId(nextGoalId);
   };
 
@@ -207,6 +210,7 @@ export default function SavingsReviewModal() {
 
           <Box p={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
             <VStack align="stretch" gap={2}>
+              <Heading size="sm">Batch actions</Heading>
               <Flex justify="space-between" flexWrap="wrap" gap={2}>
                 <Checkbox.Root
                   checked={queue.length > 0 && selectedCount === queue.length}
@@ -233,8 +237,50 @@ export default function SavingsReviewModal() {
                     ))}
                     <option value="__newGoal">+ Create new goal…</option>
                   </AppSelect>
+                </HStack>
+              </Flex>
 
+              {batchIsCreating ? (
+              <Box border="1px solid" borderColor="gray.300" p={2} borderRadius="md" bg="bg.emphasized" w="100%">
+                <Flex width="100%" wrap="wrap" gap={2} justifyContent="end">
+                  <HStack wrap="wrap" justifyContent="space-between" gapX={4}>
+                    <Input
+                      width="250px"
+                      bg="bg.panel"
+                      placeholder="New goal name"
+                      aria-label="Batch new goal name"
+                      value={batchNewGoal?.name || ''}
+                      onChange={(e) => setBatchNewGoal((prev) => ({ ...prev, name: e.target.value }))}
+                    />
+                    <Input
+                      width="250px"
+                      type="number"
+                      bg="bg.panel"
+                      placeholder="Target amount"
+                      aria-label="Batch new goal target amount"
+                      value={batchNewGoal?.target || ''}
+                      onChange={(e) => setBatchNewGoal((prev) => ({ ...prev, target: e.target.value }))}
+                    />
+                  </HStack>
                   <Button
+                    size="sm"
+                    colorPalette="red"
+                    variant="outline"
+                    onClick={() => {
+                      setBatchIsCreating(false);
+                      setBatchNewGoal({});
+                      setBatchGoalId('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Tip size="xs" color="fg.muted">
+                    Click “Apply to selected” to create the goal and assign it, once you have entered the name and target amount.
+                  </Tip>
+                </Flex>
+              </Box>
+              ) : null}
+                                <Button
                     size="sm"
                     colorPalette="blue"
                     variant="outline"
@@ -243,76 +289,67 @@ export default function SavingsReviewModal() {
                   >
                     Apply to selected
                   </Button>
-                </HStack>
-              </Flex>
-
-              <Separator />
-
-              <Box maxHeight="300px" px={1}>
-              {batchIsCreating ? (
-                <Flex align="stretch" width="100%" wrap="wrap" justifyContent="space-between">
-                  <Input
-                    width="350px"
-                    placeholder="New goal name"
-                    aria-label="Batch new goal name"
-                    value={batchNewGoal?.name || ''}
-                    onChange={(e) => setBatchNewGoal((prev) => ({ ...prev, name: e.target.value }))}
-                  />
-                  <Input
-                    width="350px"
-                    placeholder="Target amount"
-                    aria-label="Batch new goal target amount"
-                    type="number"
-                    value={batchNewGoal?.target || ''}
-                    onChange={(e) => setBatchNewGoal((prev) => ({ ...prev, target: e.target.value }))}
-                  />
-                </Flex>
-              ) : null}
-              </Box>
-              <Tip size="sm" color="fg.muted">
-                Click “Apply to selected” to create the goal and assign it.
-              </Tip>
               <Tip size="sm" color="fg.muted">
                 Not seeing a goal you expected? Make sure it was created before the transactions were imported, or that it’s associated with the correct import session.
               </Tip>
             </VStack>
           </Box>
 
+          <Flex flexDir={"column"} p={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel" gap={4}>
+            <Heading size="sm">Entries to review</Heading>
+
           {queue.map((entry) => (
             <VStack key={entry.id} p={3} gap={2} borderWidth={1} borderColor="border" borderRadius="md" bg="bg" alignItems="start">
-                <HStack justify="space-between" width="100%">
-                  <Checkbox.Root
-                    checked={selectedEntryIds[entry.id] === true}
-                    onCheckedChange={(details) => toggleSelected(entry.id, details.checked === true)}
-                  >
-                    <Checkbox.HiddenInput />
-                    <Checkbox.Control />
-                    <Checkbox.Label>Select</Checkbox.Label>
-                  </Checkbox.Root>
-
-                  <Text lineClamp={2}>
-                    {entry.date} — ${entry.amount.toFixed(2)} — {entry.name}
-                  </Text>
-                </HStack>
-
-                <AppSelect
-                  placeholder="Don't add to goal"
-                  aria-label="Select savings goal"
-                  value={selectedGoals[entry.id] || ''}
-                  onChange={(e) => handleChange(entry.id, e.target.value)}
+              <Heading size="xs">Transaction ID: {entry.id}</Heading>
+              <HStack justify="space-between" width="100%" gap={2}>
+                <Checkbox.Root
+                  checked={selectedEntryIds[entry.id] === true}
+                  onCheckedChange={(details) => toggleSelected(entry.id, details.checked === true)}
                 >
-                  {savingsGoals.map((goal) => (
-                    <option key={goal.id} value={goal.id}>
-                      {goal.name}
-                    </option>
-                  ))}
-                  <option value="__newGoal">+ Create new goal…</option>
-                </AppSelect>
+                  <Checkbox.HiddenInput />
+                  <Checkbox.Control />
+                  <Checkbox.Label>Select</Checkbox.Label>
+                </Checkbox.Root>
 
-                <Box>
-                  {isCreating[entry.id] && (
-                    <VStack mt={2} align="stretch" gap={2}>
+                {isPortraitWidth ? (
+                  <Flex flexDirection={"column"} alignItems={"flex-end"}>
+                    <Text fontSize="sm" fontWeight="semibold" color="fg.muted">{entry.date}</Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="fg">
+                      {entry.amount.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </Text>
+                    <Text fontSize="sm" fontWeight="semibold" color="fg.subtle">{entry.name}</Text>
+                  </Flex>
+                ) : (
+                <Text>
+                  {entry.date} — ${entry.amount.toFixed(2)} — {entry.name}
+                </Text>
+                )}
+              </HStack>
+
+              <AppSelect
+                placeholder="Don't add to goal"
+                aria-label="Select savings goal"
+                value={selectedGoals[entry.id] || ''}
+                onChange={(e) => handleChange(entry.id, e.target.value)}
+              >
+                {savingsGoals.map((goal) => (
+                  <option key={goal.id} value={goal.id}>
+                    {goal.name}
+                  </option>
+                ))}
+                <option value="__newGoal">+ Create new goal…</option>
+              </AppSelect>
+
+              {isCreating[entry.id] && (
+                <Box border="1px solid" borderColor="gray.300" p={2} borderRadius="md" bg="bg.emphasized" w="100%">
+                  <VStack width="100%" gap={2}>
+                    <Flex width="100%" wrap="wrap" justifyContent="space-between">
                       <Input
+                        width="350px"
+                        bg="bg.panel"
                         placeholder="New goal name"
                         aria-label="New goal name"
                         value={newGoalNames[entry.id]?.name || ''}
@@ -324,6 +361,8 @@ export default function SavingsReviewModal() {
                         }
                       />
                       <Input
+                        width="350px"
+                        bg="bg.panel"
                         placeholder="Target amount"
                         aria-label="New goal target amount"
                         type="number"
@@ -335,6 +374,8 @@ export default function SavingsReviewModal() {
                           }))
                         }
                       />
+                    </Flex>
+                    <HStack>
                       <Button
                         size="sm"
                         colorPalette="teal"
@@ -342,16 +383,29 @@ export default function SavingsReviewModal() {
                       >
                         Create Goal
                       </Button>
-                    </VStack>
-                  )}
-                </Box>
-
-                <Text fontSize="sm" color="fg.muted">
-                  Goal: {selectedGoals[entry.id] ? savingsGoals.find((g) => g.id === selectedGoals[entry.id])?.name : "None"}
-                </Text>
-              </VStack>
-            ))}
-          </VStack>
+                      <Button
+                        size="sm"
+                        colorPalette="red"
+                        variant="outline"
+                        onClick={() => {
+                          setIsCreating((prev) => ({ ...prev, [entry.id]: false }));
+                          setNewGoalNames((prev) => ({ ...prev, [entry.id]: {} }));
+                          setSelectedGoals((prev) => ({ ...prev, [entry.id]: '' }));
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </HStack>
+                  </VStack>
+              </Box>
+              )}
+              <Text fontSize="sm" color="fg.muted">
+                Goal: {selectedGoals[entry.id] ? savingsGoals.find((g) => g.id === selectedGoals[entry.id])?.name : "None"}
+              </Text>
+            </VStack>
+          ))}
+                    </Flex>
+        </VStack>
         }
       />
   );
