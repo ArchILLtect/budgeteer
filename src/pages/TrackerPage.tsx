@@ -25,7 +25,7 @@ export default function BudgetTrackerPage() {
       >
         <Center mb={4}>
           <VStack gap={1}>
-            <Heading size="md" fontWeight={700} onMouseEnter={preloadMonthlyActualSummary}>
+            <Heading size="xl" fontWeight={700} onMouseEnter={preloadMonthlyActualSummary}>
               Tracker
             </Heading>
             <Text fontSize="sm" color="fg.muted">
