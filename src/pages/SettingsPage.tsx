@@ -270,18 +270,6 @@ export default function SettingsPage() {
             title="Failed to load settings"
             message={err}
             onRetry={() => {
-                      <HStack justify="space-between" flexWrap="wrap" gap={2}>
-                        <Text fontSize="sm">Account Mappings (label/institution)</Text>
-                        <Button
-                          size="xs"
-                          colorPalette="red"
-                          variant="outline"
-                          onClick={() => void clearPersistedStore("Account Mappings", useAccountMappingsStore)}
-                        >
-                          Clear
-                        </Button>
-                      </HStack>
-
               void refreshData();
             }}
           />
@@ -1098,6 +1086,18 @@ export default function SettingsPage() {
                           colorPalette="red"
                           variant="outline"
                           onClick={() => void clearPersistedStore("Tx Strong Key Overrides", useTxStrongKeyOverridesStore)}
+                        >
+                          Clear
+                        </Button>
+                      </HStack>
+
+                      <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                        <Text fontSize="sm">Account Mappings (label/institution)</Text>
+                        <Button
+                          size="xs"
+                          colorPalette="red"
+                          variant="outline"
+                          onClick={() => void clearPersistedStore("Account Mappings", useAccountMappingsStore)}
                         >
                           Clear
                         </Button>
