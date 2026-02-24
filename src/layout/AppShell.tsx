@@ -173,9 +173,9 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
                 aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                 aria-expanded={sidebarOpen}
                 aria-controls="app-sidebar"
-                size="sm"
-                variant="outline"
-                bg="bg.panel"
+                size="lg"
+                // variant="outline" // Disabled for better visibility against the sidebar content, but may want to re-enable with a custom style later.
+                colorPalette="teal"
                 borderColor="border"
                 position="absolute"
                 top="50%"
