@@ -1,5 +1,20 @@
 import type { ImportSession, Transaction } from "../types";
 
+export type DirectiveFinding = {
+  line?: number;
+  date?: string;
+  description?: string;
+  kind: "rename" | "category" | "goal" | "apply";
+  value: string;
+};
+
+export type DirectivesReport = {
+  total: number;
+  byKind: Record<DirectiveFinding["kind"], number>;
+  truncated: boolean;
+  items: DirectiveFinding[];
+};
+
 export type IngestionError =
   | {
       type: "parse";
@@ -99,4 +114,6 @@ export type ImportPlan = {
 
   errors: IngestionError[];
   duplicatesSample: DuplicateSample[];
+
+  directivesReport?: DirectivesReport;
 };

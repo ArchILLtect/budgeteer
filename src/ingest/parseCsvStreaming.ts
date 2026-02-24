@@ -5,6 +5,12 @@
 
 import Papa from 'papaparse';
 
+function normalizeHeader(header: string | undefined): string {
+    const h = (header ?? '').trim();
+    // Common in CSVs saved from Excel/Sheets.
+    return h.replace(/^\uFEFF/, '');
+}
+
 /**
  * streamParseCsv
  * @param {File|String} fileOrText - File object (browser) or raw CSV string
@@ -84,6 +90,7 @@ export function streamParseCsv<Row extends StreamCsvRow = StreamCsvRow>(
             header,
             preview,
             skipEmptyLines: true,
+            transformHeader: header ? normalizeHeader : undefined,
         });
 
         const bytes: number | null =
@@ -119,6 +126,7 @@ export function streamParseCsv<Row extends StreamCsvRow = StreamCsvRow>(
             header,
             preview,
             skipEmptyLines: true,
+            transformHeader: header ? normalizeHeader : undefined,
             worker: resolvedWorker === true,
             chunkSize,
             chunk: (results: Papa.ParseResult<Row>, parser: Papa.Parser) => {

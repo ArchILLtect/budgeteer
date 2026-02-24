@@ -15,14 +15,27 @@ function coerceRowString(val: unknown): string | undefined {
 export function extractBankNoteFromOriginal(original?: Record<string, unknown>): string | undefined {
   if (!original) return undefined;
 
+  const getCandidate = (key: string) => {
+    // Prefer exact match when possible.
+    if (Object.prototype.hasOwnProperty.call(original, key)) return (original as Record<string, unknown>)[key];
+
+    // Fallback: match keys case/whitespace-insensitively, and strip BOM.
+    const wanted = key.replace(/^\uFEFF/, "").trim().toLowerCase();
+    for (const k of Object.keys(original)) {
+      const normalized = k.replace(/^\uFEFF/, "").trim().toLowerCase();
+      if (normalized === wanted) return (original as Record<string, unknown>)[k];
+    }
+    return undefined;
+  };
+
   // Common bank export headers; keep this conservative.
   const candidates = [
-    original.Note,
-    original.note,
-    original.Notes,
-    original.notes,
-    original.Memo,
-    original.memo,
+    getCandidate("Note"),
+    getCandidate("note"),
+    getCandidate("Notes"),
+    getCandidate("notes"),
+    getCandidate("Memo"),
+    getCandidate("memo"),
   ];
 
   for (const c of candidates) {

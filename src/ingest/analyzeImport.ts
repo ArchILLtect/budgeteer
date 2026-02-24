@@ -10,6 +10,8 @@ import {
 } from "./inferCategory";
 import type {
   DuplicateSample,
+  DirectiveFinding,
+  DirectivesReport,
   ImportPlan,
   IngestionError,
   IngestionStats,
@@ -196,6 +198,14 @@ export async function analyzeImport({
   const accepted: Transaction[] = [];
   const duplicatesSample: DuplicateSample[] = [];
 
+  const DIRECTIVES_REPORT_CAP = 5000;
+  const directivesReport: DirectivesReport = {
+    total: 0,
+    byKind: { rename: 0, category: 0, goal: 0, apply: 0 },
+    truncated: false,
+    items: [],
+  };
+
   let dupesExisting = 0;
   let dupesIntraFile = 0;
 
@@ -276,6 +286,25 @@ export async function analyzeImport({
     if (noteInfo.bankNote) norm.bankNote = noteInfo.bankNote;
     if (noteInfo.note) norm.note = noteInfo.note;
     if (noteInfo.directives.length) norm.directives = noteInfo.directives;
+
+    if (noteInfo.directives.length) {
+      for (const d of noteInfo.directives) {
+        directivesReport.total += 1;
+        directivesReport.byKind[d.kind] += 1;
+
+        if (directivesReport.items.length < DIRECTIVES_REPORT_CAP) {
+          directivesReport.items.push({
+            line: (raw as { __line?: number })?.__line,
+            date: norm.date,
+            description: norm.description,
+            kind: d.kind,
+            value: d.value,
+          } satisfies DirectiveFinding);
+        } else {
+          directivesReport.truncated = true;
+        }
+      }
+    }
 
     if ((autoApplyExplicitDirectives ?? true) && noteInfo.directives.length) {
       for (const d of noteInfo.directives) {
@@ -607,5 +636,6 @@ export async function analyzeImport({
     stats,
     errors,
     duplicatesSample,
+    directivesReport: directivesReport.total ? directivesReport : undefined,
   };
 }

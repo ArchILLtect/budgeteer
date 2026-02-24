@@ -1,8 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveNoteAndDirectives } from "../noteDirectives";
+import { deriveNoteAndDirectives, extractBankNoteFromOriginal } from "../noteDirectives";
 
 describe("noteDirectives", () => {
+  it("extracts bank note case/whitespace-insensitively from original row", () => {
+    expect(
+      extractBankNoteFromOriginal({ " Note ": "budgeteer:rename=Primary Paycheck" }),
+    ).toBe("budgeteer:rename=Primary Paycheck");
+
+    expect(
+      extractBankNoteFromOriginal({ "\uFEFFNOTE": "hello" }),
+    ).toBe("hello");
+
+    expect(
+      extractBankNoteFromOriginal({ memo: "m" }),
+    ).toBe("m");
+  });
+
   it("parses a single rename directive and strips it from note", () => {
     const r = deriveNoteAndDirectives("budgeteer:rename=Primary Paycheck");
     expect(r.directives).toHaveLength(1);

@@ -203,5 +203,14 @@ describe("analyzeImport", () => {
         directiveKind: "rename",
       },
     ]);
+
+    expect(plan.directivesReport).toBeTruthy();
+    expect(plan.directivesReport?.total).toBe(1);
+    expect(plan.directivesReport?.byKind.rename).toBe(1);
+    expect(plan.directivesReport?.items[0]).toMatchObject({
+      kind: "rename",
+      value: "Work",
+      date: "2026-02-01",
+    });
   });
 });
