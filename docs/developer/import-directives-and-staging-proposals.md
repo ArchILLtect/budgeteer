@@ -204,7 +204,9 @@ Options:
 ## Tracker changes
 
 - Display transaction label as `name ?? description`.
-- Inline edits update `name` (not `description`).
+- Edits to user-facing labels update `name` (not `description`).
+  - Imported/staged transactions: edited via the staged transaction edit UI (Accounts) and stored on `Transaction.name`.
+  - Tracker monthly income sources and expenses: inline inputs update the corresponding `name` fields (see `AddFixedIncomeSource` and `ExpenseTracker`).
 
 ## Testing plan
 
@@ -265,11 +267,12 @@ UI tests (if present) or manual scripts:
 
 9) Apply-to-budget safeguards
 - [x] ~~If pending proposals exist, require confirm modal before applying~~ (uses `ConfirmModal`)
-- [ ] Demo-mode: allow auto-approve / reduced friction (later)
+- [x] ~~Demo-mode: allow auto-approve / reduced friction~~ (deferred; tracked in `TODO.md`)
 
 10) Tracker
 - [x] ~~Use `name ?? description` for display~~
-- [ ] (Optional) If inline edit UI is added, ensure edits update `name` (not `description`)
+- [x] ~~Ensure editable labels write to `name` (not `description`)~~ (income sources + expenses inline edit; staged tx edits write `Transaction.name`)
+- [x] ~~(Deferred) Add a per-imported-transaction rename/edit entrypoint in Tracker transaction lists~~ (tracked in `TODO.md`)
 
 11) Tests + docs
 - [x] ~~Add unit tests for parser + import behaviors~~

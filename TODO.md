@@ -149,6 +149,10 @@ MVP quality (P1/P2):
 
 - [ ] TODO(P2): Imports — “Clear session” UX: offer advanced options (clear only import vs clear only tracker)
 - [ ] TODO(P2): Imports — add a DEV-only variant of “Clear session” with extra scoping toggles for experimentation
+- [ ] TODO(P2): Imports/Demo — reduce friction when pending proposals exist (demo-mode auto-approve or simplified confirm)
+- [ ] TODO(P2): Tracker/Imports — add a per-transaction rename/edit entrypoint in Tracker transaction lists
+  - Must reuse the staged transaction edit flow (writes to `name`, never `description`)
+  - Prefer opening the existing staged edit modal (or deep-linking to Accounts focused on the tx)
 
 ## Review needed — possible intentional identifiers
 
