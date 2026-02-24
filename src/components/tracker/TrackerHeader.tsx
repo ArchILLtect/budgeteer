@@ -63,19 +63,21 @@ export default function TrackerHeader() {
     return (
         <Box p={2} borderTopRadius="lg" boxShadow="md" bg="bg.subtle" borderWidth={2} borderColor="border">
             <Center my={1}>
-                <Flex bg="bg.panel" borderWidth={1} borderColor="border" borderRadius="md">
+                <Flex bg="bg.panel" borderWidth={1} borderColor="border" borderRadius="md" textAlign={"center"} alignItems="center" justifyContent="center" gap={2} px={3} py={1}>
                     <IconButton
                         size="sm"
+                        colorPalette="teal"
                         onClick={() => shiftMonth(-1)}
                         aria-label="Previous Month"
                     >
                       <TiArrowLeftThick />
                     </IconButton>
 
-                    <Text fontSize="lg" fontWeight="bold" mx={4} >{formatted}</Text>
+                    <Text fontSize="lg" fontWeight="bold" color={{ _dark: "teal.100", _light: "teal.700" }} mx={4} >{formatted}</Text>
 
                     <IconButton
                         size="sm"
+                        colorPalette="teal"
                         onClick={() => shiftMonth(1)}
                         aria-label="Next Month"
                     >
