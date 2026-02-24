@@ -223,6 +223,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
                   <Button
                     onClick={() => addExpense({ name: '', amount: 0 })}
                     size="sm"
+                    colorPalette={"teal"}
                   >
                     <MdAdd />
                     Add Expense
@@ -234,6 +235,7 @@ export default function ExpenseTracker({ origin = 'Planner', selectedMonth: sele
                   <Button
                     onClick={() => addExpense({ name: '', amount: 0 })}
                     size={isPortraitWidth ? "xs" : "sm"}
+                    colorPalette={"teal"}
                   >
                     <MdAdd />
                     {isPortraitWidth ? "Add" : "Add Expense"}

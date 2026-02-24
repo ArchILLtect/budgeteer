@@ -1,4 +1,4 @@
-import { Box, Flex, Center, Heading, Stack, List, Text, Input, Button, VStack, useMediaQuery } from "@chakra-ui/react";
+import { Box, Flex, Center, Heading, Stack, List, Text, Input, Button, VStack, useMediaQuery, IconButton } from "@chakra-ui/react";
 import { Tooltip } from "../ui/Tooltip";
 import { MdDelete } from "react-icons/md";
 import { useState } from "react";
@@ -155,15 +155,13 @@ export default function SavingsLog() {
                         </Button>
                       </Tooltip>
                     )}
-                    <Button
-                      size={isPortraitWidth ? "2xs" : "xs"}
-                      border={"1px solid"}
-                      borderColor={"red.500"}
-                      bg={"bg.error"}
+                    <IconButton
+                      size={isPortraitWidth ? "2xs" : "md"}
+                      colorPalette="red"
                       onClick={() => handleRemove(selectedMonth, index)}
                     >
                       <MdDelete />
-                    </Button>
+                    </IconButton>
                   </Flex>
                   <hr style={{marginTop: 15 + "px", marginBottom: 15 + "px"}}/>
                 </List.Item>
@@ -173,9 +171,7 @@ export default function SavingsLog() {
             <Center>
               <Button
                 size={isPortraitWidth ? "2xs" : "sm"}
-                border={"1px solid"}
-                borderColor={"red.500"}
-                bg={"bg.error"}
+                colorPalette={"red"}
                 variant="outline"
                 onClick={() => resetSavingsLog(selectedMonth)}
                 mt={2}

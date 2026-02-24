@@ -198,7 +198,7 @@ export default function IncomeCalculator({ origin = 'Planner', selectedMonth }: 
                   <Text fontSize="sm" color="fg.muted">
                     No income sources yet. Add one to estimate gross/net monthly income.
                   </Text>
-                  <Button size="sm" variant="outline" alignSelf="flex-start" onClick={handleAddSource}>
+                  <Button size="sm" variant="outline" colorPalette={"teal"} alignSelf="flex-start" onClick={handleAddSource}>
                     {isPortraitWidth ? "+ Add" : "+ Add income source"}
                   </Button>
                 </Stack>

@@ -139,6 +139,7 @@ export default function AddFixedIncomeSource({ origin = 'Planner', selectedMonth
               <Button
                 onClick={() => addActualIncomeSource(selectedMonth, { name: '', description: '', amount: 0 })}
                 size={isPortraitWidth ? "xs" : "sm"}
+                colorPalette={"teal"}
               >
                 <MdAdd />
                 {isPortraitWidth ? "Add" : "Add Income Source"}
