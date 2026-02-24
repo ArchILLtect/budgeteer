@@ -100,6 +100,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const setLastIngestionBenchmark = useBudgetStore(s => s.setLastIngestionBenchmark);
   const [dryRunStarted, setDryRunStarted] = useState(false);
   const [autoApplyExplicitDirectives, setAutoApplyExplicitDirectives] = useState(true);
+  const autoApplyExplicitDirectivesRef = useRef(autoApplyExplicitDirectives);
 
   const [showErrors, setShowErrors] = useState(false);
   const [errorFilter, setErrorFilter] = useState<'all' | 'parse' | 'normalize' | 'duplicate'>('all');
@@ -301,6 +302,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
       fireToast('warning', 'No data loaded', 'Please select a CSV first.');
       return;
     }
+    if (ingesting) return;
     setDryRunStarted(true);
     await importCsvData(pendingData);
   };
@@ -367,6 +369,20 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     void runDryRun();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, dryRunStarted, shouldAutoRunDryRun]);
+
+  useEffect(() => {
+    if (autoApplyExplicitDirectivesRef.current === autoApplyExplicitDirectives) return;
+    autoApplyExplicitDirectivesRef.current = autoApplyExplicitDirectives;
+
+    // If the user changes directive auto-apply behavior after a dry-run,
+    // auto re-run so Apply All always matches the latest toggle.
+    if (step !== 'transactions') return;
+    if (!dryRunStarted) return;
+    if (!pendingData.length) return;
+    if (ingesting) return;
+
+    void runDryRun();
+  }, [autoApplyExplicitDirectives, step, dryRunStarted, pendingData.length, ingesting]);
 
   // Ingestion migration implementation
   const importCsvData = async (data: CsvRow[]) => {
@@ -725,7 +741,17 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
               <Stack gap={3}>
                 <Checkbox.Root
                   checked={autoApplyExplicitDirectives}
-                  onCheckedChange={(details) => setAutoApplyExplicitDirectives(details.checked === true)}
+                  onCheckedChange={(details) => {
+                    const next = details.checked === true;
+                    if (next === autoApplyExplicitDirectives) return;
+                    setAutoApplyExplicitDirectives(next);
+
+                    // Invalidate any previous dry-run immediately to avoid applying stale plans.
+                    if (dryRunStarted) {
+                      setIngestionResults([]);
+                      setTelemetry(null);
+                    }
+                  }}
                   disabled={ingesting}
                 >
                   <Checkbox.HiddenInput />
