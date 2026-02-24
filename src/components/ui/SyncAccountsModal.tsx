@@ -1,5 +1,5 @@
 import { Button, RadioGroup, Stack, Input, Text, Box, Stat, SimpleGrid, Tag, Dialog, Checkbox, HStack } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { useBudgetStore } from "../../store/budgetStore";
 import { analyzeImport } from "../../ingest/analyzeImport";
@@ -108,6 +108,8 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
 
   const csvParserRef = useRef<Papa.Parser | null>(null);
   const parseAbortedRef = useRef(false);
+
+  const importCsvDataRef = useRef<(data: CsvRow[]) => Promise<void>>(async () => {});
 
   const primaryActionButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -297,15 +299,15 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     setStep('transactions');
   };
 
-  const runDryRun = async () => {
+  const runDryRun = useCallback(async () => {
     if (!pendingData.length) {
       fireToast('warning', 'No data loaded', 'Please select a CSV first.');
       return;
     }
     if (ingesting) return;
     setDryRunStarted(true);
-    await importCsvData(pendingData);
-  };
+    await importCsvDataRef.current(pendingData);
+  }, [pendingData, ingesting]);
 
   const isLargeFile = (csvFile?.size || 0) > (streamingAutoByteThreshold || 500_000);
   const shouldAutoRunDryRun = !isLargeFile;
@@ -367,8 +369,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     if (!shouldAutoRunDryRun) return;
     // Auto-run dry run for small files; large files require explicit click.
     void runDryRun();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, dryRunStarted, shouldAutoRunDryRun]);
+  }, [step, dryRunStarted, shouldAutoRunDryRun, runDryRun]);
 
   useEffect(() => {
     if (autoApplyExplicitDirectivesRef.current === autoApplyExplicitDirectives) return;
@@ -382,10 +383,10 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     if (ingesting) return;
 
     void runDryRun();
-  }, [autoApplyExplicitDirectives, step, dryRunStarted, pendingData.length, ingesting]);
+  }, [autoApplyExplicitDirectives, step, dryRunStarted, pendingData.length, ingesting, runDryRun]);
 
   // Ingestion migration implementation
-  const importCsvData = async (data: CsvRow[]) => {
+  const importCsvData = useCallback(async (data: CsvRow[]) => {
     setIngesting(true);
     setIngestionResults([]);
     setTelemetry(null);
@@ -457,7 +458,11 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     } finally {
       setIngesting(false);
     }
-  };
+  }, [autoApplyExplicitDirectives, metricsAccount, txStrongKeyOverridesByKey]);
+
+  useEffect(() => {
+    importCsvDataRef.current = importCsvData;
+  }, [importCsvData]);
 
   const applyAllPlans = () => {
     if (!ingestionResults.length) return;
