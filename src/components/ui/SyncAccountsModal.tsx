@@ -1,4 +1,4 @@
-import { Button, RadioGroup, Stack, Input, Text, Box, Stat, SimpleGrid, Tag, Dialog, Checkbox } from "@chakra-ui/react";
+import { Button, RadioGroup, Stack, Input, Text, Box, Stat, SimpleGrid, Tag, Dialog, Checkbox, HStack } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import Papa from "papaparse";
 import { useBudgetStore } from "../../store/budgetStore";
@@ -9,6 +9,7 @@ import { fireToast } from "../../hooks/useFireToast";
 import { recordGenericTiming } from "../../services/perfLogger";
 import type { ImportPlan } from "../../ingest/importPlan";
 import type { AccountMapping, Transaction } from "../../types";
+import { AppSelect } from "./AppSelect";
 
 // Migration Notes:
 // This modal now leverages the ingestion pipeline (analyzeImport + commitImportPlan) for each account present in the CSV.
@@ -29,6 +30,24 @@ type syncFileTypeMode = "csv" | "ofx" | "plaid";
 type Step = "select" | "mapping" | "accounts" | "transactions";
 
 type CsvRow = Record<string, unknown>;
+
+function normalizeHeader(header: string | undefined): string {
+  const h = (header ?? '').trim();
+  return h.replace(/^\uFEFF/, '');
+}
+
+function pickValue(row: CsvRow, keys: string[]): unknown {
+  for (const k of keys) {
+    if (Object.prototype.hasOwnProperty.call(row, k)) return row[k];
+  }
+  // Fallback: case/whitespace-insensitive match (and BOM-safe)
+  const wantedSet = new Set(keys.map((k) => k.replace(/^\uFEFF/, '').trim().toLowerCase()));
+  for (const actual of Object.keys(row)) {
+    const normalized = actual.replace(/^\uFEFF/, '').trim().toLowerCase();
+    if (wantedSet.has(normalized)) return row[actual];
+  }
+  return undefined;
+}
 
 type IngestionResult = { accountNumber: string; plan: ImportPlan };
 
@@ -56,6 +75,8 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const addOrUpdateAccount = useBudgetStore((s) => s.addOrUpdateAccount);
   const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
   const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);
+  const importManifests = useBudgetStore((s) => s.importManifests || {});
+  const registerImportManifest = useBudgetStore((s) => s.registerImportManifest);
 
   const txStrongKeyOverridesByKey = useTxStrongKeyOverridesByKey();
 
@@ -68,6 +89,11 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const [foundAccounts, setFoundAccounts] = useState<string[]>([]);
   const [accountInputs, setAccountInputs] = useState<Record<string, AccountInput>>({});
   const [ingesting, setIngesting] = useState(false);
+  const [parsing, setParsing] = useState(false);
+  const [parseRows, setParseRows] = useState(0);
+  const [parseBytes, setParseBytes] = useState<number | null>(null);
+  const [parseFinished, setParseFinished] = useState(false);
+  const [parseAborted, setParseAborted] = useState(false);
   const [ingestionResults, setIngestionResults] = useState<IngestionResult[]>([]); // [{ accountNumber, plan }]
   const [telemetry, setTelemetry] = useState<AggregateTelemetry | null>(null); // aggregate
   const [metricsAccount, setMetricsAccount] = useState('');
@@ -75,6 +101,13 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const setLastIngestionBenchmark = useBudgetStore(s => s.setLastIngestionBenchmark);
   const [dryRunStarted, setDryRunStarted] = useState(false);
   const [autoApplyExplicitDirectives, setAutoApplyExplicitDirectives] = useState(true);
+
+  const [showErrors, setShowErrors] = useState(false);
+  const [errorFilter, setErrorFilter] = useState<'all' | 'parse' | 'normalize' | 'duplicate'>('all');
+  const exportLockRef = useRef(false);
+
+  const csvParserRef = useRef<Papa.Parser | null>(null);
+  const parseAbortedRef = useRef(false);
 
   const primaryActionButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -112,6 +145,17 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     setMetricsAccount('');
     setDryRunStarted(false);
     setAutoApplyExplicitDirectives(true);
+
+    setParsing(false);
+    setParseRows(0);
+    setParseBytes(null);
+    setParseFinished(false);
+    setParseAborted(false);
+    parseAbortedRef.current = false;
+    csvParserRef.current = null;
+
+    setShowErrors(false);
+    setErrorFilter('all');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,12 +179,48 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         fireToast("warning", "CSV Required", "Please select a CSV file before importing.");
         return;
       }
+
+      setParsing(true);
+      setParseRows(0);
+      setParseBytes(null);
+      setParseFinished(false);
+      setParseAborted(false);
+      parseAbortedRef.current = false;
+      csvParserRef.current = null;
+
+      const collected: CsvRow[] = [];
+      let rowsCount = 0;
+
       Papa.parse(csvFile, {
         header: true,
         skipEmptyLines: true,
         worker: (csvFile?.size || 0) > 500_000,
+        transformHeader: normalizeHeader,
+        chunkSize: 1024 * 256,
+        chunk: (results: Papa.ParseResult<CsvRow>, parser: Papa.Parser) => {
+          csvParserRef.current = parser;
+          if (parseAbortedRef.current) {
+            try { parser.abort(); } catch { /* noop */ }
+            return;
+          }
+
+          const chunkRows = Array.isArray(results.data) ? results.data : [];
+          if (chunkRows.length) {
+            collected.push(...chunkRows);
+            rowsCount += chunkRows.length;
+            setParseRows(rowsCount);
+          }
+
+          const bytes = typeof results.meta?.cursor === 'number' ? results.meta.cursor : null;
+          if (bytes !== null) setParseBytes(bytes);
+        },
         complete: (results: Papa.ParseResult<CsvRow>) => {
-          const data = results.data;
+          setParseFinished(true);
+          setParsing(false);
+          if (parseAbortedRef.current) return;
+
+          // When chunk mode is enabled, we use the collected array.
+          const data = collected.length ? collected : results.data;
 
           if (!Array.isArray(data) || data.length === 0) {
             fireToast('warning', 'No rows found', 'The CSV appears to be empty.');
@@ -176,6 +256,7 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           setStep('accounts');
         },
         error: (err) => {
+          setParsing(false);
           fireToast("error", "CSV Parse Failed", err.message || "An error occurred while parsing the CSV file.");
         },
         },
@@ -187,6 +268,14 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
       }
       fireToast("warning", "OFX File Import Coming Soon", "Please use CSV for now.");
     }
+  };
+
+  const abortCsvParse = () => {
+    parseAbortedRef.current = true;
+    setParseAborted(true);
+    try { csvParserRef.current?.abort(); } catch { /* noop */ }
+    setParsing(false);
+    fireToast('warning', 'Parse aborted', 'CSV parsing was aborted.');
   };
 
   const createOrUpdateAccounts = (accountNumbers: string[]) => {
@@ -311,13 +400,22 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
         aggregate.accounts++;
         aggregate.rows += rows.length;
         // Build a parsedRows structure that analyzeImport understands: each row mapped to expected normalizeRow fields
-        const adaptedRows = rows.map((r, idx) => ({
-          date: r['Posted Date'] || r['Date'] || r.date,
-          Description: r.Description || r.description || r.Memo,
-          Amount: r.Amount ?? r.amount ?? r.Amt ?? r.amt,
-          Category: r.Category || r.category,
-          __line: idx + 1,
-        }));
+        const adaptedRows = rows.map((r, idx) => {
+          const note = pickValue(r, ["Note", "note", "Notes", "notes", "Memo", "memo"]);
+
+          return {
+            date: pickValue(r, ["Posted Date", "Date", "date"]),
+            Description: pickValue(r, ["Description", "description", "Memo", "memo"]),
+            Amount: pickValue(r, ["Amount", "amount", "Amt", "amt"]),
+            Category: pickValue(r, ["Category", "category", "CATEGORY"]),
+
+            // Preserve original note-ish fields so note directives can be parsed.
+            Note: note,
+            Memo: note,
+
+            __line: idx + 1,
+          };
+        });
         const existing = (accountsRef.current?.[acctNumber]?.transactions ?? []) as Transaction[];
 
         const plan = await analyzeImport({
@@ -327,6 +425,18 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
           txStrongKeyOverridesByKey,
           autoApplyExplicitDirectives,
         });
+
+        // Record hash/account association at dry-run time so we can warn about re-imports.
+        try {
+          registerImportManifest(plan.stats.hash, acctNumber, {
+            size: csvFile?.size ?? 0,
+            sampleName: csvFile?.name ?? '',
+            newCount: plan.stats.newCount,
+            dupes: plan.stats.dupes,
+          });
+        } catch {
+          /* noop */
+        }
 
         results.push({ accountNumber: acctNumber, plan });
         aggregate.newCount += plan.stats.newCount;
@@ -540,6 +650,35 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                         Selected: {(sourceType === "csv" ? csvFile?.name : ofxFile?.name)}
                       </Text>
                     )}
+
+                    {sourceType === 'csv' && parsing && csvFile && (
+                      <Box borderWidth='1px' borderRadius='md' p={3} bg='bg.subtle'>
+                        <HStack justify='space-between' align='center' wrap='wrap' gap={2}>
+                          <Text fontSize='sm'>Parsing CSV…</Text>
+                          <HStack gap={2} wrap='wrap'>
+                            <Tag.Root size='sm'>{parseRows.toLocaleString()} rows</Tag.Root>
+                            {typeof parseBytes === 'number' && csvFile.size > 0 && (
+                              <Tag.Root size='sm'>
+                                {Math.min(100, (parseBytes / csvFile.size) * 100).toFixed(1)}%
+                              </Tag.Root>
+                            )}
+                            {!parseFinished && !parseAborted && (
+                              <Button size='xs' variant='outline' colorPalette='red' onClick={abortCsvParse}>Abort</Button>
+                            )}
+                          </HStack>
+                        </HStack>
+                        <Box mt={2} h='4px' bg='gray.200' borderRadius='sm' overflow='hidden'>
+                          {(() => {
+                            let pct = 10;
+                            if (typeof parseBytes === 'number' && csvFile.size > 0) {
+                              pct = Math.min(100, (parseBytes / csvFile.size) * 100);
+                            }
+                            if (parseFinished || parseAborted) pct = 100;
+                            return <Box h='100%' width={`${pct}%`} bg={parseAborted ? 'red.400' : 'purple.400'} transition='width 0.2s ease' />;
+                          })()}
+                        </Box>
+                      </Box>
+                    )}
                   </>
                 )}
               </Stack>
@@ -715,9 +854,9 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
               <Box mt={4}>
                 <Stack direction='row' align='center' mb={2} gap={2}>
                   <Text fontSize='sm'>Metrics:</Text>
-                  <select value={metricsAccount} onChange={e=>setMetricsAccount(e.target.value)} style={{ fontSize:'0.75rem' }}>
+                  <AppSelect value={metricsAccount} onChange={e=>setMetricsAccount(e.target.value)} size="xs" fontSize='0.75rem' width='120px' placeholder="Select account">
                     {ingestionResults.map(ir => <option key={ir.accountNumber} value={ir.accountNumber}>{ir.accountNumber}</option>)}
-                  </select>
+                  </AppSelect>
                   {metricsAccount && <Tag.Root size='sm'>{metricsAccount.slice(0,12)}</Tag.Root>}
                 </Stack>
                 {(() => {
@@ -742,6 +881,160 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                     },
                   };
                   return <IngestionMetricsPanel metrics={metrics} sessionId={s.importSessionId} />;
+                })()}
+
+                {(() => {
+                  const sel = ingestionResults.find(r => r.accountNumber === metricsAccount) || ingestionResults[0];
+                  if (!sel) return null;
+                  const plan = sel.plan;
+                  const manifest = importManifests?.[plan.stats.hash];
+                  const seen = manifest?.accounts?.[sel.accountNumber];
+                  if (!manifest || !seen) return null;
+                  return (
+                    <Box mt={3} borderWidth='1px' borderRadius='md' p={3} bg='yellow.50'>
+                      <Text fontSize='sm' fontWeight='bold' color={"gray.900"}>Previously Imported</Text>
+                      <Text fontSize='xs' color={"gray.900"}>This file hash was imported for this account at {seen.importedAt}. Re-importing may be redundant.</Text>
+                    </Box>
+                  );
+                })()}
+
+                {(() => {
+                  const sel = ingestionResults.find(r => r.accountNumber === metricsAccount) || ingestionResults[0];
+                  if (!sel) return null;
+                  const sources = sel.plan.stats.categorySources;
+                  if (!sources) return null;
+                  const total = Object.values(sources).reduce((a, b) => a + b, 0) || 1;
+                  const entries = Object.entries(sources) as [string, number][];
+
+                  return (
+                    <Box mt={3} borderWidth='1px' borderRadius='md' p={3} bg='bg.subtle'>
+                      <Text fontSize='sm' fontWeight='bold' mb={2}>Category Inference Sources</Text>
+                      <Stack direction='row' gap={2} wrap='wrap'>
+                        {entries.map(([k, v]) => {
+                          const pct = ((v / total) * 100).toFixed(1);
+                          return <Tag.Root key={k} size='sm'>{k}: {v} ({pct}%)</Tag.Root>;
+                        })}
+                      </Stack>
+                    </Box>
+                  );
+                })()}
+
+                {(() => {
+                  const sel = ingestionResults.find(r => r.accountNumber === metricsAccount) || ingestionResults[0];
+                  if (!sel) return null;
+                  const plan = sel.plan;
+                  const errs = plan.errors || [];
+                  if (errs.length === 0) return null;
+
+                  const counts = {
+                    all: errs.length,
+                    parse: errs.filter((e) => e.type === 'parse').length,
+                    normalize: errs.filter((e) => e.type === 'normalize').length,
+                    duplicate: errs.filter((e) => e.type === 'duplicate').length,
+                  };
+
+                  const filtered = errs.filter((e) => errorFilter === 'all' || e.type === errorFilter);
+
+                  return (
+                    <Box mt={3} borderWidth='1px' borderRadius='md' p={3} bg='bg.subtle'>
+                      <HStack justify='space-between' align='center' wrap='wrap' gap={2}>
+                        <Box>
+                          <Text fontSize='sm' fontWeight='bold'>Row Warnings / Errors</Text>
+                          <Text fontSize='xs' color='fg.muted'>{errs.length} rows skipped.</Text>
+                        </Box>
+                        <HStack gap={2} wrap='wrap'>
+                          <Button size='xs' variant={errorFilter==='all'?'solid':'outline'} onClick={()=>setErrorFilter('all')}>All ({counts.all})</Button>
+                          <Button size='xs' variant={errorFilter==='parse'?'solid':'outline'} onClick={()=>setErrorFilter('parse')}>Parse ({counts.parse})</Button>
+                          <Button size='xs' variant={errorFilter==='normalize'?'solid':'outline'} onClick={()=>setErrorFilter('normalize')}>Normalize ({counts.normalize})</Button>
+                          <Button size='xs' variant={errorFilter==='duplicate'?'solid':'outline'} onClick={()=>setErrorFilter('duplicate')}>Duplicate ({counts.duplicate})</Button>
+                          <Button size='xs' onClick={()=>setShowErrors(s=>!s)}>{showErrors? 'Hide':'Show'}</Button>
+                          <Button
+                            size='xs'
+                            variant='ghost'
+                            title='Download errors as CSV'
+                            onClick={() => {
+                              if (exportLockRef.current) return;
+                              exportLockRef.current = true;
+                              setTimeout(()=>{ exportLockRef.current = false; }, 1500);
+                              try {
+                                const header = 'line,type,reason,message';
+                                const rows = errs.map((e) => [
+                                  e.line,
+                                  e.type,
+                                  e.type === 'duplicate' ? e.reason || '' : '',
+                                  (e.message || '').replace(/"/g, '""'),
+                                ]);
+                                const csv = [header, ...rows.map((r) => r.map((f) => `"${(f ?? '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
+                                const blob = new Blob([csv], { type: 'text/csv' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `ingestion-errors-${plan.stats.hash}-${sel.accountNumber}.csv`;
+                                (document.body ?? document.documentElement)?.appendChild(a);
+                                a.click();
+                                setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+                              } catch {
+                                /* ignore */
+                              }
+                            }}
+                          >
+                            Download CSV
+                          </Button>
+                        </HStack>
+                      </HStack>
+
+                      {showErrors && (
+                        <Box mt={2} maxH='160px' overflowY='auto' borderWidth='1px' borderRadius='md' p={2} bg='gray.900' color='red.200' fontFamily='mono' fontSize='10px'>
+                          {filtered.slice(0, 200).map((err, idx) => (
+                            <Text key={idx}>L{err.line || '?'} [{err.type}] {err.message}</Text>
+                          ))}
+                          {filtered.length > 200 && (
+                            <Text mt={1} color='gray.400'>Showing first 200 of {filtered.length}. Use Download CSV for full list.</Text>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                })()}
+
+                {(() => {
+                  const sel = ingestionResults.find(r => r.accountNumber === metricsAccount) || ingestionResults[0];
+                  if (!sel) return null;
+                  const report = sel.plan.directivesReport;
+                  const total = report?.total ?? 0;
+                  const byKind = report?.byKind ?? { rename: 0, category: 0, goal: 0, apply: 0 };
+                  const items = report?.items ?? [];
+
+                  return (
+                    <Box mt={3} borderWidth='1px' borderRadius='md' p={3} bg='bg.subtle'>
+                      <Stack gap={2}>
+                        <Text fontSize='sm' fontWeight='bold'>Directives Found in Notes</Text>
+                        <Stack direction='row' gap={2} wrap='wrap'>
+                          <Tag.Root size='sm'>total: {total}</Tag.Root>
+                          {byKind.rename > 0 && <Tag.Root size='sm'>rename: {byKind.rename}</Tag.Root>}
+                          {byKind.category > 0 && <Tag.Root size='sm'>category: {byKind.category}</Tag.Root>}
+                          {byKind.goal > 0 && <Tag.Root size='sm'>goal: {byKind.goal}</Tag.Root>}
+                          {byKind.apply > 0 && <Tag.Root size='sm'>apply: {byKind.apply}</Tag.Root>}
+                          {!!report?.truncated && <Tag.Root size='sm'>truncated</Tag.Root>}
+                        </Stack>
+
+                        {total === 0 ? (
+                          <Text fontSize='xs' color='fg.muted'>No directives found.</Text>
+                        ) : (
+                          <Box maxH='180px' overflowY='auto' borderWidth='1px' borderRadius='md' p={2} fontFamily='mono' fontSize='10px' bg='gray.900' color='green.200'>
+                            {items.slice(0, 200).map((d, idx) => (
+                              <Text key={`${d.line ?? '?'}-${d.kind}-${idx}`}>
+                                L{d.line ?? '?'} | {d.date ?? ''} | {d.kind}={d.value} | {(d.description ?? '').slice(0, 60)}
+                              </Text>
+                            ))}
+                            {items.length > 200 && (
+                              <Text mt={1} color='gray.400'>Showing first 200 of {items.length}. (Counts include all.)</Text>
+                            )}
+                          </Box>
+                        )}
+                      </Stack>
+                    </Box>
+                  );
                 })()}
               </Box>
             </Box>
