@@ -93,6 +93,23 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
     () => (currentAccount?.transactions ?? []) as Transaction[],
     [currentAccount?.transactions]
   );
+
+  const monthsWithPendingReview = useMemo(() => {
+    const set = new Set<string>();
+    for (const tx of currentTransactions) {
+      const month = typeof tx?.date === "string" ? tx.date.slice(0, 7) : "";
+      if (!month) continue;
+      if (!Array.isArray(tx.proposals)) continue;
+      if (tx.proposals.some((p) => p?.status === "pending")) set.add(month);
+    }
+    return set;
+  }, [currentTransactions]);
+
+  const yearsWithPendingReview = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of monthsWithPendingReview) set.add(m.slice(0, 4));
+    return set;
+  }, [monthsWithPendingReview]);
   const getAccountStagedSessionSummaries = useBudgetStore(
     (s) => (s as BudgetStoreAccountState).getAccountStagedSessionSummaries
   );
@@ -610,7 +627,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                     {stagedCount} STAGED <FiChevronDown />
                   </Menu.Trigger>
                 </Tooltip>
-                <Menu.Content fontSize="xs" maxW="320px">
+                <Menu.Content fontSize="xs" maxW="320px" bg={"bg.subtle"} boxShadow="md">
                   {sessionEntries.map((se) => {
                     const minutesLeft: number | null =
                       se.status === 'active' && se.expiresAt && nowMs
@@ -633,7 +650,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
                         _focus={{ outline: 'none', bg: 'transparent' }}
                         _hover={{ bg: 'bg.subtle' }}
                       >
-                        <Flex direction="column" w="100%" gap={1}>
+                        <Flex direction="column" w="100%" gap={1} borderRadius="md">
                           <Flex justify="space-between" align="center" gap={2}>
                             <HStack gap={1} align="center">
                               <Text fontSize="xs" fontWeight="bold" truncate title={se.sessionId}>{se.sessionId.slice(0,8)}</Text>
@@ -688,7 +705,7 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
       </Flex>
 
       <ButtonGroup attached={false} gap={2}>
-	      <YearPill months={months} selectedMonth={selectedMonth} onSelectedMonthChange={setSelectedMonth} />
+        <YearPill months={months} selectedMonth={selectedMonth} onSelectedMonthChange={setSelectedMonth} yearsWithPendingReview={yearsWithPendingReview} />
       </ButtonGroup>
 
       {/* Monthly Tabbed View */}
@@ -706,7 +723,15 @@ export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
           justifyContent={monthsForYear.length > 8 ? "space-around" : "start"}
         >
           {monthsForYear.map((m) => (
-            <Tabs.Trigger key={m} value={m} minWidth={1} fontWeight="bold" fontSize={22}>
+            <Tabs.Trigger
+              key={m}
+              value={m}
+              minWidth={1}
+              fontWeight="bold"
+              fontSize={22}
+              color={monthsWithPendingReview.has(m) ? "orange.500" : undefined}
+              _hover={{ bg: "bg.muted" }}
+            >
               {formatUtcMonthKey(m, { month: 'short', includeYear: false })}
             </Tabs.Trigger>
           ))}

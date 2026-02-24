@@ -6,9 +6,16 @@ type YearPillProps = {
   months: string[]; // array of "YYYY-MM" month keys available for the account
   selectedMonth: BudgetMonthKey;
   onSelectedMonthChange: (month: BudgetMonthKey) => void;
+  yearsWithPendingReview?: ReadonlySet<string> | string[];
 };
 
-export function YearPill({ months, selectedMonth, onSelectedMonthChange }: YearPillProps) {
+export function YearPill({ months, selectedMonth, onSelectedMonthChange, yearsWithPendingReview }: YearPillProps) {
+
+  const yearsWithPendingReviewSet = useMemo(() => {
+    if (!yearsWithPendingReview) return null;
+    if (Array.isArray(yearsWithPendingReview)) return new Set(yearsWithPendingReview);
+    return yearsWithPendingReview;
+  }, [yearsWithPendingReview]);
 
   // years from "YYYY-MM" month keys
   const years = useMemo(() => {
@@ -34,11 +41,15 @@ export function YearPill({ months, selectedMonth, onSelectedMonthChange }: YearP
     <ButtonGroup gap={2}>
       {years.map((y: string) => {
         const isActive = selectedMonth?.startsWith(`${y}-`);
+        const hasPendingReview = !!yearsWithPendingReviewSet?.has(y);
         return (
           <Button
             key={y}
             onClick={() => handleYearClick(y)}
-            colorPalette={isActive ? 'teal' : 'gray'}
+            colorPalette={isActive ? 'teal' : hasPendingReview ? 'orange' : 'gray'}
+            bg={!isActive ? 'bg.muted' : undefined}
+            _hover={{ bg: !isActive ? 'bg.emphasized' : undefined }}
+            color={isActive ? hasPendingReview ? 'orange.600' : 'fg' : hasPendingReview ? 'orange.500' : "bg.inverted"}
             variant={isActive ? 'solid' : 'ghost'}
             fontWeight={isActive ? 'bold' : 'normal'}
             size="md"
