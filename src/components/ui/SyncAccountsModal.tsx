@@ -4,6 +4,7 @@ import Papa from "papaparse";
 import { useBudgetStore } from "../../store/budgetStore";
 import { analyzeImport } from "../../ingest/analyzeImport";
 import { useTxStrongKeyOverridesByKey } from "../../store/txStrongKeyOverridesStore";
+import { useAccountMappings, useSetAccountMapping } from "../../store/accountMappingsStore";
 import IngestionMetricsPanel from "../accounts/IngestionMetricsPanel";
 import { fireToast } from "../../hooks/useFireToast";
 import { recordGenericTiming } from "../../services/perfLogger";
@@ -69,9 +70,9 @@ const syncFileTypeOptions = [
   ];
 
 export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModalProps) {
-  const accountMappings = useBudgetStore((s) => s.accountMappings);
+  const accountMappings = useAccountMappings();
   const accounts = useBudgetStore((s) => s.accounts);
-  const setAccountMapping = useBudgetStore((s) => s.setAccountMapping);
+  const setAccountMapping = useSetAccountMapping();
   const addOrUpdateAccount = useBudgetStore((s) => s.addOrUpdateAccount);
   const commitImportPlan = useBudgetStore((s) => s.commitImportPlan);
   const streamingAutoByteThreshold = useBudgetStore((s) => s.streamingAutoByteThreshold);

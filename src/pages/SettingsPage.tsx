@@ -25,6 +25,7 @@ import {
 import { clearUserScopedKeysByPrefix } from "../services/userScopedStorage";
 import { usePerfLogStore } from "../store/perfLogStore";
 import { useTxStrongKeyOverridesStore } from "../store/txStrongKeyOverridesStore";
+import { useAccountMappingsStore } from "../store/accountMappingsStore";
 import { useUpdatesStore } from "../store/updatesStore";
 import { useUserUICacheStore } from "../services/userUICacheStore";
 import { Tip } from "../components/ui/Tip";
@@ -269,6 +270,18 @@ export default function SettingsPage() {
             title="Failed to load settings"
             message={err}
             onRetry={() => {
+                      <HStack justify="space-between" flexWrap="wrap" gap={2}>
+                        <Text fontSize="sm">Account Mappings (label/institution)</Text>
+                        <Button
+                          size="xs"
+                          colorPalette="red"
+                          variant="outline"
+                          onClick={() => void clearPersistedStore("Account Mappings", useAccountMappingsStore)}
+                        >
+                          Clear
+                        </Button>
+                      </HStack>
+
               void refreshData();
             }}
           />

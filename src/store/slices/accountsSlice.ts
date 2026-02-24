@@ -2,17 +2,15 @@ import type { StateCreator } from "zustand";
 
 import { buildTxKey } from "../../ingest/buildTxKey";
 import type { TxKeyInput } from "../../ingest/buildTxKey";
-import type { Account, AccountMapping, Transaction } from "../../types";
+import type { Account, Transaction } from "../../types";
 
 const getStrongTransactionKey = (tx: TxKeyInput, accountNumber: string) =>
   buildTxKey({ ...tx, accountNumber: tx.accountNumber ?? accountNumber });
 
 export type AccountsSlice = {
-  accountMappings: { [accountNumber: string]: AccountMapping };
   accounts: { [accountNumber: string]: Account };
 
   clearAllAccounts: () => void;
-  clearAllAccountMappings: () => void;
   addOrUpdateAccount: (accountNumber: string, data: Partial<Account>) => void;
   addTransactionsToAccount: (accountNumber: string, transactions: Transaction[]) => void;
   patchTransactionByStrongKey: (
@@ -26,7 +24,6 @@ export type AccountsSlice = {
       proposals?: Transaction["proposals"];
     }
   ) => void;
-  setAccountMapping: (accountNumber: string, mapping: AccountMapping) => void;
   removeAccount: (accountNumber: string) => void;
 };
 
@@ -44,12 +41,9 @@ function normalizeOptionalText(value: unknown): string | null | undefined {
 }
 
 export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
-  accountMappings: {},
   accounts: {},
 
   clearAllAccounts: () => set(() => ({ accounts: {} })),
-
-  clearAllAccountMappings: () => set(() => ({ accountMappings: {} })),
 
   addOrUpdateAccount: (accountNumber, data) =>
     set((state) => ({
@@ -134,14 +128,6 @@ export const createAccountsSlice: SliceCreator<AccountsSlice> = (set) => ({
         },
       };
     }),
-
-  setAccountMapping: (accountNumber, mapping) =>
-    set((state) => ({
-      accountMappings: {
-        ...state.accountMappings,
-        [accountNumber]: mapping,
-      },
-    })),
 
   removeAccount: (accountNumber) =>
     set((state) => {

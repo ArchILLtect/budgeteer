@@ -15,7 +15,6 @@ export default function AccountsTracker() {
 
   const accounts = useBudgetStore((s) => s.accounts);
   const clearAllAccounts = useBudgetStore((s) => s.clearAllAccounts);
-  const clearAllAccountMappings = useBudgetStore((s) => s.clearAllAccountMappings);
   const clearAllImportData = useBudgetStore((s) => s.clearAllImportData);
   const resetMonthlyActuals = useBudgetStore((s) => s.resetMonthlyActuals);
   const resetSavingsLogs = useBudgetStore((s) => s.resetSavingsLogs);
@@ -41,12 +40,11 @@ export default function AccountsTracker() {
                 variant="outline"
                 onClick={() => {
                   const ok = window.confirm(
-                    'DEV only: Clear all imported data?\n\nThis will remove accounts, account mappings, and import history for your current user scope.'
+                    'DEV only: Clear all imported data?\n\nThis will remove accounts, transactions, and import history for your current user scope.\n\nAccount label/institution mappings will be kept.'
                   );
                   if (!ok) return;
                   clearAllImportData?.();
                   clearAllAccounts?.();
-                  clearAllAccountMappings?.();
                   resetMonthlyActuals?.();
                   resetSavingsLogs?.();
                 }}
