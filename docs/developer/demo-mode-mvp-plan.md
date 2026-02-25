@@ -79,19 +79,19 @@ If “Clear demo data” exists, it should either:
 
 ### Demo-marking
 
-All seeded demo records must be clearly marked so we can clear them deterministically.
+Originally intended: mark seeded demo records so we can clear them deterministically.
 
-MVP: mark at least transactions and import history / manifests as demo-created.
+MVP update (2026-02-24): we treat demo reset as **"square one"** for demo identities by clearing the current user's local persisted state, so per-record demo-marking is **deferred**.
 
 ## Implementation checklist (step-by-step)
 
 ### A. Demo CSV asset + import entrypoint
 
-- [ ] Provide three canonical demo CSV datasets: Tiny / Medium / Large
+- [x] ~~Provide three canonical demo CSV datasets: Tiny / Medium / Large~~ (done 2026-02-24)
   - Must match the canonical “History export” header style used in `/samples`.
   - Prefer runtime assets under `public/demo/` to avoid bundling large CSV strings into JS.
     - Example: `public/demo/demo-tiny.csv`, `public/demo/demo-medium.csv`, `public/demo/demo-large.csv`
-- [ ] Update the Import UI demo action to load the selected CSV text and run the normal flow
+- [x] ~~Update the Import UI demo action to load the selected CSV text and run the normal flow~~ (done 2026-02-24)
   - Replace any in-memory `CsvRow[]` generation.
   - Run the same pipeline as normal imports:
     - parse (PapaParse)
@@ -101,27 +101,24 @@ MVP: mark at least transactions and import history / manifests as demo-created.
 
 ### B. Fix demo seeding stub (bootstrap)
 
-- [ ] Implement `seedDemoData()` in the bootstrap service
-  - Use the embedded CSV text (from A) to seed via `analyzeImport({ fileText })`.
-  - Commit via the same store APIs as the normal import flow.
-  - Ensure seeded items are demo-marked.
-- [ ] Ensure the seed gate (`seedVersion`) continues to be multi-tab safe
-  - Keep the existing claim/finalize/rollback mechanism.
+- [x] ~~Implement `seedDemoData()` in the bootstrap service~~ (done 2026-02-24)
+  - Uses a real demo CSV asset and seeds via `analyzeImport(...)` + `commitImportPlan(plan)`.
+  - Note: per-record demo-marking deferred (see Demo-marking section).
+- [x] ~~Ensure the seed gate (`seedVersion`) continues to be multi-tab safe~~ (already implemented)
+  - Claim/finalize/rollback mechanism retained.
 
 ### C. Demo-mode flag wiring (so demo-only UI appears)
 
-- [ ] Ensure `useDemoMode(...)` drives `useBudgetStore(...).setIsDemoUser(true|false)`
-  - Centralize this in app shell/layout so individual components don’t duplicate logic.
-  - Goal: components like Import UI can reliably show demo-only actions.
+- [x] ~~Ensure `useDemoMode(...)` drives `useBudgetStore(...).setIsDemoUser(true|false)`~~ (done 2026-02-24)
+  - Centralized in app shell/layout so Import UI can reliably show demo-only actions.
 
 ### D. Demo reset: “square one”
 
-- [ ] Implement a single MVP reset action for demo identities
-  - Clears demo-marked local data
+- [x] ~~Implement a single MVP reset action for demo identities~~ (done 2026-02-24)
+  - Clears current user's local persisted state ("square one")
   - Resets `seedVersion` to 0
   - Calls `bootstrapUser({ seedDemo: true })`
-- [ ] Wire Settings UI to call the real reset implementation
-  - Remove/comment-in the currently stubbed calls.
+- [x] ~~Wire Settings UI to call the real reset implementation~~ (done 2026-02-24)
 
 ### E. Minimal samples curation (MVP)
 
@@ -132,10 +129,10 @@ MVP: mark at least transactions and import history / manifests as demo-created.
 
 ## Acceptance criteria (definition of done)
 
-- [ ] In demo mode, Import Account Data → “Load Demo CSV” runs the full normal pipeline and results in:
+- [x] ~~In demo mode, Import Account Data → “Load Demo CSV” runs the full normal pipeline and results in:~~ (done 2026-02-24)
   - an account with staged transactions
   - an import history entry
   - ability to apply/undo
-- [ ] Demo seeding at login is no longer a stub and produces the same kind of dataset.
-- [ ] Settings → Reset demo data returns to the initial demo state (square one).
-- [ ] No additional demo “polish” features beyond the above.
+- [x] ~~Demo seeding at login is no longer a stub and produces the same kind of dataset.~~ (done 2026-02-24)
+- [x] ~~Settings → Reset demo data returns to the initial demo state (square one).~~ (done 2026-02-24)
+- [x] No additional demo “polish” features beyond the above.

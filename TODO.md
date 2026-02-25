@@ -96,6 +96,12 @@ Docs (P1):
 - [x] TODO(P1): Replace README banner with a Budgeteer version
   - new file: `docs/assets/readme-banner.svg`
   - ensure README references it
+- [ ] TODO(P1): Demo Mode (MVP) — E. Minimal samples curation
+  - Add a small deterministic “golden” canonical History-export CSV under `/samples`
+    - Intended for debugging ingestion and for quick manual import.
+    - Keep it small (10–30 rows), deterministic, and representative.
+  - Update `/samples/README.md` to describe the golden file
+  - Source checklist: `docs/developer/demo-mode-mvp-plan.md` → “E. Minimal samples curation (MVP)”
 - [ ] TODO(P1): Ensure `/samples` is documented and curated
   - describe each sample file
   - keep a small, deterministic “golden” CSV for ingestion tests/debug
@@ -103,38 +109,38 @@ Docs (P1):
   - document in `docs/developer/README.md` or similar
   - ensure frontend models align with backend expectations
   - consider adding TypeScript types/interfaces for these models in `src/types` and using them at ingestion boundaries
-- [ ] TODO(P1): Document auth flows and user-scoped persistence in architecture docs
+- [x] TODO(P1): Document auth flows and user-scoped persistence in architecture docs (done; see `docs/ARCHITECTURE.md`)
   - how `useAuthUser()` works, how it triggers rehydration of user-scoped stores
   - the user-scoped storage key format and rationale
   - any implications for development/testing (e.g. how to clear state, how to test multiple users)
   - consider adding a diagram to illustrate the auth lifecycle and storage scoping
-- [ ] TODO(P1): Document the transaction import flow (staging, apply, undo) in architecture docs
+- [x] TODO(P1): Document the transaction import flow (staging, apply, undo) in architecture docs (done; see `docs/ARCHITECTURE.md`)
   - how import sessions are modeled, how transactions are tagged with `importSessionId`
   - the user experience around staging/apply/undo
   - any edge cases or important details (e.g. time window for undo, how duplicates are prevented)
   - consider adding a flow diagram to illustrate the import process and state transitions
-- [ ] TODO(P1): Document the budgeting model and core domain concepts in architecture docs
+- [x] TODO(P1): Document the budgeting model and core domain concepts in architecture docs (done; see `docs/ARCHITECTURE.md` + `docs/DATA_MODEL.md`)
   - scenarios, monthly plans/actuals, savings goals/logs, accounts/transactions
   - how these concepts are represented in the store and how they relate to each other
   - any important calculations or business logic (e.g. how the planner computes summaries)
   - consider adding a diagram to illustrate the budgeting model and relationships between concepts
-- [ ] TODO(P1): Document the decision to use a shared Amplify Gen 1 backend with AppSync GraphQL API
+- [x] TODO(P1): Document the decision to use a shared Amplify Gen 1 backend with AppSync GraphQL API (done; see `docs/ARCHITECTURE.md` + `docs/budgeteer_project_context_vision.md`)
   - rationale for the decision (reuse backend services, decoupled frontend)
   - what resources are shared (user pool, GraphQL API) and what is separate (frontend codebase, auth handling, local persistence)
   - any implications for development or future plans (e.g. if we want to migrate to Gen 2 in the future, how would that work?)
-- [ ] TODO(P1): Document the user personas and target users for Budgeteer in the architecture or roadmap docs
+- [x] TODO(P1): Document the user personas and target users for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
   - budget planner, spreadsheet migrator, developer/reviewer
   - how these personas influenced design decisions and feature prioritization
   - any plans for future features that might target additional personas (e.g. multi-user collaboration for households)
-- [ ] TODO(P1): Document the non-goals for Budgeteer in the architecture or roadmap docs
+- [x] TODO(P1): Document the non-goals for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
   - Plaid/bank credential linking, automated “magic” budgeting, crypto/investing/net-worth features, multi-user household collaboration
   - rationale for excluding these features (out of scope, future possibility, etc.)
   - how we might approach these features in the future if we decide to pursue them
-- [ ] TODO(P1): Document the product and engineering goals for Budgeteer in the architecture or roadmap docs
+- [x] TODO(P1): Document the product and engineering goals for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
   - planning-first budgeting, safe imports, clarity, privacy-by-design, showcase-quality engineering
   - how these goals influenced design and implementation decisions
   - any trade-offs or challenges we faced in trying to achieve these goals
-- [ ] TODO(P1): Ensure the architecture doc reflects the current system accurately
+- [x] TODO(P1): Ensure the architecture doc reflects the current system accurately (done; last reviewed 2026-02-19)
   - review and update sections on auth, persistence, budgeting model, transaction importing, etc. to match the current implementation
   - remove any outdated references to non-Budgeteer concepts
   - ensure the doc is clear and comprehensive for new developers joining the project
