@@ -1,7 +1,11 @@
 import { getCurrentUser } from "aws-amplify/auth";
 
 import { budgeteerApi } from "../api/budgeteerApi";
-import { bootstrapUser } from "./userBootstrapService";
+import { useAccountMappingsStore } from "../store/accountMappingsStore";
+import { useBudgetStore } from "../store/budgetStore";
+import { useTxStrongKeyOverridesStore } from "../store/txStrongKeyOverridesStore";
+import { useUpdatesStore } from "../store/updatesStore";
+import { useUserUICacheStore } from "./userUICacheStore";
 
 function errorToMessage(err: unknown): string {
   if (typeof err === "string") return err;
@@ -15,41 +19,53 @@ export type ClearDemoDataResult = Record<string, never>;
 
 export type AddDemoDataResult = Record<string, never>;
 
-// Clears only *demo-marked* data (`isDemo === true`).
-// Guardrails:
-// - Never deletes non-demo data.
+type StoreWithPersist = {
+  getInitialState: () => any;
+  setState: (...args: any[]) => any;
+  persist?: {
+    clearStorage?: () => void | Promise<void>;
+  };
+};
+
+async function clearAndResetStore(store: StoreWithPersist): Promise<void> {
+  try {
+    await store.persist?.clearStorage?.();
+  } catch {
+    // ignore
+  }
+
+  try {
+    store.setState(store.getInitialState(), true);
+  } catch {
+    // ignore
+  }
+}
+
+// Removes locally stored sample/demo data for this user on this device.
+// Note: In MVP we do not track per-record "demo" ownership, so this clears the local stores
+// that hold budget/import/planner state rather than selectively deleting demo-marked rows.
 export async function clearDemoDataOnly(): Promise<ClearDemoDataResult> {
   // Requires auth.
   await getCurrentUser();
 
+  await Promise.all([
+    clearAndResetStore(useBudgetStore),
+    clearAndResetStore(useUpdatesStore),
+    clearAndResetStore(useUserUICacheStore),
+    clearAndResetStore(useAccountMappingsStore),
+    clearAndResetStore(useTxStrongKeyOverridesStore),
+  ]);
 
-
-  return {
-    //movedNonDemoTaskCount: nonDemoTaskIdsToMove.length,
-    //deletedDemoTaskCount: demoTaskIdsToDelete.length,
-    //deletedDemoListCount: demoListIdsToDelete.length,
-  };
-}
-
-// Resets (re-seeds) demo data while preserving non-demo data.
-// Implementation: clear demo-only rows, reset the seed gate, then run the seed.
-export async function resetDemoDataPreservingNonDemo(): Promise<ClearDemoDataResult> {
-  await getCurrentUser();
-
-  const clearResult = await clearDemoDataOnly();
-
+  // Reset the seed gate so sample/demo seeding can run again if the user re-enables it later.
   const current = await getCurrentUser();
   const profileId = current.userId;
-
   try {
     await budgeteerApi.updateUserProfile({ id: profileId, seedVersion: 0, seededAt: null });
   } catch (err) {
     throw new Error(`Failed to reset seed version: ${errorToMessage(err)}`);
   }
 
-  await bootstrapUser({ seedDemo: true });
-
-  return clearResult;
+  return {};
 }
 
 /* For future use when we want a "full reset" that wipes all data (demo and non-demo) for the user.

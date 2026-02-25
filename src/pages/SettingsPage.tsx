@@ -44,6 +44,7 @@ import {
   clearDemoDataOnly,
   // resetDemoDataPreservingNonDemo, // TODO(P4): keep this for now to use for demo data counts in the success message after we surface those counts from the API; remove it when we no longer need it for that
 } from "../services/demoDataService";
+import { resetDemoData } from "../services/resetDemoData";
 import { AppCollapsible } from "../components/ui/AppCollapsible";
 import { MdAdd, MdDelete } from "react-icons/md";
 import { BsFillSignStopFill } from "react-icons/bs";
@@ -162,7 +163,11 @@ export default function SettingsPage() {
       // Ensure it's also disabled so the badge/tour controls don't appear in a no-op state.
       setDemoModeOptIn(false);
       clearDemoSessionActive();
-      fireToast("success", "Sample data removed", "Demo-marked sample data was deleted and future seeding is disabled.");
+      fireToast(
+        "success",
+        "Sample data removed",
+        "Local Budgeteer data for this user was cleared on this device, and future sample-data seeding is disabled."
+      );
       setIsRemoveSampleOpen(false);
     } catch (err) {
       const msg = typeof err === "object" && err !== null && "message" in err ? String((err as { message: unknown }).message) : "Failed to remove sample data.";
@@ -494,15 +499,15 @@ export default function SettingsPage() {
           <Heading size="lg">{isDemoIdentity ? "Demo Data" : "Sample data"}</Heading>
           <Text color="fg.muted" fontSize="sm">
             {isDemoIdentity
-              ? "Manage demo-marked sample data. These actions only affect data marked as demo."
-              : "Your account can start with sample data (marked as demo). You can remove it when desired."}
+              ? "Manage the local demo dataset for this demo identity."
+              : "Your account can start with sample data. You can remove it when desired."}
           </Text>
 
           {!isDemoIdentity ? (
             <Box pt={3}>
               <Heading size="sm">Remove sample data</Heading>
               <Text color="fg.muted" fontSize="sm">
-                This deletes demo-marked sample data and permanently disables future sample-data seeding for this account on this device.
+                This clears locally stored Budgeteer data for this user on this device and permanently disables future sample-data seeding.
               </Text>
               <Text color="fg.muted" fontSize="sm">
                 This cannot be undone from within the app. If you want “temporary demo” data later, you can create your own test entries and
@@ -545,7 +550,7 @@ export default function SettingsPage() {
                 body={
                   <VStack align="start" gap={3}>
                     <Text>
-                      This will delete all demo-marked sample data in your account. It will also disable future sample-data seeding for this user in this browser.
+                      This will clear locally stored Budgeteer data for this user on this device. It will also disable future sample-data seeding for this user in this browser.
                     </Text>
                     <Checkbox.Root
                       checked={removeSampleChecked}
@@ -657,7 +662,8 @@ export default function SettingsPage() {
                 body={
                   <VStack align="start" gap={2}>
                     <Text>
-                      This deletes demo-marked sample data only. Non-demo data is preserved.
+                      For MVP, “Clear demo data” behaves like “Reset to square one”.
+                      It clears the local demo dataset and then re-seeds the original demo data.
                     </Text>
                     {demoActionError ? (
                       <Text color="red.600" fontSize="sm">
@@ -682,11 +688,11 @@ export default function SettingsPage() {
                   setDemoActionLoading("clear");
                   setDemoActionError(null);
                   try {
-                    // const res = await clearDemoDataOnly();
+                    await resetDemoData();
                     fireToast(
                       "success",
                       "Demo data cleared",
-                      `Deleted demo-marked sample data.` // TODO(P4): add counts to this message if we surface them from the API
+                      "Cleared local demo data and re-seeded the original demo dataset."
                     );
                   } catch (err) {
                     const msg =
@@ -712,7 +718,8 @@ export default function SettingsPage() {
                 body={
                   <VStack align="start" gap={2}>
                     <Text>
-                      This clears demo-marked sample data and re-seeds the original demo dataset. Non-demo data is preserved.
+                      This resets the demo experience to square one.
+                      It clears the local demo dataset and re-seeds the original demo data.
                     </Text>
                     {demoActionError ? (
                       <Text color="red.600" fontSize="sm">
@@ -737,11 +744,11 @@ export default function SettingsPage() {
                   setDemoActionLoading("reset");
                   setDemoActionError(null);
                   try {
-                    // const res = await resetDemoDataPreservingNonDemo();
+                    await resetDemoData();
                     fireToast(
                       "success",
                       "Demo data reset",
-                      `Cleared demo-marked data, then re-seeded demo data.` // TODO(P4): add counts to this message if we surface them from the API
+                      "Cleared local demo data and re-seeded the original demo dataset."
                     );
                   } catch (err) {
                     const msg =

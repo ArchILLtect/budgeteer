@@ -3,6 +3,14 @@ import { getCurrentUser } from "aws-amplify/auth";
 import { budgeteerApi } from "../api/budgeteerApi";
 import { bootstrapUser } from "./userBootstrapService";
 import { useUpdatesStore } from "../store/updatesStore";
+import { useBudgetStore } from "../store/budgetStore";
+import { useLocalSettingsStore } from "../store/localSettingsStore";
+import { useUserUICacheStore } from "./userUICacheStore";
+import { clearUserScopedKeysByPrefix, userScopedRemoveItem } from "./userScopedStorage";
+import { DEMO_MODE_OPT_IN_KEY } from "./demoModeOptIn";
+import { DEMO_TOUR_SEEN_KEY } from "./demoTour";
+import { SEED_DEMO_PREF_KEY } from "./seedDemoPreference";
+import { WELCOME_MODAL_PREF_KEY } from "./welcomeModalPreference";
 
 function errorToMessage(err: unknown): string {
   if (typeof err === "string") return err;
@@ -12,19 +20,50 @@ function errorToMessage(err: unknown): string {
   return "Unknown error";
 }
 
+type StoreWithPersist = {
+  getInitialState: () => any;
+  setState: (...args: any[]) => any;
+  persist?: {
+    clearStorage?: () => void | Promise<void>;
+  };
+};
+
+async function clearAndResetStore(store: StoreWithPersist): Promise<void> {
+  try {
+    await store.persist?.clearStorage?.();
+  } catch {
+    // ignore
+  }
+
+  try {
+    store.setState(store.getInitialState(), true);
+  } catch {
+    // ignore
+  }
+}
+
 
 export async function resetDemoData(): Promise<void> {
   // Requires auth; keep this helper strict so callers can surface a clear message.
   await getCurrentUser();
 
-  // Clear UX-only local state first to avoid stale UI while the reset runs.
-  useUpdatesStore.getState().resetAll?.();
+  // MVP semantics: "reset to square one".
+  // Clear persisted per-user state and reset in-memory stores so the UI updates immediately.
+  await Promise.all([
+    clearAndResetStore(useUpdatesStore),
+    clearAndResetStore(useLocalSettingsStore),
+    clearAndResetStore(useBudgetStore),
+    clearAndResetStore(useUserUICacheStore),
+  ]);
 
-  // Clear persisted UX state for the current user scope.
+  // Clear per-user localStorage keys that are not part of a zustand store.
   try {
-    await Promise.all([
-      useUpdatesStore.persist.clearStorage(),
-    ]);
+    clearUserScopedKeysByPrefix("tip:");
+    userScopedRemoveItem(DEMO_MODE_OPT_IN_KEY);
+    userScopedRemoveItem(DEMO_TOUR_SEEN_KEY);
+    userScopedRemoveItem(SEED_DEMO_PREF_KEY);
+    userScopedRemoveItem(WELCOME_MODAL_PREF_KEY);
+    userScopedRemoveItem("welcomeModalLastShownAtMs");
   } catch {
     // ignore
   }
@@ -43,10 +82,5 @@ export async function resetDemoData(): Promise<void> {
   await bootstrapUser({ seedDemo: true });
 
   // 6) Clear updates again so seed events don't flood the feed
-  useUpdatesStore.getState().resetAll?.();
-  try {
-    await useUpdatesStore.persist.clearStorage();
-  } catch {
-    // ignore
-  }
+  await clearAndResetStore(useUpdatesStore);
 }

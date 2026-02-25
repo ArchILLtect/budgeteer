@@ -5,7 +5,11 @@ import {
   PlanTier,
   type ModelUserProfileConditionInput,
 } from "../API";
+import Papa from "papaparse";
 import { budgeteerApi } from "../api/budgeteerApi";
+import { analyzeImport } from "../ingest/analyzeImport";
+import { useBudgetStore } from "../store/budgetStore";
+import type { Transaction } from "../types/domain";
 import { isDemoIdentityUsername } from "./userDisplay";
 import { errorToMessage } from "../utils/appUtils";
 
@@ -281,16 +285,123 @@ async function seedDemoData() {
   const current = await getCurrentUser();
   const owner = current.userId;
 
-  if (import.meta.env.DEV) {
-    console.debug(`[demo seed] data empty until we build a new seed flow for Budgeteer (current owner sub=${owner})`);
-    // console.debug(`[demo seed] using owner(sub)=${owner} for demo creates`);
+  // Guard: avoid double-seeding into a non-empty local store.
+  // (The seed gate is server-side, but local persisted state might already exist.)
+  const state = useBudgetStore.getState();
+  const hasAnyAccounts = Object.keys(state.accounts || {}).length > 0;
+  const hasAnyHistory = Array.isArray(state.importHistory) && state.importHistory.length > 0;
+  if (hasAnyAccounts || hasAnyHistory) {
+    if (import.meta.env.DEV) {
+      console.info("[demo seed] skipped (local state not empty)", {
+        owner,
+        accounts: Object.keys(state.accounts || {}).length,
+        history: state.importHistory?.length ?? 0,
+      });
+    }
+    return;
   }
 
-  /* TODO(P2): Build a Budgeteer-specific demo seed flow here.
-  // This should create demo budgeting domain data (accounts, transactions, plans, goals)
-  // using Budgeteer APIs and store shapes.
-  */
+  // Use a real CSV asset so this exercises the normal parsing + ingestion pipeline.
+  // Default to the tiny dataset because it stays close to the current date and loads fast.
+  const res = await fetch("/demo/demo-tiny.csv", { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch demo CSV (status ${res.status})`);
+  }
+  const csvText = await res.text();
 
+  const parsed = Papa.parse<Record<string, unknown>>(csvText, {
+    header: true,
+    skipEmptyLines: true,
+  });
+
+  const rows = Array.isArray(parsed.data) ? parsed.data : [];
+  if (!rows.length) {
+    throw new Error("Demo CSV parsed with 0 rows.");
+  }
+
+  const pickValue = (row: Record<string, unknown>, keys: string[]): string => {
+    for (const k of keys) {
+      const v = row?.[k];
+      if (typeof v === "string") {
+        const s = v.trim();
+        if (s) return s;
+      }
+      if (typeof v === "number" && Number.isFinite(v)) return String(v);
+    }
+    return "";
+  };
+
+  // Figure out a good initial month to land the user on (latest month in dataset).
+  let newestMonthKey = "";
+  for (const r of rows) {
+    const raw = pickValue(r, ["Posted Date", "Date", "date"]);
+    if (!raw) continue;
+    const d = new Date(raw);
+    if (!Number.isFinite(d.getTime())) continue;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const key = `${y}-${m}`;
+    if (!newestMonthKey || key.localeCompare(newestMonthKey) > 0) newestMonthKey = key;
+  }
+
+  // Group by AccountNumber (canonical History-export format).
+  const groups = rows.reduce<Record<string, Record<string, unknown>[]>>((acc, row) => {
+    const v = row?.AccountNumber ?? row?.accountNumber;
+    const acct = (typeof v === "string" ? v : String(v ?? "")).trim();
+    if (!acct) return acc;
+    if (!acc[acct]) acc[acct] = [];
+    acc[acct].push(row);
+    return acc;
+  }, {});
+
+  const txStrongKeyOverridesByKey: Record<
+    string,
+    | {
+        name?: string | null;
+        note?: string | null;
+      }
+    | undefined
+  > = {};
+
+  for (const accountNumber of Object.keys(groups)) {
+    const accountRows = groups[accountNumber] || [];
+    const adaptedRows = accountRows.map((r, idx) => {
+      const note = pickValue(r, ["Note", "note", "Notes", "notes", "Memo", "memo"]);
+
+      return {
+        date: pickValue(r, ["Posted Date", "Date", "date"]),
+        Description: pickValue(r, ["Description", "description", "Memo", "memo"]),
+        Amount: pickValue(r, ["Amount", "amount", "Amt", "amt"]),
+        Category: pickValue(r, ["Category", "category", "CATEGORY"]),
+        Note: note,
+        Memo: note,
+        __line: idx + 1,
+      };
+    });
+
+    const existingTxns = (useBudgetStore.getState().accounts?.[accountNumber]?.transactions ?? []) as Transaction[];
+    const plan = await analyzeImport({
+      parsedRows: { rows: adaptedRows, errors: [] },
+      accountNumber,
+      existingTxns,
+      txStrongKeyOverridesByKey,
+      autoApplyExplicitDirectives: true,
+    });
+
+    useBudgetStore.getState().commitImportPlan(plan);
+  }
+
+  if (newestMonthKey) {
+    useBudgetStore.getState().setSelectedMonth(newestMonthKey);
+  }
+
+  if (import.meta.env.DEV) {
+    console.info("[demo seed] seeded via demo CSV", {
+      owner,
+      accounts: Object.keys(groups).length,
+      newestMonthKey: newestMonthKey || null,
+    });
+  }
 }
 
 export async function bootstrapUser(opts?: { seedDemo?: boolean }): Promise<BootstrapUserResult> {
