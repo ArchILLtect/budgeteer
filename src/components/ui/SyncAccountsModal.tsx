@@ -32,6 +32,14 @@ type Step = "select" | "mapping" | "accounts" | "transactions";
 
 type CsvRow = Record<string, unknown>;
 
+type DemoDatasetId = "tiny" | "medium" | "large";
+
+const demoDatasetOptions: Array<{ id: DemoDatasetId; label: string; url: string }> = [
+  { id: "tiny", label: "Tiny (Showcase)", url: "/demo/demo-tiny.csv" },
+  { id: "medium", label: "Medium (Showcase)", url: "/demo/demo-medium.csv" },
+  { id: "large", label: "Large (History export)", url: "/demo/demo-large.csv" },
+];
+
 function normalizeHeader(header: string | undefined): string {
   const h = (header ?? '').trim();
   return h.replace(/^\uFEFF/, '');
@@ -84,6 +92,9 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [ofxFile, setOfxFile] = useState<File | null>(null);
   const [step, setStep] = useState<Step>("select");
+
+  const [demoDataset, setDemoDataset] = useState<DemoDatasetId>("tiny");
+  const [demoLoadBusy, setDemoLoadBusy] = useState(false);
   const [pendingMappings, setPendingMappings] = useState<string[]>([]);
   const [pendingData, setPendingData] = useState<CsvRow[]>([]); // original parsed rows awaiting mapping
   const [foundAccounts, setFoundAccounts] = useState<string[]>([]);
@@ -273,6 +284,97 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     }
   };
 
+  const handleLoadDemoDataset = useCallback(async () => {
+    if (demoLoadBusy) return;
+
+    const selected = demoDatasetOptions.find((o) => o.id === demoDataset) ?? demoDatasetOptions[0];
+    if (!selected) return;
+
+    setDemoLoadBusy(true);
+
+    setParsing(true);
+    setParseRows(0);
+    setParseBytes(null);
+    setParseFinished(false);
+    setParseAborted(false);
+    parseAbortedRef.current = false;
+    csvParserRef.current = null;
+
+    try {
+      const res = await fetch(selected.url, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(`Failed to load demo CSV (${res.status})`);
+      }
+
+      const csvText = await res.text();
+      const approxBytes = (() => {
+        try {
+          return new Blob([csvText]).size;
+        } catch {
+          return csvText.length;
+        }
+      })();
+
+      const collected: CsvRow[] = [];
+      let rowsCount = 0;
+
+      // Note: For demo datasets, prefer the simple synchronous string-parse.
+      // This avoids PapaParse overload/type ambiguity around worker/chunk configs.
+      const results = Papa.parse<CsvRow>(csvText, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: normalizeHeader,
+        worker: false,
+      });
+
+      setParseBytes(approxBytes);
+
+      const data = Array.isArray(results.data) ? results.data : collected;
+      rowsCount = data.length;
+      setParseRows(rowsCount);
+
+      setParseFinished(true);
+      setParsing(false);
+      if (parseAbortedRef.current) return;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        fireToast("warning", "No rows found", "The demo CSV appears to be empty.");
+        return;
+      }
+
+      const accountNumbers = new Set(
+        data
+          .map((row) => {
+            const v = row?.AccountNumber ?? row?.accountNumber;
+            const s = typeof v === "string" ? v : String(v ?? "");
+            return s.trim();
+          })
+          .filter(Boolean)
+      );
+
+      const accountsList = Array.from(accountNumbers);
+      setFoundAccounts(accountsList);
+      setPendingData(data);
+
+      const unmapped = accountsList.filter((num) => !accountMappingsRef.current?.[num]);
+      if (unmapped.length > 0) {
+        setPendingMappings(unmapped);
+        setStep("mapping");
+        return;
+      }
+
+      createOrUpdateAccounts(accountsList);
+      setStep("accounts");
+    } catch (err) {
+      setParsing(false);
+      setParseFinished(true);
+      const msg = typeof err === "object" && err !== null && "message" in err ? String((err as { message: unknown }).message) : "Failed to load the demo CSV.";
+      fireToast("error", "Demo import failed", msg);
+    } finally {
+      setDemoLoadBusy(false);
+    }
+  }, [demoDataset, demoLoadBusy]);
+
   const abortCsvParse = () => {
     parseAbortedRef.current = true;
     setParseAborted(true);
@@ -461,9 +563,9 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
     }
   }, [autoApplyExplicitDirectives, metricsAccount, txStrongKeyOverridesByKey]);
 
-  useEffect(() => {
-    importCsvDataRef.current = importCsvData;
-  }, [importCsvData]);
+  // Keep the latest callback available synchronously so effects (like the
+  // auto re-run on toggle change) don't invoke a stale closure.
+  importCsvDataRef.current = importCsvData;
 
   const applyAllPlans = () => {
     if (!ingestionResults.length) return;
@@ -601,29 +703,44 @@ export default function SyncAccountsModal({ isOpen, onClose }: SyncAccountsModal
                 </Text>
                 {isDemo && (
                   <>
-                    <Button size="sm" variant="outline" onClick={() => {
-                      // 1) synthesize rows in-memory
-                      const sample = [
-                        { AccountNumber:'1234', AccountType:'Checking', 'Posted Date':'2025-08-03', Description:'Woodmans Grocery', Category:'groceries', Amount:'-89.12' },
-                        { AccountNumber:'1234', AccountType:'Checking', 'Posted Date':'2025-08-05', Description:'Direct Deposit',   Category:'income',    Amount:'1200.00' },
-                        { AccountNumber:'1234', AccountType:'Checking', 'Posted Date':'2025-08-09', Description:'Web Branch:TFR TO SV 457397801', Category:'transfer', Amount:'-100.00' },
-                      ];
-                      // 2) use current mapping state; if unmapped, jump to mapping step
-                      const accountNumbers = [...new Set(sample.map(r => r.AccountNumber?.trim()).filter(Boolean))];
-                      const mappings = accountMappingsRef.current;
-                      const unmapped = accountNumbers.filter(n => !mappings[n]);
-                      setFoundAccounts(accountNumbers);
-                      setPendingData(sample);
-                      if (unmapped.length) {
-                        setPendingMappings(unmapped);
-                        setStep("mapping");
-                      } else {
-                        createOrUpdateAccounts(accountNumbers);
-                        setStep('accounts');
-                      }
-                    }}>
-                      Load Sample CSV (Demo)
-                    </Button>
+                    <Stack gap={2}>
+                      <Text fontSize="sm" color="fg.muted">
+                        Demo import: choose a dataset and load it.
+                      </Text>
+
+                      <RadioGroup.Root
+                        value={demoDataset}
+                        onValueChange={(details) => {
+                          const v = details.value as DemoDatasetId;
+                          if (v === "tiny" || v === "medium" || v === "large") {
+                            setDemoDataset(v);
+                          }
+                        }}
+                      >
+                        <HStack gap={4} wrap="wrap">
+                          {demoDatasetOptions.map((opt) => (
+                            <RadioGroup.Item key={opt.id} value={opt.id}>
+                              <RadioGroup.ItemHiddenInput />
+                              <RadioGroup.ItemControl>
+                                <RadioGroup.ItemIndicator />
+                              </RadioGroup.ItemControl>
+                              <RadioGroup.ItemText>{opt.label}</RadioGroup.ItemText>
+                            </RadioGroup.Item>
+                          ))}
+                        </HStack>
+                      </RadioGroup.Root>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          void handleLoadDemoDataset();
+                        }}
+                        disabled={demoLoadBusy}
+                      >
+                        Load Demo CSV
+                      </Button>
+                    </Stack>
                     <Text fontSize="sm" color="fg.muted" alignContent={'center'}>-- OR --</Text>
                   </>
                 )}

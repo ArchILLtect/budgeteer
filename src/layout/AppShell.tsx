@@ -25,6 +25,7 @@ import { waitForIdleAndPaint } from "../utils/appUtils";
 import { FullPageLoading } from "./FullPageLoading";
 import { useRouteLoadingStore } from "../store/routeLoadingStore";
 import { recordRouteLoadComplete } from "../services/perfLogger";
+import { useDemoMode } from "../hooks/useDemoMode";
 
 type AppShellProps = {
   user?: AuthUserLike | null;
@@ -55,6 +56,15 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
   const showIngestionBenchmark = useBudgetStore((s) => s.showIngestionBenchmark);
   const lastIngestionBenchmarkMetrics = useBudgetStore((s) => s.lastIngestionBenchmarkMetrics);
   const lastIngestionBenchmarkSessionId = useBudgetStore((s) => s.lastIngestionBenchmarkSessionId);
+
+  const setIsDemoUser = useBudgetStore((s) => s.setIsDemoUser);
+  const { isDemo } = useDemoMode(signedIn);
+
+  // Bridge: demo UI affordances (Import modal, etc) rely on a store flag.
+  // Keep it derived from the authoritative demo-mode sources.
+  useEffect(() => {
+    setIsDemoUser(Boolean(signedIn && isDemo));
+  }, [isDemo, setIsDemoUser, signedIn]);
 
   const isRouteLoading = useRouteLoadingStore((s) => s.isRouteLoading);
   const routeLoadingDestination = useRouteLoadingStore((s) => s.destination);

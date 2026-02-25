@@ -435,13 +435,10 @@ export const createPlannerSlice: SliceCreator<PlannerSlice> = (set, get) => {
         const updatedPlans = { ...state.monthlyPlans };
         delete updatedPlans[month];
 
-        const updatedActuals = { ...state.monthlyActuals };
-        delete updatedActuals[month];
-
-        return {
-          monthlyPlans: updatedPlans,
-          monthlyActuals: updatedActuals,
-        };
+        // Plans are optional baselines; actuals are the source of truth for what
+        // happened (manual actual inputs + applied-to-budget derived values).
+        // Removing a plan should never delete or reset actuals.
+        return { monthlyPlans: updatedPlans };
       }),
 
     updateMonthlyExpenseActuals: (month, id, newData) =>

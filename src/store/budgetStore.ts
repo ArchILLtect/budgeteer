@@ -56,6 +56,7 @@ export const useBudgetStore = create<BudgetStoreState>()(
                 delete clone.progressCount;
                 delete clone.progressTotal;
                 delete clone.loadingHeader;
+                delete clone.isDemoUser;
                 delete clone.showIngestionBenchmark; // dev-only toggle not persisted
                 delete clone.lastIngestionBenchmarkMetrics;
                 delete clone.lastIngestionBenchmarkSessionId;

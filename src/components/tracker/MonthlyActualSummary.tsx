@@ -1,6 +1,15 @@
-import { Box, Text, Heading, Stat, Stack,
-  StatGroup, Progress, Flex, Badge,
-  useMediaQuery, 
+import {
+  Box,
+  Text,
+  Heading,
+  Stat,
+  Stack,
+  StatGroup,
+  Progress,
+  Flex,
+  Badge,
+  SimpleGrid,
+  useMediaQuery,
 } from '@chakra-ui/react';
 import { useBudgetStore } from '../../store/budgetStore';
 import ExpenseTracker from '../planner/ExpenseTracker';
@@ -61,6 +70,25 @@ export default function MonthlyActualSummary() {
 
   const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
+  const monthLabel = formatUtcMonthYear(selectedMonth, { month: 'long' });
+
+  const plannedIncome = Number(plan?.netIncome ?? 0) || 0;
+  const plannedExpenses = Number(plan?.totalExpenses ?? 0) || 0;
+  const plannedSavings = Number(plan?.totalSavings ?? 0) || 0;
+  const plannedLeftover =
+    Number(plan?.estLeftover ?? (plannedIncome - plannedExpenses - plannedSavings)) || 0;
+
+  const deltaIncome = netIncome - plannedIncome;
+  const deltaSpending = plannedExpenses - totalExpenses; // positive = under plan
+  const deltaSavings = savings - plannedSavings;
+  const deltaLeftover = leftover - plannedLeftover;
+
+  const absMoney = (value: number) => formatCurrency(Math.abs(Number(value) || 0));
+  const labelDelta = (value: number, positiveLabel: string, negativeLabel: string) => {
+    if (!Number.isFinite(value) || value === 0) return 'On plan';
+    return value > 0 ? `${absMoney(value)} ${positiveLabel}` : `${absMoney(value)} ${negativeLabel}`;
+  };
+
   return (
     <Box p={4} borderBottomRadius="lg" boxShadow="md" bg="bg" borderWidth={2}>
       {actual &&
@@ -99,7 +127,7 @@ export default function MonthlyActualSummary() {
         </Box>
       }
 
-      <Heading size="md" my={3}>{formatUtcMonthYear(selectedMonth, { month: 'long' })} Summary</Heading>
+      <Heading size="md" my={3}>{monthLabel} Summary</Heading>
       <Box px={4} py={3} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
         <StatGroup>
           <Stat.Root textAlign={'center'}>
@@ -119,6 +147,95 @@ export default function MonthlyActualSummary() {
             <Stat.ValueText color={leftover >= 0 ? 'green.500' : 'red.500'} fontSize={isPortraitWidth ? "md" : "2xl"}>{formatCurrency(leftover)}</Stat.ValueText>
           </Stat.Root>
         </StatGroup>
+      </Box>
+
+      <Box mt={4} px={4} py={4} borderWidth={1} borderColor="border" borderRadius="md" bg="bg.panel">
+        <Flex justifyContent="space-between" alignItems="center" gap={3} mb={1} wrap="wrap">
+          <Heading size="sm">Plan vs Actual Scorecard</Heading>
+          {plan ? (
+            <Badge colorPalette={deltaLeftover >= 0 ? 'green' : 'red'}>
+              {deltaLeftover >= 0 ? 'Ahead of plan' : 'Behind plan'}
+            </Badge>
+          ) : (
+            <Badge colorPalette="gray">No plan set</Badge>
+          )}
+        </Flex>
+
+        {plan ? (
+          <Text fontSize="sm" color="fg.muted">
+            This compares your saved month plan{plan?.scenarioName ? ` (from scenario “${plan.scenarioName}”)` : ''} to your
+            current actuals for {monthLabel}. Use it to spot where you drifted and what you did well.
+          </Text>
+        ) : (
+          <Text fontSize="sm" color="fg.muted">
+            Set a plan for this month (from a scenario) to create a baseline. Then Tracker can show how far you’re over/under
+            plan for income, spending, savings, and leftover.
+          </Text>
+        )}
+
+        {plan && (
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap={3} mt={4}>
+            <Box borderWidth={1} borderColor="border" borderRadius="md" p={3} bg="bg">
+              <Flex justifyContent="space-between" alignItems="center" gap={2} mb={1}>
+                <Text fontWeight="semibold">Income</Text>
+                <Badge colorPalette={deltaIncome >= 0 ? 'green' : 'red'}>
+                  {deltaIncome === 0 ? 'On plan' : deltaIncome > 0 ? 'Above plan' : 'Below plan'}
+                </Badge>
+              </Flex>
+              <Text fontSize="xs" color="fg.muted">
+                Planned {formatCurrency(plannedIncome)} • Actual {formatCurrency(netIncome)}
+              </Text>
+              <Text mt={1} fontSize="sm" color={deltaIncome >= 0 ? 'green.500' : 'red.500'}>
+                {labelDelta(deltaIncome, 'above plan', 'below plan')}
+              </Text>
+            </Box>
+
+            <Box borderWidth={1} borderColor="border" borderRadius="md" p={3} bg="bg">
+              <Flex justifyContent="space-between" alignItems="center" gap={2} mb={1}>
+                <Text fontWeight="semibold">Spending</Text>
+                <Badge colorPalette={deltaSpending >= 0 ? 'green' : 'red'}>
+                  {deltaSpending === 0 ? 'On plan' : deltaSpending > 0 ? 'Under plan' : 'Over plan'}
+                </Badge>
+              </Flex>
+              <Text fontSize="xs" color="fg.muted">
+                Planned {formatCurrency(plannedExpenses)} • Actual {formatCurrency(totalExpenses)}
+              </Text>
+              <Text mt={1} fontSize="sm" color={deltaSpending >= 0 ? 'green.500' : 'red.500'}>
+                {labelDelta(deltaSpending, 'under plan', 'over plan')}
+              </Text>
+            </Box>
+
+            <Box borderWidth={1} borderColor="border" borderRadius="md" p={3} bg="bg">
+              <Flex justifyContent="space-between" alignItems="center" gap={2} mb={1}>
+                <Text fontWeight="semibold">Savings</Text>
+                <Badge colorPalette={deltaSavings >= 0 ? 'green' : 'red'}>
+                  {deltaSavings === 0 ? 'On goal' : deltaSavings > 0 ? 'Ahead' : 'Behind'}
+                </Badge>
+              </Flex>
+              <Text fontSize="xs" color="fg.muted">
+                Planned {formatCurrency(plannedSavings)} • Actual {formatCurrency(savings)}
+              </Text>
+              <Text mt={1} fontSize="sm" color={deltaSavings >= 0 ? 'green.500' : 'red.500'}>
+                {labelDelta(deltaSavings, 'ahead of goal', 'behind goal')}
+              </Text>
+            </Box>
+
+            <Box borderWidth={1} borderColor="border" borderRadius="md" p={3} bg="bg">
+              <Flex justifyContent="space-between" alignItems="center" gap={2} mb={1}>
+                <Text fontWeight="semibold">Leftover</Text>
+                <Badge colorPalette={deltaLeftover >= 0 ? 'green' : 'red'}>
+                  {deltaLeftover === 0 ? 'On plan' : deltaLeftover > 0 ? 'Ahead' : 'Behind'}
+                </Badge>
+              </Flex>
+              <Text fontSize="xs" color="fg.muted">
+                Planned {formatCurrency(plannedLeftover)} • Actual {formatCurrency(leftover)}
+              </Text>
+              <Text mt={1} fontSize="sm" color={deltaLeftover >= 0 ? 'green.500' : 'red.500'}>
+                {labelDelta(deltaLeftover, 'ahead of plan', 'behind plan')}
+              </Text>
+            </Box>
+          </SimpleGrid>
+        )}
       </Box>
 
       {(plan?.totalSavings ?? 0) > 0 ? (
