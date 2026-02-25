@@ -4,6 +4,9 @@ import BudgetTracker from '../components/tracker/BudgetTracker';
 const preloadMonthlyActualSummary = () => import('../components/tracker/MonthlyActualSummary');
 import SavingsGoalsTracker from '../components/tracker/SavingsGoalsTracker';
 import { usePerfMilestone } from "../hooks/usePerfMilestone";
+import { lazy, Suspense } from 'react';
+
+const ConfirmModal = lazy(() => import('../components/ui/ConfirmModal'));
 
 export default function BudgetTrackerPage() {
 
@@ -39,6 +42,10 @@ export default function BudgetTrackerPage() {
         <BudgetTracker />
 
         <SavingsGoalsTracker />
+
+        <Suspense fallback={null}>
+          <ConfirmModal />
+        </Suspense>
       </Box>
     </Box>
   );

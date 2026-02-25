@@ -16,6 +16,7 @@ export default function TrackerHeader() {
     const setSelectedMonth = useBudgetStore((s) => s.setSelectedMonth);
     const monthlyPlans = useBudgetStore((s) => s.monthlyPlans);
     const removeMonthlyPlan = useBudgetStore((s) => s.removeMonthlyPlan);
+    const openConfirmModal = useBudgetStore((s) => s.openConfirmModal);
     const accounts = useBudgetStore((s) => s.accounts);
     const { open, onOpen, onClose } = useDisclosure();
     const [planTargetMonths, setPlanTargetMonths] = useState<string[] | undefined>(undefined);
@@ -46,12 +47,20 @@ export default function TrackerHeader() {
     };
 
     const handleRemove = () => {
-        const didConfirm = window.confirm(
-            `Are you sure you want to remove the plan for ${formatted}?`
-        );
-        if (didConfirm) {
-            removeMonthlyPlan(selectedMonth);
-        }
+        openConfirmModal({
+            title: 'Remove plan?',
+            message:
+                `This will remove the plan baseline for ${formatted}.\n\n` +
+                `Your actuals (including anything added by Apply-to-Budget and any manual actual inputs) will NOT be deleted or changed.\n\n` +
+                `Remove plan now?`,
+            acceptLabel: 'Remove plan',
+            cancelLabel: 'Cancel',
+            acceptColorPalette: 'red',
+            isDanger: false,
+            initialFocus: 'cancel',
+            enterKeyAction: 'cancel',
+            onAccept: () => removeMonthlyPlan(selectedMonth),
+        });
     };
 
     const handleTempButton = () => {
