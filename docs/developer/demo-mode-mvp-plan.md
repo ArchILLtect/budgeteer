@@ -6,15 +6,18 @@ Last updated: 2026-02-24
 
 Deliver a **low-friction, end-to-end demo** that runs through the **real import pipeline** and then supports the normal staging/apply/undo flow.
 
-Key requirement: demo mode must provide a special option in **Import Account Data** that imports a **specific embedded CSV file/string** (canonical “History export” format), and then proceeds as normal.
+Key requirement: demo mode must provide a special option in **Import Account Data** that imports a **specific CSV file/string** (canonical “History export” format), and then proceeds as normal.
+
+Also required: users must be able to choose which demo dataset size to import (**Tiny / Medium / Large**).
 
 ## Guiding decisions
 
-### 1) “Embedded CSV”, not “in-memory rows”
+### 1) “Demo CSV asset”, not “in-memory rows”
 
 The demo import must pass a **CSV text/string** through the same parsing + ingestion pipeline as real imports.
 
-- ✅ OK: import a `.csv` asset as a raw string (e.g. `?raw`) and feed it into `analyzeImport({ fileText })`.
+- ✅ OK: fetch a real `.csv` file from app assets (e.g. `public/demo/*.csv`) and parse it with PapaParse.
+- ✅ OK: import a `.csv` asset as a raw string (e.g. `?raw`) and feed it into the normal flow.
 - ✅ OK: store a canonical CSV string constant in code.
 - ❌ Not OK: synthesize a `CsvRow[]` and skip parsing.
 
@@ -50,9 +53,10 @@ Rationale: the primary demo expectation is “get me back to the starting demo e
 
 Add a demo-only action (visible when demo mode is active):
 
+- **Picker:** Tiny / Medium / Large
 - **Button:** “Load Demo CSV”
 - Behavior:
-  1) Loads a fixed embedded canonical History-export CSV text.
+  1) Loads the selected dataset’s canonical History-export CSV text (Tiny/Medium/Large).
   2) Runs the exact normal parse + ingest flow (same code paths as file upload).
   3) Produces the same outputs as a real import: staged txns, import history entry, etc.
 
@@ -83,12 +87,11 @@ MVP: mark at least transactions and import history / manifests as demo-created.
 
 ### A. Demo CSV asset + import entrypoint
 
-- [ ] Create a canonical demo CSV asset under `src/` (so it can be imported as raw text)
-  - Example: `src/demo/demo-history.csv`
+- [ ] Provide three canonical demo CSV datasets: Tiny / Medium / Large
   - Must match the canonical “History export” header style used in `/samples`.
-- [ ] Add a loader module that returns CSV text
-  - Example: `src/demo/demoCsv.ts` with `import demoCsv from "./demo-history.csv?raw"`
-- [ ] Update the Import UI demo button to use the embedded CSV text
+  - Prefer runtime assets under `public/demo/` to avoid bundling large CSV strings into JS.
+    - Example: `public/demo/demo-tiny.csv`, `public/demo/demo-medium.csv`, `public/demo/demo-large.csv`
+- [ ] Update the Import UI demo action to load the selected CSV text and run the normal flow
   - Replace any in-memory `CsvRow[]` generation.
   - Run the same pipeline as normal imports:
     - parse (PapaParse)
