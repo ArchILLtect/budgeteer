@@ -15,6 +15,7 @@ For process & quality checklist see: `../CONTRIBUTING.md` (contribution workflow
 -   **Ingestion Refactor Plan / Status:** [ingestion-refactor-plan](./legacy/ingestion-refactor-plan.md)
 -   **Category Rules & Savings Queue Guide:** [category-rules-and-savings-queue](./developer/category-rules-and-savings-queue.md)
 -   **Contribution Guide:** [CONTRIBUTING](../CONTRIBUTING.md)
+-   **MVP Achieved Plan (Checklist):** [mvp-achieved-plan](./developer/mvp-achieved-plan.md)
 
 ## Project Docs
 
