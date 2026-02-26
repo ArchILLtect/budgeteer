@@ -1,5 +1,5 @@
 import { Button, Heading, Box, useDisclosure, HStack, Text, VStack, useMediaQuery } from '@chakra-ui/react';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from "../store/budgetStore";
 import AccountCard from '../components/accounts/AccountCard';
@@ -20,6 +20,17 @@ export default function AccountsTracker() {
   const accounts = useBudgetStore((s) => s.accounts);
   const syncModal = useDisclosure();
   const isDev = import.meta.env.DEV;
+
+  // Render the page shell immediately, then mount the accounts list on the next frame.
+  // This avoids the "did my click take?" feeling when rendering is heavy.
+  const [showAccountsList, setShowAccountsList] = useState(false);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setShowAccountsList(true));
+    return () => window.cancelAnimationFrame(id);
+  }, []);
+
+  const accountEntries = useMemo(() => Object.entries(accounts), [accounts]);
+  const hasAccounts = accountEntries.length > 0;
 
   usePerfMilestone("accounts:mounted");
 
@@ -48,6 +59,9 @@ export default function AccountsTracker() {
           <Text fontSize="sm" color="fg.muted" mx={3}>
             Import a CSV in two steps: set up accounts, then import transactions.
           </Text>
+          <Text fontSize="sm" color="fg.muted" mx={3}>
+            This page may take a bit to load depending on the number of accounts and transactions imported.
+          </Text>
         </VStack>
 
         <HStack gap={4}>
@@ -69,17 +83,28 @@ export default function AccountsTracker() {
         <SyncAccountsModal isOpen={syncModal.open} onClose={syncModal.onClose} />
       </Suspense>
 
-      {Object.entries(accounts).length > 0 ? (
+      {hasAccounts ? (
         <Box>
           <Heading size="md" mb={2} mx={4}>
             Synced accounts
           </Heading>
 
-          {Object.entries(accounts).map(([accountNumber, acct]) => (
-            <Box key={accountNumber} borderWidth="1px" borderRadius="lg" p={4} mb={6} mx={4} bg={"bg.panel"}>
-              <AccountCard acct={acct} acctNumber={accountNumber} />
+          {!showAccountsList ? (
+            <Box mx={4} borderWidth="1px" borderRadius="lg" p={4} bg={"bg.panel"}>
+              <HStack gap={3} align="center">
+                <InlineSpinner />
+                <Text fontSize="sm" color="fg.muted">
+                  Loading accounts…
+                </Text>
+              </HStack>
             </Box>
-          ))}
+          ) : (
+            accountEntries.map(([accountNumber, acct]) => (
+              <Box key={accountNumber} borderWidth="1px" borderRadius="lg" p={4} mb={6} mx={4} bg={"bg.panel"}>
+                <AccountCard acct={acct} acctNumber={accountNumber} />
+              </Box>
+            ))
+          )}
         </Box>
       ) : (
         <Box mx={4} borderWidth="1px" borderRadius="lg" p={4} bg={"bg.panel"}>

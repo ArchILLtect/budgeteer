@@ -84,6 +84,86 @@ function normalizeOptionalText(value: unknown): string | null | undefined {
 }
 
 export default function AccountCard({ acct, acctNumber }: AccountCardProps) {
+  const resolvedAccountNumber = acct.accountNumber || acctNumber;
+  const accountLabel = acct.label || (resolvedAccountNumber ? maskAccountNumber(resolvedAccountNumber) : "Account");
+  const institution = acct.institution || "Institution Unknown";
+  const txCount = Array.isArray((acct as { transactions?: unknown }).transactions)
+    ? ((acct as { transactions: unknown[] }).transactions.length ?? 0)
+    : 0;
+
+  const [expanded, setExpanded] = useState(false);
+  const [expanding, setExpanding] = useState(false);
+
+  const toggleExpanded = () => {
+    if (expanded) {
+      setExpanded(false);
+      setExpanding(false);
+      return;
+    }
+
+    // Ensure the per-account loading indicator paints before mounting heavy details.
+    setExpanding(true);
+    window.requestAnimationFrame(() => {
+      setExpanded(true);
+      setExpanding(false);
+    });
+  };
+
+  return (
+    <Box>
+      <Flex align="center" justify="space-between" gap={3} flexWrap="wrap">
+        <VStack align="start" gap={0} minW={0} flex="1">
+          <Text fontWeight={700} lineClamp={1} title={accountLabel}>
+            {accountLabel}
+          </Text>
+          <Text fontSize="sm" color="fg.muted" lineClamp={1} title={institution}>
+            {institution}
+          </Text>
+        </VStack>
+
+        <HStack gap={2} flexShrink={0}>
+          <Tag.Root size="sm" colorPalette="gray">
+            {txCount} tx
+          </Tag.Root>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={toggleExpanded}
+            aria-expanded={expanded}
+          >
+            <HStack gap={2}>
+              <Text>{expanded ? "Hide" : "View"}</Text>
+              <Box
+                as={FiChevronDown}
+                transform={expanded ? "rotate(180deg)" : "rotate(0deg)"}
+                transition="transform 150ms ease"
+              />
+            </HStack>
+          </Button>
+        </HStack>
+      </Flex>
+
+      {expanding ? (
+        <Box mt={3}>
+          <HStack gap={3} align="center">
+            <InlineSpinner />
+            <Text fontSize="sm" color="fg.muted">
+              Loading account details…
+            </Text>
+          </HStack>
+        </Box>
+      ) : null}
+
+      {expanded ? (
+        <Box mt={4}>
+          <AccountCardDetails acct={acct} acctNumber={acctNumber} />
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
+function AccountCardDetails({ acct, acctNumber }: AccountCardProps) {
   const ORIGIN_COLOR_MAP = useBudgetStore((s) => (s as BudgetStoreAccountState).ORIGIN_COLOR_MAP);
   const accounts = useBudgetStore((s) => (s as BudgetStoreAccountState).accounts);
   const importHistory = useBudgetStore((s) => (s as BudgetStoreAccountState).importHistory);
