@@ -82,7 +82,9 @@ export default function TrackerHeader() {
                       <TiArrowLeftThick />
                     </IconButton>
 
-                    <Text fontSize="lg" fontWeight="bold" color={{ _dark: "teal.100", _light: "teal.700" }} mx={4} >{formatted}</Text>
+                    <Box display="flex" alignItems="center" justifyContent="center" minWidth="170px">
+                      <Text fontSize="lg" fontWeight="bold" color={{ _dark: "teal.100", _light: "teal.700" }} mx={4} >{formatted}</Text>
+                    </Box>
 
                     <IconButton
                         size="sm"
