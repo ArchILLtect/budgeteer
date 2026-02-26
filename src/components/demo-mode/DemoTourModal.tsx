@@ -45,12 +45,12 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
       title="Demo quick tour"
       body={
         <VStack align="start" gap={3}>
-          <Text color="gray.700">
+          <Text color="fg">
             A short walkthrough you can use for a showcase. Budgeteer is planning-first: make a plan, import
             transactions safely, then track plan vs actual.
           </Text>
 
-          <Box bg="orange.50" borderWidth="1px" borderColor="orange.200" rounded="md" p={3} w="100%">
+          <Box bg="orange.50" borderWidth="1px" borderColor="orange.200" rounded="md" p={3} w="100%" gap={2} display="flex" flexDirection="column">
             <Text fontSize="sm" color="orange.900" fontWeight={700}>
               Demo account note
             </Text>
@@ -58,81 +58,85 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
               Demo data is meant for temporary evaluation. Use Settings → Demo Data to reset the demo experience back
               to square one anytime.
             </Text>
+            <Text fontSize="sm" color="orange.900">
+              Demo accounts are throw-away: when you’re done, sign out and create a regular
+              account for real use.
+            </Text>
           </Box>
 
-          <Box bg="gray.50" borderWidth="1px" borderColor="gray.200" rounded="md" p={3} w="100%">
+          <Box bg="bg.panel" borderWidth="1px" borderColor="border" rounded="md" p={3} w="100%">
             <VStack align="start" gap={2}>
               <Text fontWeight="700">Recommended steps</Text>
 
               <VStack align="start" gap={3} w="100%">
                 <Box w="100%">
-                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                  <Text fontSize="sm" color="fg" fontWeight={700}>
                     1) Planner = build a month plan
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
+                  <Text fontSize="sm" color="fg.muted">
                     Start in Planner to model income, expenses, and savings using scenarios. The goal is to create a
                     baseline plan for the selected month.
                   </Text>
-                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/planner")}>
+                  <Button mt={2} size="sm" colorPalette="blue" variant="outline" onClick={() => navigate("/planner")}>
                     Go to Planner
                   </Button>
                 </Box>
 
                 <Box w="100%">
-                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                  <Text fontSize="sm" color="fg" fontWeight={700}>
                     2) Accounts + Imports = ingest safely
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
+                  <Text fontSize="sm" color="fg.muted">
                     Import a CSV and review the staged results. Budgeteer is designed to be idempotent: re-importing the
                     same file should not create duplicates.
                   </Text>
                   <HStack mt={2} gap={2} flexWrap="wrap">
-                    <Button size="sm" variant="outline" onClick={() => navigate("/accounts")}>
+                    <Button size="sm" colorPalette="blue" variant="outline" onClick={() => navigate("/accounts")}>
                       Go to Accounts
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => navigate("/imports")}>
+                    <Button size="sm" colorPalette="blue" variant="outline" onClick={() => navigate("/imports")}>
                       Go to Import History
                     </Button>
                   </HStack>
                 </Box>
 
                 <Box w="100%">
-                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                  <Text fontSize="sm" color="fg" fontWeight={700}>
                     3) Apply/Undo = safe experimentation
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
+                  <Text fontSize="sm" color="fg.muted">
                     After importing, apply a session to push staged transactions into monthly actuals. If you make a
                     mistake, Undo is time-limited but available (and session-scoped).
                   </Text>
-                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/imports")}>
+                  <Button mt={2} size="sm" colorPalette="blue" variant="outline" onClick={() => navigate("/imports")}>
                     Go to Import History
                   </Button>
                 </Box>
 
                 <Box w="100%">
-                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                  <Text fontSize="sm" color="fg" fontWeight={700}>
                     4) Tracker = planned vs actual
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
+                  <Text fontSize="sm" color="fg.muted">
                     Open Tracker for the month you planned/imported. The monthly summary is designed to make it obvious
                     whether you’re ahead or behind plan.
                   </Text>
-                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/tracker")}>
+                  <Button mt={2} size="sm" colorPalette="blue" variant="outline" onClick={() => navigate("/tracker")}>
                     Go to Tracker
                   </Button>
                 </Box>
 
                 <Box w="100%">
-                  <Text fontSize="sm" color="gray.800" fontWeight={700}>
+                  <Text fontSize="sm" color="fg" fontWeight={700}>
                     5) Settings = demo reset tools
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
+                  <Text fontSize="sm" color="fg.muted">
                     Settings includes import policy knobs and demo tools.
                   </Text>
-                  <Text fontSize="sm" color="gray.700">
+                  <Text fontSize="sm" color="fg.muted">
                     If you want to start the demo over, use Reset demo data to return to the initial seeded dataset.
                   </Text>
-                  <Button mt={2} size="sm" variant="outline" onClick={() => navigate("/settings")}>
+                  <Button mt={2} size="sm" colorPalette="blue" variant="outline" onClick={() => navigate("/settings")}>
                     Go to Settings
                   </Button>
                 </Box>
@@ -154,7 +158,7 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
               </Checkbox.Label>
             </Checkbox.Root>
 
-            <Text fontSize="xs" color="gray.600">
+            <Text fontSize="xs" color="fg">
               You can re-enable this in Settings.
             </Text>
           </HStack>

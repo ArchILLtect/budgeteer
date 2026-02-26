@@ -168,6 +168,7 @@ export const DialogModal = ({
             border={isDanger ? "5px solid" : "unset"}
             borderColor={isDanger ? "red.500" : "unset" }
             maxWidth={modalMaxWidth ?? "undefined"}
+            bg="bg.subtle"
           >
             <Dialog.Header paddingX={4} paddingTop={4} paddingBottom={2}>
               <Dialog.Title>{title}</Dialog.Title>
