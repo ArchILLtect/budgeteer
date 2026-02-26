@@ -215,10 +215,11 @@ export default function SavingsReviewModal() {
                 <Checkbox.Root
                   checked={queue.length > 0 && selectedCount === queue.length}
                   onCheckedChange={(details) => setAllSelected(details.checked === true)}
+                  colorPalette="blue"
                 >
                   <Checkbox.HiddenInput />
-                  <Checkbox.Control />
-                  <Checkbox.Label>
+                  <Checkbox.Control borderColor="fg" />
+                  <Checkbox.Label color="fg">
                     Select all ({selectedCount}/{queue.length})
                   </Checkbox.Label>
                 </Checkbox.Root>
@@ -280,7 +281,7 @@ export default function SavingsReviewModal() {
                 </Flex>
               </Box>
               ) : null}
-                                <Button
+                  <Button
                     size="sm"
                     colorPalette="blue"
                     variant="outline"
@@ -305,10 +306,11 @@ export default function SavingsReviewModal() {
                 <Checkbox.Root
                   checked={selectedEntryIds[entry.id] === true}
                   onCheckedChange={(details) => toggleSelected(entry.id, details.checked === true)}
+                  colorPalette="blue"
                 >
-                  <Checkbox.HiddenInput />
-                  <Checkbox.Control />
-                  <Checkbox.Label>Select</Checkbox.Label>
+                  <Checkbox.HiddenInput/>
+                  <Checkbox.Control borderColor="fg" />
+                  <Checkbox.Label color="fg">Select</Checkbox.Label>
                 </Checkbox.Root>
 
                 {isPortraitWidth ? (
