@@ -65,6 +65,14 @@ export function useAuthUser(): {
     // even before auth resolves on the next page load.
     setUserStorageScopeKey(authKey);
 
+    const hasPersistedForCurrentScope = (persistName: string): boolean => {
+      try {
+        return userScopedGetItem(`zustand:${persistName}`) != null;
+      } catch {
+        return false;
+      }
+    };
+
     // If we're switching to a *new* signed-in user who has never persisted a given store yet,
     // Zustand's `rehydrate()` can merge `null` into the existing in-memory state, leaving
     // the previous user's data visible until a full page refresh.
@@ -90,13 +98,22 @@ export function useAuthUser(): {
     //   Doing so can overwrite the newly-selected scope with defaults before rehydrate.
     // - On sign-out, we do reset in-memory state so the UI doesn't retain authed data.
     if (!authKey) {
+      // NOTE:
+      // When signed out, the current scope becomes `anonymous`.
+      // If anonymous has persisted state (e.g. demo mode used without auth), resetting the
+      // store here would immediately overwrite that persisted state with defaults before
+      // we get a chance to rehydrate.
+      const hasAnonymousBudget = hasPersistedForCurrentScope("budgeteer:budgetStore");
+
       // Clear authed state from in-memory stores so signed-out screens (or the next
       // login) can't briefly show previous-user data.
       try {
         // Prefer a full replace with Zustand's initial state.
         // If the runtime store doesn't expose it (unexpected), skip the reset rather than
         // risking a stale/partial hard-coded default.
-        tryResetStoreToInitial(useBudgetStore);
+        if (!hasAnonymousBudget) {
+          tryResetStoreToInitial(useBudgetStore);
+        }
       } catch {
         // ignore
       }
@@ -151,9 +168,8 @@ export function useAuthUser(): {
         setUser(null);
         recordAuthTiming({ name: "auth:refresh", durationMs: performance.now() - startedAt, ok: true, message: "signed-out" });
       } else {
-        // Non-auth errors shouldn't brick the app; treat as signed out but log in DEV.
-        applyScope(null);
-        setUser(null);
+        // Transient/non-auth errors (network hiccups, CPU pressure, etc.) should not
+        // force a scope flip to anonymous. Keep the last known user/scope and log in DEV.
         if (import.meta.env.DEV) {
           console.warn("[auth] failed to resolve current user", err);
         }
