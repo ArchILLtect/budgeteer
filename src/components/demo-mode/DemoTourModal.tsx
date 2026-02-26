@@ -7,7 +7,6 @@ import { DialogModal } from "../ui/DialogModal";
 
 export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
   const navigate = useNavigate();
-  const [dismissedThisSession, setDismissedThisSession] = useState(false);
   const [dontShowAgainChecked, setDontShowAgainChecked] = useState(false);
 
   const { isDemo } = useDemoMode(signedIn);
@@ -29,7 +28,7 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
     return !disabled;
   }, [disabled, isDemo, signedIn]);
 
-  const open = (shouldOffer && !dismissedThisSession) || (shouldOffer && openRequested);
+  const open = shouldOffer && openRequested;
   const setOpen = (next: boolean) => {
     // Only close from the explicit Accept action.
     // Ignore overlay clicks / escape / close triggers.
@@ -177,7 +176,6 @@ export function DemoTourModal({ signedIn }: { signedIn: boolean }) {
           setDisabled(true);
         }
         setOpenRequested(false);
-        setDismissedThisSession(true);
       }}
       onCancel={() => {
         // no-op (modal only closes via Accept)
