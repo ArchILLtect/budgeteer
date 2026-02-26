@@ -22,6 +22,17 @@ export default function AccountsTracker() {
   const isDev = import.meta.env.DEV;
 
   usePerfMilestone("accounts:mounted");
+
+  const handleImportClick = () => {
+    const ok = window.confirm(
+      'DEV only: Clear all imported data?\n\nThis will remove accounts, transactions, and import history for your current user scope.\n\nAccount label/institution mappings will be kept.'
+    );
+    if (!ok) return;
+    clearAllImportData?.();
+    clearAllAccounts?.();
+    resetMonthlyActuals?.();
+    resetSavingsLogs?.();
+  }
   
   return (
     <Box bg="bg.subtle" p={isPortraitWidth ? 0 : 4} minH="100%">
@@ -47,16 +58,7 @@ export default function AccountsTracker() {
             <Button
               colorPalette="red"
               variant="outline"
-              onClick={() => {
-                const ok = window.confirm(
-                  'DEV only: Clear all imported data?\n\nThis will remove accounts, transactions, and import history for your current user scope.\n\nAccount label/institution mappings will be kept.'
-                );
-                if (!ok) return;
-                clearAllImportData?.();
-                clearAllAccounts?.();
-                resetMonthlyActuals?.();
-                resetSavingsLogs?.();
-              }}
+              onClick={handleImportClick}
             >
               DEV: Clear Imported Data
             </Button>
