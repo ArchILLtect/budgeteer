@@ -217,7 +217,7 @@ function buildLargeMonthRows({ year, monthIndex0, count, seed, monthIndexFromSta
       day: 1,
       jitter: 0,
       description: "ACH:VISTA TECH PAYROLL",
-      signedAmount: 3800 + (monthIndexFromStart % 12 === 0 ? 150 : 0),
+      signedAmount: 3800.0,
       category: "Misc. Income",
       note: monthIndexFromStart === 0 ? "budgeteer:rename=Primary Paycheck" : "",
     },
