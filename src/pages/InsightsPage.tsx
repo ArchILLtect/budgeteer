@@ -121,6 +121,29 @@ function clampLabel(value: string, maxChars: number): string {
   return `${s.slice(0, Math.max(0, maxChars - 1))}…`;
 }
 
+type AxisTickProps = {
+  x?: number | string;
+  y?: number | string;
+  payload?: { value?: unknown };
+};
+
+function renderSingleLineCategoryTick({ maxChars, dx = 0 }: { maxChars: number; dx?: number }) {
+  return function CategoryTick(props: AxisTickProps) {
+    const rawX = typeof props.x === "number" ? props.x : Number(props.x);
+    const rawY = typeof props.y === "number" ? props.y : Number(props.y);
+    const x = Number.isFinite(rawX) ? rawX + dx : 0;
+    const y = Number.isFinite(rawY) ? rawY : 0;
+    const raw = props.payload?.value;
+    const label = clampLabel(String(raw ?? ""), maxChars);
+
+    return (
+      <text x={x} y={y} dy={4} textAnchor="end" fill="var(--chakra-colors-fg)" fontSize={11}>
+        {label}
+      </text>
+    );
+  };
+}
+
 export function InsightsPage() {
   const selectedMonth = useBudgetStore((s) => s.selectedMonth);
   const monthlyActuals = useBudgetStore((s) => s.monthlyActuals);
@@ -276,6 +299,18 @@ export function InsightsPage() {
 
   const [isPortraitWidth] = useMediaQuery(["(max-width: 450px)"]);
 
+  const changeChartLabelWidth = isPortraitWidth ? 140 : 220;
+  const changeChartLabelMaxChars = isPortraitWidth ? 18 : 22;
+  const changeChartTick = renderSingleLineCategoryTick({ maxChars: changeChartLabelMaxChars, dx: 4 });
+
+  const tooltipContentStyle: React.CSSProperties = {
+    backgroundColor: "var(--chakra-colors-bg-emphasized)",
+    border: "1px solid var(--chakra-colors-fg)",
+    color: "var(--chakra-colors-fg)",
+  };
+  const tooltipLabelStyle: React.CSSProperties = { color: "var(--chakra-colors-fg)" };
+  const tooltipItemStyle: React.CSSProperties = { color: "var(--chakra-colors-fg)" };
+
   return (
     <Stack gap={6} p={4}>
       <Box>
@@ -374,6 +409,9 @@ export function InsightsPage() {
                 formatter={(value: unknown) =>
                   typeof value === "number" ? formatCurrency(value) : String(value ?? "")
                 }
+                contentStyle={tooltipContentStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
               />
               <Legend verticalAlign="bottom" height={22} wrapperStyle={{ paddingTop: 2 }} />
               <Line
@@ -536,21 +574,23 @@ export function InsightsPage() {
                 <BarChart
                   data={increaseChartData}
                   layout="vertical"
-                  margin={{ top: 10, right: 12, left: 8, bottom: 0 }}
+                  margin={{ top: 10, right: 12, left: 20, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" />
                   <XAxis type="number" tickFormatter={(v) => (typeof v === "number" ? `$${Math.round(v)}` : "")} />
                   <YAxis
                     dataKey="name"
                     type="category"
-                    width={90}
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(v) => clampLabel(String(v ?? ""), 14)}
+                    width={changeChartLabelWidth}
+                    tick={changeChartTick}
                   />
                   <RechartsTooltip
                     formatter={(value: unknown) =>
                       typeof value === "number" ? formatCurrency(value) : String(value ?? "")
                     }
+                    contentStyle={tooltipContentStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipItemStyle}
                   />
                   <Bar dataKey="delta" name="Δ" fill="var(--chakra-colors-orange-500)" />
                 </BarChart>
@@ -602,21 +642,23 @@ export function InsightsPage() {
                 <BarChart
                   data={decreaseChartData}
                   layout="vertical"
-                  margin={{ top: 10, right: 12, left: 8, bottom: 0 }}
+                  margin={{ top: 10, right: 12, left: 20, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--chakra-colors-border)" />
                   <XAxis type="number" tickFormatter={(v) => (typeof v === "number" ? `$${Math.round(v)}` : "")} />
                   <YAxis
                     dataKey="name"
                     type="category"
-                    width={90}
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(v) => clampLabel(String(v ?? ""), 14)}
+                    width={changeChartLabelWidth}
+                    tick={changeChartTick}
                   />
                   <RechartsTooltip
                     formatter={(value: unknown) =>
                       typeof value === "number" ? formatCurrency(value) : String(value ?? "")
                     }
+                    contentStyle={tooltipContentStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipItemStyle}
                   />
                   <Bar dataKey="delta" name="Δ" fill="var(--chakra-colors-green-500)" />
                 </BarChart>
