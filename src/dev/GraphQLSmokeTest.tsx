@@ -35,6 +35,7 @@ export function GraphQLSmokeTest() {
       <Button
         variant={"outline"}
         onClick={fetchAndLogAuthSession}
+        colorPalette="blue"
       >Check status</Button>
       <Text color="fg.muted">
         Quick end-to-end checks for Cognito + AppSync + @model/@auth(owner).
@@ -44,7 +45,7 @@ export function GraphQLSmokeTest() {
         <Heading size="sm" mb={2}>
           Log
         </Heading>
-        <VStack align="stretch" gap={2}>
+        <VStack align="stretch" gap={2} bg="bg.panel" p={3} rounded="md" borderWidth="1px" borderColor="border">
           {log.map((l, idx) => (
             <Box key={idx} borderWidth="1px" rounded="md" p={2}>
               <Text fontSize="sm" color="fg.muted">
