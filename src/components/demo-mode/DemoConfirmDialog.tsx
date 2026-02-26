@@ -1,5 +1,5 @@
 import { Box, HStack, Text, VStack } from "@chakra-ui/react";
-import { DialogModal } from "./DialogModal";
+import { DialogModal } from "../ui/DialogModal";
 
 export function DemoConfirmDialog({
   open,
