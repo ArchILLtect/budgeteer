@@ -5,7 +5,7 @@ import { signIn } from "aws-amplify/auth";
 import { createDemoCredentials } from "../services/demoAuthService";
 import { clearDemoSessionActive, setDemoSessionActive } from "../services/demoSession";
 import { Tip } from "../components/ui/Tip";
-import { DemoConfirmDialog } from "../components/ui/DemoConfirmDialog";
+import { DemoConfirmDialog } from "../components/demo-mode/DemoConfirmDialog";
 import { VisuallyHidden } from "@chakra-ui/react";
 import { BudgeteerLogo } from "../components/icons/BudgeteerLogo";
 import homeBannerSvg from "../assets/home-banner.svg?raw";

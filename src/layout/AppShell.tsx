@@ -7,7 +7,7 @@ import Header from "./Header.tsx";
 import Footer from "./Footer.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import type { AuthUserLike } from "../types";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { WelcomeModal } from "../components/ui/WelcomeModal";
@@ -26,6 +26,10 @@ import { FullPageLoading } from "./FullPageLoading";
 import { useRouteLoadingStore } from "../store/routeLoadingStore";
 import { recordRouteLoadComplete } from "../services/perfLogger";
 import { useDemoMode } from "../hooks/useDemoMode";
+
+const DemoTourModal = lazy(() =>
+  import("../components/demo-mode/DemoTourModal").then((mod) => ({ default: mod.DemoTourModal }))
+);
 
 type AppShellProps = {
   user?: AuthUserLike | null;
@@ -146,6 +150,9 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
       </Link>
       <Toaster />
       <WelcomeModal signedIn={signedIn} authLoading={authLoading} />
+      <Suspense fallback={null}>
+        <DemoTourModal signedIn={signedIn} />
+      </Suspense>
       <GlobalProgressOverlay />
 
       <Header user={user}/>
