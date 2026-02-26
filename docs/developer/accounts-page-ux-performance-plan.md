@@ -2,6 +2,19 @@
 
 Date: 2026-02-26
 
+## Status
+
+Implemented (2026-02-26):
+
+- `/accounts` now renders a fast page shell immediately, with a clear “may take a bit…” message.
+- The accounts list mount is deferred by one animation frame, showing a “Loading accounts…” indicator.
+- Accounts are collapsed by default; expanding an account mounts the existing heavy details UI.
+
+Primary implementation files:
+
+- `src/pages/AccountsPage.tsx`
+- `src/components/accounts/AccountCard.tsx`
+
 ## Goals
 
 - Make navigation to `/accounts` feel immediate and unambiguous.
@@ -62,19 +75,34 @@ Recommended structure:
 
 ## Checklist (This Change)
 
-- [ ] Update `/accounts` page to render a fast shell immediately (heading + message + spinner).
-- [ ] Change account rendering to collapsed-by-default (summary first).
-- [ ] Refactor `AccountCard` into summary + details (details mounts only when expanded).
-- [ ] Ensure collapsed summaries do not scan full transaction lists during render.
-- [ ] Show per-account “Loading…” indicator on expand if details are expensive.
-- [ ] Confirm existing flows still work:
+- [x] Update `/accounts` page to render a fast shell immediately (heading + message + spinner).
+- [x] Change account rendering to collapsed-by-default (summary first).
+- [x] Refactor `AccountCard` into summary + details (details mounts only when expanded).
+- [x] Ensure collapsed summaries do not scan full transaction lists during render.
+- [x] Show per-account “Loading…” indicator on expand if details are expensive.
+- [ ] Confirm existing flows still work (manual UI verification):
   - [ ] Import Account Data (sync modal)
   - [ ] Review staged sessions
   - [ ] Apply to budget
   - [ ] Savings review
   - [ ] DEV: Clear Imported Data
 - [ ] Verify performance manually with a large dataset.
-- [ ] Run repo verification: `npm run check`.
+- [x] Run repo verification: `npm run check`.
+
+## Implementation Notes (As Built)
+
+### `/accounts` fast shell
+
+- `AccountsPage` renders the heading + guidance message immediately.
+- The accounts list is mounted after the first paint using `requestAnimationFrame`, showing an inline “Loading accounts…” indicator in the meantime.
+
+### Collapsed-by-default accounts
+
+- `AccountCard` is now a lightweight wrapper:
+  - Renders a cheap summary (label/institution + transaction count).
+  - Defaults to collapsed.
+  - On expand, shows a brief per-card “Loading account details…” indicator for one frame, then mounts the heavy details component.
+- `AccountCardDetails` contains the existing heavy account UI and only renders when expanded.
 
 ## Follow-ups / Future Work
 
@@ -114,5 +142,5 @@ Checklist (Option 5)
 ## Risks / Watchouts
 
 - If the collapsed summary still computes expensive derived fields, the page will remain slow.
-- If expand triggers a large synchronous render, the per-account spinner may not paint until after work completes; consider yielding (chunking) or limiting what mounts initially.
+- If expand triggers a large synchronous render, the per-account spinner may only appear briefly before the heavy render blocks; consider yielding (chunking) or limiting what mounts initially.
 - Keep changes minimal: avoid introducing new UX beyond collapse + explicit loading messaging.
