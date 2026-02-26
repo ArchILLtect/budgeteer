@@ -264,6 +264,18 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
   - Place: next to an actual income row in Tracker “Income Details” (and/or in Import session review), so the user can promote a known-good stream with one click
 - [ ] TODO(stretch): Planner — add "weekly" and "bi-weekly" as income types/frequency options in IncomeSourceForm to reduce manual salary conversions
 
+- [ ] TODO(stretch): Accounts — virtualize the collapsed accounts list (performance)
+  - Goal: keep `/accounts` fast when many accounts exist (even if each has few transactions)
+  - Approach: virtualize the *collapsed* summary rows (not expanded details) using a small list virtualization library (e.g. `react-window`)
+  - Watchouts: variable row heights (expanded cards) complicate virtualization; prefer keeping virtualization scoped to the collapsed view
+  - Verify: keyboard/focus behavior, scroll restoration, expand/collapse interaction inside a virtualized list
+
+- [ ] TODO(stretch): Accounts — precompute/cache per-account summary fields at import-time (avoid repeated scans)
+  - Goal: eliminate repeated per-render loops over full transaction arrays to compute the same counts/sets
+  - Approach: define an `AccountSummary` shape (e.g. txCount, lastImportedAt, monthsPresent, pendingProposalCounts, stagedCounts) and compute/update it during import commit/apply
+  - Invalidation: ensure summary updates when edits occur (proposal approvals, directive changes, tx patching) or explicitly recompute for affected account
+  - Migration: if stored on `Account`, ensure it’s optional initially and can be rebuilt from transactions (no legacy adapters; prefer explicit reset/bump if needed)
+
 - [ ] TODO(stretch): Imports/Apply — derive optional apply-to-budget “instructions” from the `Note` column (opt-in)
   - Scope: Only run when user explicitly enables “Note directives” and configures at least one directive
   - Prefer explicit tags over fuzzy parsing (e.g. `budgeteer:goal=Auto Loan Down-payment`, `budgeteer:category=Groceries`, `budgeteer:rename=Paycheck`)
