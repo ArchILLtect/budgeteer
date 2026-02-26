@@ -7,7 +7,7 @@ import Header from "./Header.tsx";
 import Footer from "./Footer.tsx";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import type { AuthUserLike } from "../types";
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { WelcomeModal } from "../components/ui/WelcomeModal";
@@ -73,19 +73,24 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
   const isRouteLoading = useRouteLoadingStore((s) => s.isRouteLoading);
   const routeLoadingDestination = useRouteLoadingStore((s) => s.destination);
   const routeLoadingStartedAtMs = useRouteLoadingStore((s) => s.startedAtMs);
-  const startRouteLoading = useRouteLoadingStore((s) => s.startRouteLoading);
   const stopRouteLoading = useRouteLoadingStore((s) => s.stopRouteLoading);
 
   const prevRouteRef = useRef<string>(`${location.pathname}${location.search}${location.hash}`);
 
+  const [showRouteOverlay, setShowRouteOverlay] = useState(false);
+
   useBootstrapUserProfile(user);
 
-  // Fallback: if navigation happens outside our RouterLink clicks (e.g. redirects),
-  // show the loading overlay after the route commits.
-  useLayoutEffect(() => {
-    const dest = `${location.pathname}${location.search}${location.hash}`;
-    startRouteLoading(dest);
-  }, [location.hash, location.key, location.pathname, location.search, startRouteLoading]);
+  // Avoid flashing the full-page overlay for fast navigations.
+  useEffect(() => {
+    if (!isRouteLoading) {
+      setShowRouteOverlay(false);
+      return;
+    }
+
+    const id = window.setTimeout(() => setShowRouteOverlay(true), 200);
+    return () => window.clearTimeout(id);
+  }, [isRouteLoading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,7 +218,7 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
           </Box>
         {/* Main area is the primary scroll container */}
         <Box flex="1" minW={0} h="100%" overflow="auto" className="Main" id="main-content" tabIndex={-1} position="relative">
-          {isRouteLoading ? (
+          {showRouteOverlay ? (
             <Box
               position="absolute"
               inset={0}

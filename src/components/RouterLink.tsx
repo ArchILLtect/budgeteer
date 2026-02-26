@@ -1,4 +1,4 @@
-import { forwardRef, startTransition, type ReactNode } from "react";
+import { forwardRef, type ReactNode } from "react";
 import { NavLink, type NavLinkProps, useNavigate } from "react-router-dom";
 import { useRouteLoadingStore } from "../store/routeLoadingStore";
 
@@ -33,14 +33,12 @@ export const RouterLink = forwardRef<HTMLAnchorElement, RouterLinkProps>(
           // don't block the loading overlay from appearing.
           const dest = typeof props.to === "string" ? props.to : null;
           startRouteLoading(dest);
-          startTransition(() => {
-            navigate(props.to, {
-              replace,
-              state,
-              preventScrollReset,
-              relative,
-              viewTransition,
-            });
+          navigate(props.to, {
+            replace,
+            state,
+            preventScrollReset,
+            relative,
+            viewTransition,
           });
         }}
         style={{ textDecoration: "none", ...(props.style ?? {}) }}
