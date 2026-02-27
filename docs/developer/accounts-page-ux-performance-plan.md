@@ -80,13 +80,13 @@ Recommended structure:
 - [x] Refactor `AccountCard` into summary + details (details mounts only when expanded).
 - [x] Ensure collapsed summaries do not scan full transaction lists during render.
 - [x] Show per-account “Loading…” indicator on expand if details are expensive.
-- [ ] Confirm existing flows still work (manual UI verification):
-  - [ ] Import Account Data (sync modal)
-  - [ ] Review staged sessions
-  - [ ] Apply to budget
-  - [ ] Savings review
-  - [ ] DEV: Clear Imported Data
-- [ ] Verify performance manually with a large dataset.
+- [x] Confirm existing flows still work (manual UI verification):
+  - [x] Import Account Data (sync modal)
+  - [x] Review staged sessions
+  - [x] Apply to budget
+  - [x] Savings review
+  - [x] DEV: Clear Imported Data
+- [x] Verify performance manually with a large dataset.
 - [x] Run repo verification: `npm run check`.
 
 ## Implementation Notes (As Built)
