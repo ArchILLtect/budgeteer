@@ -150,6 +150,13 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
         zIndex={9999}
         transform="translateY(-200%)"
         _focusVisible={{ transform: "translateY(0)", outline: "2px solid", outlineColor: "blue.400" }}
+        onClick={() => {
+          // Move focus to the main landmark so keyboard users can continue tabbing from content.
+          window.setTimeout(() => {
+            const el = document.getElementById("main-content");
+            if (el instanceof HTMLElement) el.focus();
+          }, 0);
+        }}
       >
         Skip to content
       </Link>
@@ -217,7 +224,7 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
             </Tooltip>
           </Box>
         {/* Main area is the primary scroll container */}
-        <Box flex="1" minW={0} h="100%" overflow="auto" className="Main" id="main-content" tabIndex={-1} position="relative">
+        <Box as="main" role="main" flex="1" minW={0} h="100%" overflow="auto" className="Main" id="main-content" tabIndex={-1} position="relative">
           {showRouteOverlay ? (
             <Box
               position="absolute"

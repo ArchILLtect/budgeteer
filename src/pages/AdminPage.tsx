@@ -260,6 +260,7 @@ export default function AdminPage() {
 
         <Input
           type="datetime-local"
+          aria-label="From date/time"
           value={startDateTimeLocal}
           onChange={(e) => setStartDateTimeLocal(e.target.value)}
           placeholder="From"
@@ -271,6 +272,7 @@ export default function AdminPage() {
 
         <Input
           type="datetime-local"
+          aria-label="To date/time"
           value={endDateTimeLocal}
           onChange={(e) => setEndDateTimeLocal(e.target.value)}
           placeholder="To"
@@ -284,6 +286,7 @@ export default function AdminPage() {
           size="sm"
           value={kind}
           placeholder="Kind"
+          aria-label="Filter by kind"
           onChange={(e) => setKind(e.target.value as PerfEventKind | "all")}
         >
           <option value="all">All kinds</option>
@@ -294,14 +297,14 @@ export default function AdminPage() {
           ))}
         </AppSelect>
 
-        <AppSelect size="sm" value={sortBy} placeholder="Sort" onChange={(e) => setSortBy(e.target.value as SortBy)}>
+        <AppSelect size="sm" value={sortBy} placeholder="Sort" aria-label="Sort by" onChange={(e) => setSortBy(e.target.value as SortBy)}>
           <option value="when">Sort: When</option>
           <option value="duration">Sort: Duration</option>
           <option value="kind">Sort: Kind</option>
           <option value="what">Sort: What</option>
         </AppSelect>
 
-        <AppSelect size="sm" value={sortDir} placeholder="Direction" onChange={(e) => setSortDir(e.target.value as SortDir)}>
+        <AppSelect size="sm" value={sortDir} placeholder="Direction" aria-label="Sort direction" onChange={(e) => setSortDir(e.target.value as SortDir)}>
           <option value="desc">Desc</option>
           <option value="asc">Asc</option>
         </AppSelect>
@@ -310,6 +313,7 @@ export default function AdminPage() {
           size="sm"
           value={String(pageSize)}
           placeholder="Page size"
+          aria-label="Page size"
           onChange={(e) => setPageSize(Number(e.target.value) || 50)}
         >
           <option value="25">25 / page</option>

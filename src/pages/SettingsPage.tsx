@@ -342,6 +342,7 @@ export default function SettingsPage() {
                 {expenseNameOverridesLocal.map((rule, idx) => (
                   <HStack key={`exp-ovr-${idx}`}>
                     <Input
+                      aria-label={`Expense name override match (row ${idx + 1})`}
                       value={rule.match ?? ""}
                       onChange={(e) =>
                         setExpenseNameOverridesLocal((prev) => {
@@ -354,6 +355,7 @@ export default function SettingsPage() {
                       bg={"bg"}
                     />
                     <Input
+                      aria-label={`Expense name override display name (row ${idx + 1})`}
                       value={rule.displayName ?? ""}
                       onChange={(e) =>
                         setExpenseNameOverridesLocal((prev) => {
@@ -397,6 +399,7 @@ export default function SettingsPage() {
                 {incomeNameOverridesLocal.map((rule, idx) => (
                   <HStack key={`inc-ovr-${idx}`}>
                     <Input
+                      aria-label={`Income name override match (row ${idx + 1})`}
                       value={rule.match ?? ""}
                       onChange={(e) =>
                         setIncomeNameOverridesLocal((prev) => {
@@ -409,6 +412,7 @@ export default function SettingsPage() {
                       bg={"bg"}
                     />
                     <Input
+                      aria-label={`Income name override display name (row ${idx + 1})`}
                       value={rule.displayName ?? ""}
                       onChange={(e) =>
                         setIncomeNameOverridesLocal((prev) => {

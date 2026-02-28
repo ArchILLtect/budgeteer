@@ -181,7 +181,7 @@ export default function ImportHistoryPage() {
         </Box>
         <Spacer />
         <HStack>
-          <AppSelect size='sm' placeholder='Account' value={filterAccount} onChange={(e: event) => setFilterAccount(e.target.value)}>
+          <AppSelect size='sm' placeholder='Account' aria-label='Filter by account' value={filterAccount} onChange={(e: event) => setFilterAccount(e.target.value)}>
             {accountsList.map((acc) => (
               <option key={acc} value={acc}>
                 {maskAccountNumber(acc)}
@@ -189,7 +189,7 @@ export default function ImportHistoryPage() {
             ))}
           </AppSelect>
 
-          <AppSelect size='sm' placeholder='Status' value={filterStatus} onChange={(e: event) => setFilterStatus(e.target.value as Status | '')}>
+          <AppSelect size='sm' placeholder='Status' aria-label='Filter by status' value={filterStatus} onChange={(e: event) => setFilterStatus(e.target.value as Status | '')}>
             <option value='active'>Active</option>
             <option value='expired'>Expired</option>
             <option value='applied'>Applied</option>

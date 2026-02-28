@@ -511,7 +511,7 @@ export function InsightsPage() {
               <Text fontSize="sm" color="fg.muted" mb={1}>
                 Month
               </Text>
-              <AppSelect value={compareMonth} onChange={(e) => setCompareMonth(e.target.value)} width="180px">
+              <AppSelect aria-label="Compare month" value={compareMonth} onChange={(e) => setCompareMonth(e.target.value)} width="180px">
                 {monthOptions.map((m) => (
                   <option key={m} value={m}>
                     {formatUtcMonthKey(m, { month: "long" })}
