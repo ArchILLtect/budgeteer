@@ -10,6 +10,9 @@ import { useUserUI } from '../hooks/useUserUI';
 import { useDemoMode } from "../hooks/useDemoMode";
 import { useDemoTourStore } from "../store/demoTourStore";
 import { useColorModeClass } from "../hooks/useColorModeClass";
+import { usePresenceHeartbeat } from "../hooks/usePresenceHeartbeat";
+import { usePresenceStore } from "../store/presenceStore";
+import { useShallow } from "zustand/react/shallow";
 
 type NavigationProps = {
   user?: AuthUserLike | null;
@@ -37,6 +40,47 @@ export default function Navigation({ user, userUI }: NavigationProps) {
   const openDemoTour = useDemoTourStore((s) => s.openTour);
 
   const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
+
+  const userId = user?.userId ?? null;
+  usePresenceHeartbeat({ enabled: Boolean(userId), userId });
+
+  const presence = usePresenceStore(
+    useShallow((s) => ({
+      status: s.status,
+      lastAttemptAtMs: s.lastAttemptAtMs,
+      lastOkAtMs: s.lastOkAtMs,
+      lastError: s.lastError,
+    }))
+  );
+
+  const presenceLabel =
+    presence.status === "online"
+      ? "Online"
+      : presence.status === "offline"
+        ? "Offline"
+        : "Checking…";
+
+  const presencePalette =
+    presence.status === "online"
+      ? "green"
+      : presence.status === "offline"
+        ? "red"
+        : "gray";
+
+  const presenceTooltipParts: string[] = [];
+  if (presence.lastOkAtMs) {
+    presenceTooltipParts.push(`Last ok: ${new Date(presence.lastOkAtMs).toLocaleTimeString()}`);
+  }
+  if (presence.lastAttemptAtMs) {
+    presenceTooltipParts.push(
+      `Last check: ${new Date(presence.lastAttemptAtMs).toLocaleTimeString()}`
+    );
+  }
+  if (presence.status === "offline" && presence.lastError) {
+    presenceTooltipParts.push(presence.lastError);
+  }
+  const presenceTooltip =
+    presenceTooltipParts.length > 0 ? presenceTooltipParts.join(" • ") : "Presence";
 
   return (
     <HStack
@@ -135,6 +179,14 @@ export default function Navigation({ user, userUI }: NavigationProps) {
                   <Badge rounded="md" bg="purple.100" color="purple.800">
                     Admin
                   </Badge>
+                ) : null}
+
+                {userId ? (
+                  <Tooltip content={presenceTooltip} showArrow>
+                    <Badge rounded="md" colorPalette={presencePalette}>
+                      {presenceLabel}
+                    </Badge>
+                  </Tooltip>
                 ) : null}
 
                 {isDemo ? (
