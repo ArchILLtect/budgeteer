@@ -118,7 +118,7 @@ Before submitting a PR that alters rules or queue logic:
 | Tests (inference)         | `src/ingest/__tests__/categoryInference.test.js`      |
 | Tests (strong key utils)  | `src/utils/__tests__/strongKeyUtils.test.js`          |
 
-## 5. Future TODO Seeds
+## 5. Future `TODO` Seeds
 
 -   Pluggable user rule editor UI
 -   Import/export rule sets (JSON)
