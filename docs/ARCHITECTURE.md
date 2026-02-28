@@ -145,7 +145,9 @@ Core concepts reflected in the store:
 
 Persistence:
 
-- The store is persisted to localStorage (`budgeteer:budgetStore`) with a `partialize` that omits transient UI flags.
+- The root store uses Zustand persist with `name: "budgeteer:budgetStore"` and a `partialize` that omits transient UI flags.
+- Persisted values are stored under a user-scoped localStorage key via `createUserScopedZustandStorage()`, e.g.:
+	- `budgeteer:u:<scope>:zustand:budgeteer:budgetStore`
 - Storage is user-scoped via the `createUserScopedZustandStorage()` adapter.
 
 Current slice modules:

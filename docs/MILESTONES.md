@@ -56,7 +56,7 @@ Use this as the running “ship list” for Milestone 1. Keep it honest and conc
 
 **C) Storage + user switching (no state leakage)**
 - [x] All persisted keys follow `budgeteer:*` and user-scoped keys use the `budgeteer:u:<scope>:` prefix
-- [x] Main persisted budget state is user-scoped (no shared `budgeteer:budgetStore` across users)
+- [x] Main persisted budget state is user-scoped (stored under `budgeteer:u:<scope>:zustand:budgeteer:budgetStore`, no cross-user mixing)
 - [x] Switching users does not reuse the previous user’s budget data (budget store resets when a new user has no persisted budget state)
 - [x] Switching users does not reuse the previous user’s cached UI metadata
 - [x] Switching users does not reuse the previous user’s local settings / tips / demo preferences
