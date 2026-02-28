@@ -32,6 +32,9 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 - Savings goals created during savings review are tagged with their originating `importSessionId` so session clearing can remove them safely (only when unreferenced).
 - Tracker summary presentation now uses consistent “Planned vs Actual” labels and shared currency formatting.
 - Several money-like inputs now normalize/clamp values (finite, non-negative, rounded to cents) instead of ad-hoc `parseFloat(...) || 0`.
+- Accounts page now defaults accounts to collapsed and mounts heavy account details on demand to keep initial navigation snappy.
+- Route-loading overlay behavior adjusted to avoid showing a loader on every navigation and reduce flash for fast route changes.
+- Auth refresh behavior hardened: transient/non-auth failures resolving the current user no longer force a scope flip to anonymous.
 
 ### Fixed
 - Planner/Tracker crash caused by a render/update feedback loop (“Maximum update depth exceeded” / unstable snapshots) in `IncomeCalculator`.
@@ -42,6 +45,8 @@ The format is based on Keep a Changelog, and this project aims to follow Semanti
 - Savings Goals/Logs numeric input parsing and progress calculations (avoid NaN/invalid progress values).
 - Runtime hardening: persisted Zustand payload parsing and ingestion normalization now validate/ignore malformed values instead of crashing.
 - Settings page name override inputs no longer trigger controlled/uncontrolled warnings.
+- Demo/anonymous persistence: prevent signed-out scope reset from overwriting persisted anonymous/demo budget state before rehydration.
+- Navigation UX: avoid delayed/stalled route commits caused by transition-wrapped navigation in link clicks.
 
 ### Removed
 - Legacy `runIngestion` wrapper module and remaining patch-closure terminology in non-legacy docs.

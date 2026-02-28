@@ -30,128 +30,45 @@ Actionable TODOs must use one of:
 ## Open Backlog
 
 <a id="continual"></a>
-### TODO(continual)
+### `TODO`(continual)
 
 - [ ] TODO(continual): Keep `npm run build` green; fix regressions immediately
 - [ ] TODO(continual): Remove dead code paths during feature work (don’t let leftovers accumulate)
 - [ ] TODO(continual): Prefer user-scoped storage keys for any persisted UI state
 
 <a id="p1"></a>
-### TODO(P1)
+### `TODO`(P1)
 
-- [x] TODO(P1): Naming cleanup — align UI copy to Budgeteer
-- [x] TODO(P1): Routing cleanup — align defaults to actual Budgeteer routes
-- [x] TODO(P1): Storage cleanup — align localStorage keys to `budgeteer:*`
-- [x] TODO(P1): Rename misnamed exports/symbols
-- [x] TODO(P1): Update README + contributing docs (see “Docs” P1 below)
+
 
 UI bugfixes (P1):
 
-- [x] TODO(P1): Planner — fix “Include savings in …” radio button not working
-- [x] TODO(P1): Tracker — fix “Total Override” checkbox not working
+
 - [ ] TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”
 - [ ] TODO(P1): Imports — add an “Advanced” toggle “Generate suggestions” (heuristics) (default OFF)
   - When enabled, generate *proposals* even without explicit `budgeteer:*` directives (e.g., suggested rename/category/savings goal links)
   - Must be reviewable/approvable in staging (never silently applied)
 
-Deployment (P1):
+Docs(P1):
 
-- [x] TODO(P1): Netlify SPA routing — add `public/_redirects` (or `netlify.toml`) so deep links like `/planner` don’t 404 in production
-
-Income Details (Tracker) (P1):
-
-- [x] TODO(P1): Tracker — income delete confirmation alert copy: don’t call it an “expense”, include the income source name, and fire success/error toast appropriately
-- [x] TODO(P1): Tracker — updating/adding income sources should update “Monthly Income” total at top of card (currently only impacts “Actual Net Income” stat)
-- [x] TODO(P1): Tracker — clarify stat bar layout above “<year> Summary”; fix duplicate “Total Saved” and “Leftover” stats (ensure intended count and uniqueness)
-
-Savings Goals (Tracker) (P1):
-
-- [x] TODO(P1): Tracker — savings goal card display: fix incorrect/missing info rendering
-- [x] TODO(P1): Tracker — savings goal edit: clicking “Edit” should only open the selected item (not all edit panels)
-- [x] TODO(P1): Tracker — savings goal save: toast fires but changes are not persisted; fix persistence and refresh behavior
-- [x] TODO(P1): Tracker — savings goal delete: toast fires but item is not removed; fix deletion and refresh behavior
-
-Runtime console errors (P1):
-
-- [x] TODO(P1): Tracker — fix duplicate React key warning `same key, NaN` from SavingsGoalsTracker list rendering (ensure stable, unique keys)
-- [x] TODO(P1): Tracker — fix Chakra `Progress` error: value receives `[object Object],[object Object]` and exceeds max 100 (ensure numeric value and correct max)
-- [x] TODO(P1): Settings — fix controlled/uncontrolled input warning: text input has both `value` and `defaultValue`
-
-Copy/branding (P1):
-
-- [x] TODO(P1): Update HomePage copy/content to match Budgeteer
-- [x] TODO(P1): Update AboutPage copy/content to match Budgeteer
-
-Docs (P1):
-
-- [x] TODO(P1): Update README.md for Budgeteer (current is from older app)
-  - What the app is (planner-first, CSV import, staging/apply/undo)
-  - Local dev instructions
-  - Link to architecture docs (`docs/developer/README.md` and docs overview)
-  - Mention `/samples` folder and sample CSVs
-- [x] TODO(P1): Update CONTRIBUTING.md for Budgeteer
-  - dev workflow, branches/PR expectations
-  - how to run tests/lint/build
-  - conventions for dates/month keys, transaction strong keys
-- [x] TODO(P1): Replace README banner with a Budgeteer version
-  - new file: `docs/assets/readme-banner.svg`
-  - ensure README references it
-- [ ] TODO(P1): Demo Mode (MVP) — E. Minimal samples curation
-  - Add a small deterministic “golden” canonical History-export CSV under `/samples`
-    - Intended for debugging ingestion and for quick manual import.
-    - Keep it small (10–30 rows), deterministic, and representative.
-  - Update `/samples/README.md` to describe the golden file
-  - Source checklist: `docs/developer/demo-mode-mvp-plan.md` → “E. Minimal samples curation (MVP)”
-- [ ] TODO(P1): Ensure `/samples` is documented and curated
+- [x] TODO(P1): Demo Mode (MVP) — E. Minimal samples curation (done 2026-02-27)
+  - Golden canonical History-export sample: `samples/History_Showcase_Tiny.csv` (29 lines incl. header)
+  - `/samples/README.md` documents the sample set
+- [x] TODO(P1): Ensure `/samples` is documented and curated (done 2026-02-27)
   - describe each sample file
   - keep a small, deterministic “golden” CSV for ingestion tests/debug
 - [ ] TODO(P1): Define backend models: Account, Transaction, ImportSession (Transaction identity must be deterministic via strongKey)
   - document in `docs/developer/README.md` or similar
   - ensure frontend models align with backend expectations
   - consider adding TypeScript types/interfaces for these models in `src/types` and using them at ingestion boundaries
-- [x] TODO(P1): Document auth flows and user-scoped persistence in architecture docs (done; see `docs/ARCHITECTURE.md`)
-  - how `useAuthUser()` works, how it triggers rehydration of user-scoped stores
-  - the user-scoped storage key format and rationale
-  - any implications for development/testing (e.g. how to clear state, how to test multiple users)
-  - consider adding a diagram to illustrate the auth lifecycle and storage scoping
-- [x] TODO(P1): Document the transaction import flow (staging, apply, undo) in architecture docs (done; see `docs/ARCHITECTURE.md`)
-  - how import sessions are modeled, how transactions are tagged with `importSessionId`
-  - the user experience around staging/apply/undo
-  - any edge cases or important details (e.g. time window for undo, how duplicates are prevented)
-  - consider adding a flow diagram to illustrate the import process and state transitions
-- [x] TODO(P1): Document the budgeting model and core domain concepts in architecture docs (done; see `docs/ARCHITECTURE.md` + `docs/DATA_MODEL.md`)
-  - scenarios, monthly plans/actuals, savings goals/logs, accounts/transactions
-  - how these concepts are represented in the store and how they relate to each other
-  - any important calculations or business logic (e.g. how the planner computes summaries)
-  - consider adding a diagram to illustrate the budgeting model and relationships between concepts
-- [x] TODO(P1): Document the decision to use a shared Amplify Gen 1 backend with AppSync GraphQL API (done; see `docs/ARCHITECTURE.md` + `docs/budgeteer_project_context_vision.md`)
-  - rationale for the decision (reuse backend services, decoupled frontend)
-  - what resources are shared (user pool, GraphQL API) and what is separate (frontend codebase, auth handling, local persistence)
-  - any implications for development or future plans (e.g. if we want to migrate to Gen 2 in the future, how would that work?)
-- [x] TODO(P1): Document the user personas and target users for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
-  - budget planner, spreadsheet migrator, developer/reviewer
-  - how these personas influenced design decisions and feature prioritization
-  - any plans for future features that might target additional personas (e.g. multi-user collaboration for households)
-- [x] TODO(P1): Document the non-goals for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
-  - Plaid/bank credential linking, automated “magic” budgeting, crypto/investing/net-worth features, multi-user household collaboration
-  - rationale for excluding these features (out of scope, future possibility, etc.)
-  - how we might approach these features in the future if we decide to pursue them
-- [x] TODO(P1): Document the product and engineering goals for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
-  - planning-first budgeting, safe imports, clarity, privacy-by-design, showcase-quality engineering
-  - how these goals influenced design and implementation decisions
-  - any trade-offs or challenges we faced in trying to achieve these goals
-- [x] TODO(P1): Ensure the architecture doc reflects the current system accurately (done; last reviewed 2026-02-19)
-  - review and update sections on auth, persistence, budgeting model, transaction importing, etc. to match the current implementation
-  - remove any outdated references to non-Budgeteer concepts
-  - ensure the doc is clear and comprehensive for new developers joining the project
 
 MVP quality (P1/P2):
 
 - [ ] TODO(P2): Accessibility pass — add/verify “skip to content”, basic keyboard navigation, and labeled form controls (align with PRD a11y requirements)
-- [ ] TODO(P2): Startup resilience — ensure corrupted user-scoped localStorage can’t brick app startup (detect/clear + user-friendly message)
+- [x] TODO(P2): Startup resilience — ensure corrupted user-scoped localStorage can’t brick app startup (detect/clear + user-friendly message) (done 2026-02-27)
   
 <a id="p2"></a>
-### TODO(P2)
+### `TODO`(P2)
 
 - [ ] TODO(P2): Imports — “Clear session” UX: offer advanced options (clear only import vs clear only tracker)
 - [ ] TODO(P2): Imports — add a DEV-only variant of “Clear session” with extra scoping toggles for experimentation
@@ -173,9 +90,10 @@ MVP quality (P1/P2):
   - prefer `budgeteer:*` for global keys
   - prefer `budgeteer:u:${scope}:...` for scoped keys
 - [x] TODO(P2): Remove/replace non-Budgeteer-branded assets (e.g. title SVG)
+  - e.g. `src/assets/title.svg` (done; replaced with `docs/assets/readme-banner.svg` for README and removed from app)
 
 <a id="p3"></a>
-### TODO(P3)
+### `TODO`(P3)
 
 - [ ] TODO(P3): Clean up migration leftovers in settings and “platform” pages
   - eliminate UI that only exists to support unrelated scaffolding flows
@@ -205,12 +123,12 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
   - `src/utils/analysisUtils.ts`, `src/utils/calcUtils.ts`, `src/utils/demoUtils.ts`
 
 <a id="p4"></a>
-### TODO(P4)
+### `TODO`(P4)
 
 - [ ] TODO(P4): Decide what remains local-only vs syncs to backend (document in docs)
 
 <a id="p5"></a>
-### TODO(P5)
+### `TODO`(P5)
 
 - [ ] TODO(P5): Re-evaluate cloud sync strategy after core UX is coherent
 
@@ -220,9 +138,9 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 ### Snowball — Ingestion refactor: ImportPlan + commit (done)
 
 - [ ] TODO(P1): Add stable client device identity (deviceId in localStorage) for presence + sync lock ownership
-- [ ] TODO(P1): Add missing error handling around auth and storage access (try/catch + user-friendly messages)
+- [x] TODO(P1): Add missing error handling around auth and storage access (try/catch + user-friendly messages) (done 2026-02-27)
 - [ ] TODO(P1): Ensure settings changes take effect immediately (e.g. theme toggle should update UI without reload)
-- [ ] TODO(P1): Add a “golden” sample CSV for testing/debugging
+- [x] TODO(P1): Add a “golden” sample CSV for testing/debugging (done 2026-02-27)
 - [ ] TODO(P1): Implement Presence heartbeat + UI indicator (green/red) in app header
 - [ ] TODO(P1): Implement SyncLock (TTL mutex) for sync-only operations; block “Sync now” when lock held
 - [ ] TODO(P1): Add manual “Sync now” button that acquires SyncLock and runs pull/push
@@ -313,10 +231,102 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 <a id="archive"></a>
 ## Archive (implemented / completed)
 
+- [x] `TODO`(P1): Naming cleanup — align UI copy to Budgeteer
+- [x] `TODO`(P1): Routing cleanup — align defaults to actual Budgeteer routes
+- [x] `TODO`(P1): Storage cleanup — align localStorage keys to `budgeteer:*`
+- [x] `TODO`(P1): Rename misnamed exports/symbols
+- [x] `TODO`(P1): Update README + contributing docs (see “Docs” P1 below)
+
+UI bugfixes (P1):
+
+- [x] `TODO`(P1): Planner — fix “Include savings in …” radio button not working
+- [x] `TODO`(P1): Tracker — fix “Total Override” checkbox not working
+
+
+Deployment (P1):
+
+- [x] `TODO`(P1): Netlify SPA routing — add `public/_redirects` (or `netlify.toml`) so deep links like `/planner` don’t 404 in production
+
+Income Details (Tracker) (P1):
+
+- [x] `TODO`(P1): Tracker — income delete confirmation alert copy: don’t call it an “expense”, include the income source name, and fire success/error toast appropriately
+- [x] `TODO`(P1): Tracker — updating/adding income sources should update “Monthly Income” total at top of card (currently only impacts “Actual Net Income” stat)
+- [x] `TODO`(P1): Tracker — clarify stat bar layout above “<year> Summary”; fix duplicate “Total Saved” and “Leftover” stats (ensure intended count and uniqueness)
+
+Savings Goals (Tracker) (P1):
+
+- [x] `TODO`(P1): Tracker — savings goal card display: fix incorrect/missing info rendering
+- [x] `TODO`(P1): Tracker — savings goal edit: clicking “Edit” should only open the selected item (not all edit panels)
+- [x] `TODO`(P1): Tracker — savings goal save: toast fires but changes are not persisted; fix persistence and refresh behavior
+- [x] `TODO`(P1): Tracker — savings goal delete: toast fires but item is not removed; fix deletion and refresh behavior
+
+Runtime console errors (P1):
+
+- [x] `TODO`(P1): Tracker — fix duplicate React key warning `same key, NaN` from SavingsGoalsTracker list rendering (ensure stable, unique keys)
+- [x] `TODO`(P1): Tracker — fix Chakra `Progress` error: value receives `[object Object],[object Object]` and exceeds max 100 (ensure numeric value and correct max)
+- [x] `TODO`(P1): Settings — fix controlled/uncontrolled input warning: text input has both `value` and `defaultValue`
+
+Copy/branding (P1):
+
+- [x] `TODO`(P1): Update HomePage copy/content to match Budgeteer
+- [x] `TODO`(P1): Update AboutPage copy/content to match Budgeteer
+
+Docs (P1):
+
+- [x] `TODO`(P1): Update README.md for Budgeteer (current is from older app)
+  - What the app is (planner-first, CSV import, staging/apply/undo)
+  - Local dev instructions
+  - Link to architecture docs (`docs/developer/README.md` and docs overview)
+  - Mention `/samples` folder and sample CSVs
+- [x] `TODO`(P1): Update CONTRIBUTING.md for Budgeteer
+  - dev workflow, branches/PR expectations
+  - how to run tests/lint/build
+  - conventions for dates/month keys, transaction strong keys
+- [x] `TODO`(P1): Replace README banner with a Budgeteer version
+  - new file: `docs/assets/readme-banner.svg`
+  - ensure README references it
+
+- [x] `TODO`(P1): Document auth flows and user-scoped persistence in architecture docs (done; see `docs/ARCHITECTURE.md`)
+  - how `useAuthUser()` works, how it triggers rehydration of user-scoped stores
+  - the user-scoped storage key format and rationale
+  - any implications for development/testing (e.g. how to clear state, how to test multiple users)
+  - consider adding a diagram to illustrate the auth lifecycle and storage scoping
+- [x] `TODO`(P1): Document the transaction import flow (staging, apply, undo) in architecture docs (done; see `docs/ARCHITECTURE.md`)
+  - how import sessions are modeled, how transactions are tagged with `importSessionId`
+  - the user experience around staging/apply/undo
+  - any edge cases or important details (e.g. time window for undo, how duplicates are prevented)
+  - consider adding a flow diagram to illustrate the import process and state transitions
+- [x] `TODO`(P1): Document the budgeting model and core domain concepts in architecture docs (done; see `docs/ARCHITECTURE.md` + `docs/DATA_MODEL.md`)
+  - scenarios, monthly plans/actuals, savings goals/logs, accounts/transactions
+  - how these concepts are represented in the store and how they relate to each other
+  - any important calculations or business logic (e.g. how the planner computes summaries)
+  - consider adding a diagram to illustrate the budgeting model and relationships between concepts
+- [x] `TODO`(P1): Document the decision to use a shared Amplify Gen 1 backend with AppSync GraphQL API (done; see `docs/ARCHITECTURE.md` + `docs/budgeteer_project_context_vision.md`)
+  - rationale for the decision (reuse backend services, decoupled frontend)
+  - what resources are shared (user pool, GraphQL API) and what is separate (frontend codebase, auth handling, local persistence)
+  - any implications for development or future plans (e.g. if we want to migrate to Gen 2 in the future, how would that work?)
+- [x] `TODO`(P1): Document the user personas and target users for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
+  - budget planner, spreadsheet migrator, developer/reviewer
+  - how these personas influenced design decisions and feature prioritization
+  - any plans for future features that might target additional personas (e.g. multi-user collaboration for households)
+- [x] `TODO`(P1): Document the non-goals for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
+  - Plaid/bank credential linking, automated “magic” budgeting, crypto/investing/net-worth features, multi-user household collaboration
+  - rationale for excluding these features (out of scope, future possibility, etc.)
+  - how we might approach these features in the future if we decide to pursue them
+- [x] `TODO`(P1): Document the product and engineering goals for Budgeteer in the architecture or roadmap docs (done; see `docs/PRD.md` + `docs/budgeteer_project_context_vision.md`)
+  - planning-first budgeting, safe imports, clarity, privacy-by-design, showcase-quality engineering
+  - how these goals influenced design and implementation decisions
+  - any trade-offs or challenges we faced in trying to achieve these goals
+- [x] `TODO`(P1): Ensure the architecture doc reflects the current system accurately (done; last reviewed 2026-02-19)
+  - review and update sections on auth, persistence, budgeting model, transaction importing, etc. to match the current implementation
+  - remove any outdated references to non-Budgeteer concepts
+  - ensure the doc is clear and comprehensive for new developers joining the project
+
+
 ### Platform / Foundations
 
 - [x] `TODO`(P1): Decide Amplify Gen 2 vs Gen 1 (AppSync GraphQL) and record decision in docs/migration-plan.md
-  - Decision: This app uses an Amplify Gen 1 backend with AppSync GraphQL API. Some backend resource identifiers still contain `taskmaster` naming (see the REVIEW items above); treat those as infrastructure identifiers unless/until you intentionally rebuild/rename the backend configuration. Budgeteer’s UI code is separate and focuses on budgeting features, with local persistence + GraphQL used primarily for UserProfile bootstrapping.
+  - Decision: This app uses an Amplify Gen 1 backend with AppSync GraphQL API. Some backend resource identifiers still contain `taskmaster` naming (see the `REVIEW` items above); treat those as infrastructure identifiers unless/until you intentionally rebuild/rename the backend configuration. Budgeteer’s UI code is separate and focuses on budgeting features, with local persistence + GraphQL used primarily for UserProfile bootstrapping.
     
     This allows us to reuse backend services while keeping the new app decoupled and focused on budgeting features.
 
@@ -335,18 +345,18 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 
 ---
 
-- [x] TODO(P2): Import History “Apply selected session” must be session-scoped (do not apply other sessions in same month)
+- [x] `TODO`(P2): Import History “Apply selected session” must be session-scoped (do not apply other sessions in same month)
   - add session-scoped store APIs (apply + pending savings) and wire Import History to use them
   - add regression tests for overlapping sessions
   - tracking doc: `docs/developer/ingestion-plan.md`
 
-- [x] TODO(P3): Full ingestion refactor — ImportPlan + commit (done)
+- [x] `TODO`(P3): Full ingestion refactor — ImportPlan + commit (done)
   - `analyzeImport(...) -> ImportPlan` (serializable plan; no function-valued patches)
   - `commitImportPlan(plan)` is the single store commit boundary for import UIs
   - tests cover analyze/commit determinism + idempotency
   - tracking doc: `docs/developer/ingestion-plan.md`
 
-- [x] TODO(P4): Proposed ingestion upgrades (done)
+- [x] `TODO`(P4): Proposed ingestion upgrades (done)
   - enable PapaParse worker mode for streaming parse (large files)
   - add streaming backpressure/yielding for classify/infer stages
   - add memory/perf guardrails for huge imports
