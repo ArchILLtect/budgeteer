@@ -32,7 +32,7 @@ Note: When you start needing backward compatibility, switch to the legacy-mode g
 
 ## State & persistence
 
-- Main domain store: `src/store/budgetStore.ts` (persisted under localStorage key `budgeteer:budgetStore`).
+- Main domain store: `src/store/budgetStore.ts` (Zustand persist `name: "budgeteer:budgetStore"`, stored under user-scoped localStorage key `budgeteer:u:<scope>:zustand:budgeteer:budgetStore`).
 - Persistence boundary: `partialize` intentionally strips transient/UI-only fields (e.g. modal state, progress state, `hasInitialized`, `sessionExpired`).
 - Other persisted stores exist under `src/store/` and `src/services/`.
 - Do not change persisted store shapes or storage keys without an explicit migration plan.
