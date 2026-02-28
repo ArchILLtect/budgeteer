@@ -161,6 +161,7 @@ export default function SavingsReviewModal() {
 
   const handleSubmit = () => {
     try {
+      const processedCount = queue.length;
       queue.forEach((entry) => {
         const goalId = selectedGoals[entry.id] || null; // allow null
         addSavingsLog(entry.month, {
@@ -174,11 +175,14 @@ export default function SavingsReviewModal() {
       // Resolve and cleanup centrally
       resolveSavingsLink(true);
 
-      fireToast(
-        "success",
-        "Savings transactions linked",
-        `Processed ${queue.length.toLocaleString("en-US")} savings transfer(s).`
-      );
+      // Fire toast after the modal closes (next tick) so it reads like a completion event.
+      window.setTimeout(() => {
+        fireToast(
+          "success",
+          "Savings transactions linked",
+          `Processed ${processedCount.toLocaleString("en-US")} savings transfer(s).`
+        );
+      }, 0);
     } catch (err: unknown) {
       fireToast("error", "Error linking savings transactions", err instanceof Error ? err.message : String(err));
     }
