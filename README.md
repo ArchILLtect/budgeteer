@@ -160,19 +160,17 @@ date,description,amount,type,category
 
 ## 🔐 Auth & demo mode tips
 
--   Tokens are stored in `localStorage.token`.
--   Demo mode: set `localStorage.token = "demo-token"` to sign in as a guest user (never expires).
--   The app checks token freshness on mount and every 5 minutes; expired sessions show a lock overlay with re-login.
--   Cross-tab login refresh is handled via `window.postMessage` and `storage` events; unlocking propagates across tabs.
+-   Auth is handled via AWS Amplify (Cognito) using `aws-amplify/auth`.
+-   Demo Mode is a real end-to-end flow that runs the normal CSV import pipeline.
+  - See [docs/developer/demo-mode-mvp-plan.md](docs/developer/demo-mode-mvp-plan.md) for the design + checklist.
+-   Persisted state is user-scoped in localStorage under keys like `budgeteer:u:<scope>:...`.
 
 ---
 
 ## 🛠️ Troubleshooting
 
 -   Dev server port in use: if `5173` is busy, stop the other process or run with a different port (e.g., `npm run dev -- --port 5174`).
--   Stale local data: in the browser console run `localStorage.removeItem('budgeteer:budgetStore')` to clear persisted store.
--   Session lock persists: visit `/login?bypassLock=true` to re-auth without losing work; successful login clears the lock across tabs.
--   API base URL: if `/me` fails, set a `.env` value like `VITE_API_BASE_URL=https://your-api.example.com` and restart the dev server.
+-   Stale local data: use Settings → clear caches/reset, or clear keys prefixed with `budgeteer:` in devtools Application → Local Storage.
 -   CSV import errors: ensure headers match `date,description,amount,type,category` and dates are `YYYY-MM-DD`.
 -   Lint/type errors: run `npm run lint` and address reported issues; restart the dev server after large refactors.
 
