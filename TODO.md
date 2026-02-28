@@ -39,34 +39,19 @@ Actionable TODOs must use one of:
 <a id="p1"></a>
 ### `TODO`(P1)
 
-
-
 UI bugfixes (P1):
 
-
-- [ ] TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”
 - [ ] TODO(P1): Imports — add an “Advanced” toggle “Generate suggestions” (heuristics) (default OFF)
   - When enabled, generate *proposals* even without explicit `budgeteer:*` directives (e.g., suggested rename/category/savings goal links)
   - Must be reviewable/approvable in staging (never silently applied)
 
 Docs(P1):
 
-- [x] TODO(P1): Demo Mode (MVP) — E. Minimal samples curation (done 2026-02-27)
-  - Golden canonical History-export sample: `samples/History_Showcase_Tiny.csv` (29 lines incl. header)
-  - `/samples/README.md` documents the sample set
-- [x] TODO(P1): Ensure `/samples` is documented and curated (done 2026-02-27)
-  - describe each sample file
-  - keep a small, deterministic “golden” CSV for ingestion tests/debug
 - [ ] TODO(P1): Define backend models: Account, Transaction, ImportSession (Transaction identity must be deterministic via strongKey)
   - document in `docs/developer/README.md` or similar
   - ensure frontend models align with backend expectations
   - consider adding TypeScript types/interfaces for these models in `src/types` and using them at ingestion boundaries
 
-MVP quality (P1/P2):
-
-- [ ] TODO(P2): Accessibility pass — add/verify “skip to content”, basic keyboard navigation, and labeled form controls (align with PRD a11y requirements)
-- [x] TODO(P2): Startup resilience — ensure corrupted user-scoped localStorage can’t brick app startup (detect/clear + user-friendly message) (done 2026-02-27)
-  
 <a id="p2"></a>
 ### `TODO`(P2)
 
@@ -79,7 +64,7 @@ MVP quality (P1/P2):
 
 ## Review needed — possible intentional identifiers
 
-- [ ] REVIEW: Amplify-generated auth/API identifiers still include `taskmaster` (do not rename unless you are rebuilding/updating the Amplify backend config)
+- [ ] REVIEW : Amplify-generated auth/API identifiers still include `taskmaster` (do not rename unless you are rebuilding/updating the Amplify backend config)
   - [amplify/team-provider-info.json](amplify/team-provider-info.json#L4-L14)
   - [src/aws-exports.js](src/aws-exports.js#L33)
   - [src/amplifyconfiguration.json](src/amplifyconfiguration.json#L30)
@@ -89,8 +74,6 @@ MVP quality (P1/P2):
 - [ ] TODO(P2): Consolidate storage keys and events under a single namespace
   - prefer `budgeteer:*` for global keys
   - prefer `budgeteer:u:${scope}:...` for scoped keys
-- [x] TODO(P2): Remove/replace non-Budgeteer-branded assets (e.g. title SVG)
-  - e.g. `src/assets/title.svg` (done; replaced with `docs/assets/readme-banner.svg` for README and removed from app)
 
 <a id="p3"></a>
 ### `TODO`(P3)
@@ -111,10 +94,6 @@ MVP quality (P1/P2):
 
 Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 
-- [x] TODO(P3): Type the root persisted store wiring in `src/store/budgetStore.ts` (done 2026-02-19)
-  - define a single RootStore type (slice composition)
-  - remove `set/get/store/state: any` in the persist wrapper
-- [x] TODO(P3): Replace remaining `any` in `src/store/slices/plannerSlice.ts` (planner domain models + setters) (done 2026-02-19)
   - keep scope tight; don’t attempt to type unrelated UI
 - [ ] TODO(P3): Tighten ingestion internal/output shapes (`analyzeImport` + `ImportPlan`)
   - replace `existingTxns: any[]` with domain `Transaction[]`
@@ -138,10 +117,6 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 ### Snowball — Ingestion refactor: ImportPlan + commit (done)
 
 - [ ] TODO(P1): Add stable client device identity (deviceId in localStorage) for presence + sync lock ownership
-- [x] TODO(P1): Add missing error handling around auth and storage access (try/catch + user-friendly messages) (done 2026-02-27)
-- [ ] TODO(P1): Ensure settings changes take effect immediately (e.g. theme toggle should update UI without reload)
-- [x] TODO(P1): Add a “golden” sample CSV for testing/debugging (done 2026-02-27)
-- [ ] TODO(P1): Implement Presence heartbeat + UI indicator (green/red) in app header
 - [ ] TODO(P1): Implement SyncLock (TTL mutex) for sync-only operations; block “Sync now” when lock held
 - [ ] TODO(P1): Add manual “Sync now” button that acquires SyncLock and runs pull/push
 - [ ] TODO(P1): Implement read-only pull: fetch cloud Accounts/Transactions and hydrate Zustand safely
@@ -241,11 +216,29 @@ UI bugfixes (P1):
 
 - [x] `TODO`(P1): Planner — fix “Include savings in …” radio button not working
 - [x] `TODO`(P1): Tracker — fix “Total Override” checkbox not working
+- [x] `TODO`(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply” (done 2026-02-27)
+
+Presence (P1):
+
+- [x] `TODO`(P1): Implement Presence heartbeat + UI indicator (green/red) in app header (done 2026-02-28)
 
 
 Deployment (P1):
 
 - [x] `TODO`(P1): Netlify SPA routing — add `public/_redirects` (or `netlify.toml`) so deep links like `/planner` don’t 404 in production
+
+- [x] `TODO`(P1): Add missing error handling around auth and storage access (try/catch + user-friendly messages) (done 2026-02-27)
+- [x] `TODO`(P1): Ensure settings changes take effect immediately (e.g. theme toggle should update UI without reload)
+- [x] `TODO`(P1): Add a “golden” sample CSV for testing/debugging (done 2026-02-27)
+
+Accessibility (P2):
+
+- [x] `TODO`(P2): Accessibility pass — add/verify “skip to content”, basic keyboard navigation, and labeled form controls (align with PRD a11y requirements) (done 2026-02-27)
+
+- [x] `TODO`(P2): Startup resilience — ensure corrupted user-scoped localStorage can’t brick app startup (detect/clear + user-friendly message) (done 2026-02-27)
+
+- [x] `TODO`(P2): Remove/replace non-Budgeteer-branded assets (e.g. title SVG)
+  - e.g. `src/assets/title.svg` (done; replaced with `docs/assets/readme-banner.svg` for README and removed from app)
 
 Income Details (Tracker) (P1):
 
@@ -285,6 +278,12 @@ Docs (P1):
 - [x] `TODO`(P1): Replace README banner with a Budgeteer version
   - new file: `docs/assets/readme-banner.svg`
   - ensure README references it
+- [x] `TODO`(P1): Demo Mode (MVP) — E. Minimal samples curation (done 2026-02-27)
+  - Golden canonical History-export sample: `samples/History_Showcase_Tiny.csv` (29 lines incl. header)
+  - `/samples/README.md` documents the sample set
+- [x] `TODO`(P1): Ensure `/samples` is documented and curated (done 2026-02-27)
+  - describe each sample file
+  - keep a small, deterministic “golden” CSV for ingestion tests/debug
 
 - [x] `TODO`(P1): Document auth flows and user-scoped persistence in architecture docs (done; see `docs/ARCHITECTURE.md`)
   - how `useAuthUser()` works, how it triggers rehydration of user-scoped stores
@@ -383,3 +382,12 @@ Docs (P1):
 ---
 
 ### Routing & Navigation
+
+---
+
+### Type Hardening
+
+- [x] `TODO`(P3): Type the root persisted store wiring in `src/store/budgetStore.ts` (done 2026-02-19)
+  - define a single RootStore type (slice composition)
+  - remove `set/get/store/state: any` in the persist wrapper
+- [x] `TODO`(P3): Replace remaining `any` in `src/store/slices/plannerSlice.ts` (planner domain models + setters) (done 2026-02-19)
