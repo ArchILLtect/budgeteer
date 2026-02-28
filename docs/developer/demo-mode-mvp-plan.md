@@ -1,6 +1,6 @@
 # Demo Mode (MVP) — Plan + Checklist
 
-Last updated: 2026-02-24
+Last updated: 2026-02-27
 
 ## Goal
 
@@ -122,10 +122,9 @@ MVP update (2026-02-24): we treat demo reset as **"square one"** for demo identi
 
 ### E. Minimal samples curation (MVP)
 
-- [ ] Add a small deterministic “golden” canonical History-export CSV under `/samples`
-  - Intended for debugging ingestion and for quick manual import.
-  - Keep it small (10–30 rows), deterministic, and representative.
-- [ ] Update `/samples/README.md` to describe the golden file.
+- [x] ~~Add a small deterministic “golden” canonical History-export CSV under `/samples`~~ (done 2026-02-27)
+  - `samples/History_Showcase_Tiny.csv` (canonical History-export format; 10–30 rows)
+- [x] ~~Update `/samples/README.md` to describe the golden file.~~ (done 2026-02-27)
 
 ## Acceptance criteria (definition of done)
 

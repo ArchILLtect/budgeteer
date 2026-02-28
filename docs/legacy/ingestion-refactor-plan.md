@@ -1,6 +1,6 @@
 # CSV / Apply-to-Budget Ingestion Refactor Plan (STATUS UPDATE)
 
-> HISTORICAL NOTE (2026-02-14): This document is a status log for an earlier ingestion refactor.
+> HISTORICAL `NOTE` (2026-02-14): This document is a status log for an earlier ingestion refactor.
 > The current ingestion architecture is `analyzeImport(...) -> ImportPlan -> commitImportPlan(plan)` and the legacy `runIngestion` wrapper has been removed.
 > See `docs/ingestion-architecture.md` and `docs/developer/ingestion-architecture.md` for the up-to-date flow.
 
@@ -8,7 +8,7 @@ Purpose: Replace the monolithic, modal-blocking, multi-write transaction import 
 
 Last Update: 2026-02-07 (streaming + staging/undo + savings deferral in production; aligned with cloud sync plan)
 
-NOTE: This document is kept as a historical status log for the ingestion refactor.
+`NOTE`: This document is kept as a historical status log for the ingestion refactor.
 
 For cloud sync work (Amplify-native), see:
 

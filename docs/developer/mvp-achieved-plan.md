@@ -1,6 +1,6 @@
 # Budgeteer — MVP Achieved Plan (Checklist)
 
-Last updated: 2026-02-24
+Last updated: 2026-02-27
 
 This document answers:
 
@@ -42,14 +42,15 @@ Verification:
 
 ### C) MVP-quality non-functional guardrails are met (PRD §7)
 
-- [ ] `npm run check` is green.
+- [x] `npm run check` is green.
 - [ ] **Accessibility basics:** keyboard navigation works for primary flows; form controls are labeled; “skip to content” exists.
-- [ ] **Startup resilience:** corrupted user-scoped localStorage cannot brick app startup (detect + clear + user-friendly message).
+- [x] **Startup resilience:** corrupted user-scoped localStorage cannot brick app startup (detect + clear + user-friendly message).
+   - Implemented: corrupted user-scoped persisted Zustand payloads are cleared on read, and the app shows a “Local data was reset” toast on next load.
 
 ### D) Debuggability is “good enough” for MVP
 
-- [ ] `/samples` includes a tiny deterministic **golden canonical History-export CSV** for ingestion debugging.
-- [ ] `/samples/README.md` documents the golden file.
+- [x] `/samples` includes a tiny deterministic **golden canonical History-export CSV** for ingestion debugging (done 2026-02-27).
+- [x] `/samples/README.md` documents the golden file (done 2026-02-27).
 
 ---
 
@@ -58,7 +59,7 @@ Verification:
 Use `docs/MILESTONES.md` as the authoritative status record. As of 2026-02-24:
 
 - Milestone 0–4 are marked done.
-- Demo Mode MVP items A–D are done; only item E remains.
+- Demo Mode MVP items A–E are done.
 
 ---
 
@@ -70,20 +71,19 @@ These are the *minimum* remaining tasks to confidently say “MVP achieved”, b
 
 Source: `docs/developer/demo-mode-mvp-plan.md` → “E. Minimal samples curation (MVP)”
 
-- [ ] Add a small deterministic “golden” canonical History-export CSV under `/samples`
-  - Keep it small (10–30 rows), deterministic, representative
-  - Intended for debugging ingestion and quick manual import
-- [ ] Update `/samples/README.md` to describe the golden file
+- [x] Add a small deterministic “golden” canonical History-export CSV under `/samples` (done 2026-02-27)
+   - `samples/History_Showcase_Tiny.csv` (29 lines incl. header)
+- [x] Update `/samples/README.md` to describe the golden file (done 2026-02-27)
 
 Related backlog item:
 
-- `TODO.md`: `TODO(P1): Demo Mode (MVP) — E. Minimal samples curation`
+- `TODO`.md: `TODO`(P1): Demo Mode (MVP) — E. Minimal samples curation
 
 ### 2) Imports/Apply toast after Savings Review modal
 
 Source: `TODO.md`
 
-- [ ] `TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”`
+- [ ] TODO(P1): Imports/Apply — after Savings Review modal completes, fire toast “Savings transactions linked” (later: include counts); ensure it happens for both Accounts “Apply to Budget” and Import History “Apply”
 
 Acceptance:
 
@@ -93,11 +93,11 @@ Acceptance:
 
 Source: `TODO.md` + PRD §7 (Accessibility)
 
-- [ ] `TODO(P2): Accessibility pass — add/verify “skip to content”, basic keyboard navigation, and labeled form controls`
+- [ ] TODO(P2): Accessibility pass — add/verify “skip to content”, basic keyboard navigation, and labeled form controls for primary flows (Planner, Accounts import/apply, Tracker navigation, Settings).
 
 Acceptance:
 
-- [ ] A visible “Skip to content” link exists and works.
+- [x] A visible “Skip to content” link exists and works.
 - [ ] Primary flows are keyboard-usable (Planner inputs, import/apply, Tracker navigation, Settings).
 - [ ] Forms are labeled for screen readers (no unlabeled inputs in primary flows).
 
@@ -105,14 +105,14 @@ Acceptance:
 
 Source: `TODO.md` + PRD §7 (Reliability)
 
-- [ ] `TODO(P2): Startup resilience — ensure corrupted user-scoped localStorage can’t brick app startup (detect/clear + user-friendly message)`
+- [x] ~~`TODO`(P2): Startup resilience — ensure corrupted user-scoped localStorage can’t brick app startup (detect/clear + user-friendly message)~~ (done 2026-02-27)
 
 Acceptance:
 
-- [ ] If the persisted budget store JSON is corrupted, the app:
-  - clears the corrupted key(s)
-  - shows a clear message (toast/banner)
-  - continues to render (fresh state)
+- [x] If the persisted budget store JSON is corrupted, the app:
+   - clears the corrupted key(s)
+   - shows a clear message (toast/banner)
+   - continues to render (fresh state)
 
 ---
 
@@ -120,9 +120,9 @@ Acceptance:
 
 Keep each step small and shippable. For each step: update `TODO.md` checkboxes and run `npm run check`.
 
-1) **Samples curation**
-   - Add the golden CSV and update `/samples/README.md`.
-   - Verify it imports and produces stable, predictable results.
+1) ~~**Samples curation**~~ (done 2026-02-27)
+   - ~~Add the golden CSV and update `/samples/README.md`.~~
+   - ~~Verify it imports and produces stable, predictable results.~~
 
 2) **Savings Review completion toast**
    - Implement the toast in both apply entry points.
@@ -132,9 +132,9 @@ Keep each step small and shippable. For each step: update `TODO.md` checkboxes a
    - Add “skip to content” and label audits for primary forms.
    - Do a keyboard-only run through Journeys A/B/C.
 
-4) **Startup resilience**
-   - Add detection/guardrails around persisted store rehydrate.
-   - Add a manual “corrupt storage” test procedure (below).
+4) ~~**Startup resilience**~~ (done 2026-02-27)
+   - ~~Add detection/guardrails around persisted store rehydrate.~~
+   - Manual test procedure remains (see “Corrupted local storage resilience” scenario below).
 
 ---
 
@@ -171,4 +171,4 @@ These are valuable but do **not** block calling MVP achieved:
 - “Generate suggestions” heuristics toggle for imports (`TODO(P1)`)
 - Advanced “Clear session” options and DEV-only variants (`TODO(P2)`)
 - Per-transaction rename/edit entrypoint in Tracker (`TODO(P2)`)
-- Backend sync strategy decisions (`TODO(P4/P5)`)
+- Backend sync strategy decisions (`TODO(P5)`)
