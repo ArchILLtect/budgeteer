@@ -12,6 +12,7 @@ import { useBudgetStore } from "../store/budgetStore";
 import type { Transaction } from "../types/domain";
 import { isDemoIdentityUsername } from "./userDisplay";
 import { errorToMessage } from "../utils/appUtils";
+import { getOrCreateDeviceId } from "./deviceIdentity";
 
 export const CURRENT_SEED_VERSION = 1 as const;
 
@@ -144,6 +145,7 @@ async function resolveDesiredPlanTier(username?: string | null): Promise<ApiPlan
 async function ensureUserProfile(profileId: string, seedDemo: boolean) {
   const current = await getCurrentUser();
   const owner = current.userId;
+  const deviceId = getOrCreateDeviceId();
 
   if (import.meta.env.DEV) {
     console.debug(`[user bootstrap] ensure profile owner(sub)=${owner} profileId=${profileId} seedDemo=${String(seedDemo)}`);
@@ -187,6 +189,15 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
     if (displayName) {
       await selfHealUserProfileDisplayName(profileId, displayName);
     }
+
+    // Track last-seen device for presence/sync ownership.
+    if (deviceId && existing.lastDeviceId !== deviceId) {
+      try {
+        await budgeteerApi.updateUserProfile({ id: profileId, lastDeviceId: deviceId });
+      } catch {
+        // Best-effort only.
+      }
+    }
     return existing;
   }
 
@@ -215,7 +226,7 @@ async function ensureUserProfile(profileId: string, seedDemo: boolean) {
     bio: null,
     timezone: null,
     locale: null,
-    lastDeviceId: null,
+    lastDeviceId: deviceId,
     acceptedTermsAt: null,
   } as const;
 

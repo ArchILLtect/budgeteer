@@ -1,4 +1,5 @@
 import { Box, Flex, Button, HStack, Heading, Badge, IconButton } from '@chakra-ui/react';
+import { useMemo, useState } from "react";
 import { RouterLink } from "../components/RouterLink";
 import { Tooltip } from '../components/ui/Tooltip';
 import { requestOpenWelcomeModal } from '../services/welcomeModalPreference';
@@ -13,6 +14,10 @@ import { useColorModeClass } from "../hooks/useColorModeClass";
 import { usePresenceHeartbeat } from "../hooks/usePresenceHeartbeat";
 import { usePresenceStore } from "../store/presenceStore";
 import { useShallow } from "zustand/react/shallow";
+import { getOrCreateDeviceId } from "../services/deviceIdentity";
+import { useSyncLock } from "../hooks/useSyncLock";
+import { runSyncNow } from "../services/cloudSyncService";
+import { fireToast } from "../hooks/useFireToast";
 
 type NavigationProps = {
   user?: AuthUserLike | null;
@@ -43,6 +48,11 @@ export default function Navigation({ user, userUI }: NavigationProps) {
 
   const userId = user?.userId ?? null;
   usePresenceHeartbeat({ enabled: Boolean(userId), userId });
+
+  const deviceId = useMemo(() => getOrCreateDeviceId(), []);
+  const syncLock = useSyncLock();
+  const syncLockHeldByOther = Boolean(syncLock && deviceId && syncLock.ownerDeviceId !== deviceId);
+  const [syncing, setSyncing] = useState(false);
 
   const presence = usePresenceStore(
     useShallow((s) => ({
@@ -186,6 +196,43 @@ export default function Navigation({ user, userUI }: NavigationProps) {
                     <Badge rounded="md" colorPalette={presencePalette}>
                       {presenceLabel}
                     </Badge>
+                  </Tooltip>
+                ) : null}
+
+                {userId ? (
+                  <Tooltip
+                    content={
+                      syncLockHeldByOther
+                        ? "Sync in progress (another tab/device)."
+                        : syncing
+                          ? "Syncing…"
+                          : "Sync now"
+                    }
+                    showArrow
+                  >
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={syncing || syncLockHeldByOther}
+                      onClick={async () => {
+                        if (!userId) return;
+                        setSyncing(true);
+                        try {
+                          const res = await runSyncNow(userId);
+                          if (res.ok) {
+                            fireToast("success", "Synced", "Cloud sync probe completed.");
+                          } else if (res.reason === "locked") {
+                            fireToast("warning", "Sync busy", res.message);
+                          } else {
+                            fireToast("error", "Sync failed", res.message);
+                          }
+                        } finally {
+                          setSyncing(false);
+                        }
+                      }}
+                    >
+                      Sync now
+                    </Button>
                   </Tooltip>
                 ) : null}
 
