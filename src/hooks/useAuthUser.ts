@@ -10,6 +10,7 @@ import { useUserUICacheStore } from "../services/userUICacheStore";
 import { useBudgetStore } from "../store/budgetStore";
 import { useLocalSettingsStore } from "../store/localSettingsStore";
 import { useUpdatesStore } from "../store/updatesStore";
+import { useOutboxStore } from "../store/outboxStore";
 import { recordAuthTiming } from "../services/perfLogger";
 //import { clearDemoSessionActive } from "../services/demoSession";
 
@@ -91,6 +92,7 @@ export function useAuthUser(): {
       resetStoreIfMissing("budgeteer:user", useUserUICacheStore);
       resetStoreIfMissing("budgeteer:localSettings", useLocalSettingsStore);
       resetStoreIfMissing("budgeteer:updates", useUpdatesStore);
+      resetStoreIfMissing("budgeteer:outbox", useOutboxStore);
     }
 
     // IMPORTANT:
@@ -141,6 +143,7 @@ export function useAuthUser(): {
         });
       void useLocalSettingsStore.persist.rehydrate();
       void useUpdatesStore.persist.rehydrate();
+      void useOutboxStore.persist.rehydrate();
     } catch {
       // ignore
     }
