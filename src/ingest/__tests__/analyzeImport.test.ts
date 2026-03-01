@@ -31,22 +31,59 @@ function installDeterministicCrypto() {
     return `uuid-${i}`;
   };
 
-  const nextCrypto = {
-    ...(original || ({} as Crypto)),
-    randomUUID,
-  } as Crypto;
+  if (!original) {
+    const nextCrypto = { randomUUID } as Crypto;
 
-  Object.defineProperty(globalThis, "crypto", {
-    value: nextCrypto,
-    configurable: true,
-  });
-
-  return () => {
     Object.defineProperty(globalThis, "crypto", {
-      value: original,
+      value: nextCrypto,
       configurable: true,
     });
-  };
+
+    return () => {
+      Object.defineProperty(globalThis, "crypto", {
+        value: original,
+        configurable: true,
+      });
+    };
+  }
+
+  // Prefer patching in-place so WebCrypto getters keep the correct `this`.
+  const originalRandomUUID = original.randomUUID;
+  try {
+    Object.defineProperty(original, "randomUUID", {
+      value: randomUUID,
+      configurable: true,
+    });
+
+    return () => {
+      Object.defineProperty(original, "randomUUID", {
+        value: originalRandomUUID,
+        configurable: true,
+      });
+    };
+  } catch {
+    // Some environments make `crypto` non-extensible or `randomUUID` non-writable.
+    // Fall back to a Proxy that preserves `this` bindings and only overrides randomUUID.
+    const proxied = new Proxy(original, {
+      get(target, prop) {
+        if (prop === "randomUUID") return randomUUID;
+        const value = Reflect.get(target, prop, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    }) as Crypto;
+
+    Object.defineProperty(globalThis, "crypto", {
+      value: proxied,
+      configurable: true,
+    });
+
+    return () => {
+      Object.defineProperty(globalThis, "crypto", {
+        value: original,
+        configurable: true,
+      });
+    };
+  }
 }
 
 describe("analyzeImport", () => {
