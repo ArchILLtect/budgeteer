@@ -18,6 +18,15 @@ import type { ImportPlan } from "../../ingest/importPlan";
 import { normalizeTransactionAmount } from "../../utils/storeHelpers";
 import type { SavingsReviewEntry } from "../../types/savingsReview";
 import type { IngestionMetrics } from "../../types/ingestionMetrics";
+import { useOutboxStore } from "../outboxStore";
+
+function stripTxnForCloudPayload(tx: TransactionForImportLifecycle): Record<string, unknown> {
+  // Avoid persisting potentially large origin payloads (CSV rows, etc) in the outbox.
+  // Backend sync can always be extended later to include richer provenance.
+  const copy = { ...((tx as unknown as Record<string, unknown>) ?? {}) };
+  delete copy.original;
+  return copy;
+}
 
 type ImportManifestMeta = {
   size?: number;
@@ -221,7 +230,9 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
       };
     }),
 
-  commitImportPlan: (plan) =>
+  commitImportPlan: (plan) => {
+    let outboxItems: Array<{ kind: string; dedupeKey: string; payload: unknown }> = [];
+
     set((state) => {
       const sessionId = String(plan.session?.sessionId || "");
       const accountNumber = String(plan.session?.accountNumber || "");
@@ -239,6 +250,8 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
       const accepted: TransactionForImportLifecycle[] = Array.isArray(plan?.accepted)
         ? (plan.accepted as TransactionForImportLifecycle[])
         : [];
+
+      const isDemoUser = Boolean((state as { isDemoUser?: unknown }).isDemoUser);
       if (!accepted.length) {
         // Still record the session metadata for audit if desired.
         const entry: ImportHistoryEntry = {
@@ -251,6 +264,24 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
           savingsCount: Array.isArray(plan?.savingsQueue) ? plan.savingsQueue.length : 0,
           hash,
         };
+
+        if (!isDemoUser) {
+          outboxItems = [
+            {
+              kind: "cloud:upsertImportSession",
+              dedupeKey: `importSession|${accountNumber}|${sessionId}`,
+              payload: {
+                session: plan.session,
+                stats: {
+                  hash,
+                  newCount: 0,
+                  dupesExisting: stats?.dupesExisting,
+                  dupesIntraFile: stats?.dupesIntraFile,
+                },
+              },
+            },
+          ];
+        }
 
         const maxEntries = state.importHistoryMaxEntries || 30;
         const maxAgeDays = state.importHistoryMaxAgeDays || 30;
@@ -287,6 +318,35 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
           // If keying fails, skip commit rather than risk duping.
           continue;
         }
+      }
+
+      if (!isDemoUser) {
+        outboxItems = [
+          {
+            kind: "cloud:upsertImportSession",
+            dedupeKey: `importSession|${accountNumber}|${sessionId}`,
+            payload: {
+              session: plan.session,
+              stats: {
+                hash,
+                newCount: toAdd.length,
+                dupesExisting: stats?.dupesExisting,
+                dupesIntraFile: stats?.dupesIntraFile,
+              },
+            },
+          },
+          {
+            kind: "cloud:upsertTransactions",
+            dedupeKey: `importTransactions|${accountNumber}|${sessionId}`,
+            payload: {
+              accountNumber,
+              sessionId,
+              importedAt,
+              hash,
+              transactions: toAdd.map(stripTxnForCloudPayload),
+            },
+          },
+        ];
       }
 
       const merged = [...existingTxns, ...toAdd].sort((a, b) =>
@@ -412,7 +472,17 @@ export const createImportSlice: SliceCreator<ImportSlice> = (set, get) => ({
         importManifests,
         lastIngestionTelemetry,
       };
-    }),
+    });
+
+    // Side-effect after state commit: enqueue cloud writes for later sync.
+    // (Under SyncLock, the sync runner can flush these to the backend once implemented.)
+    if (outboxItems.length) {
+      const outbox = useOutboxStore.getState();
+      for (const it of outboxItems) {
+        outbox.enqueue({ kind: it.kind, dedupeKey: it.dedupeKey, payload: it.payload, preferReplace: true });
+      }
+    }
+  },
 
   processSavingsQueue: (entries) =>
     set((state) => {
