@@ -117,7 +117,6 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 ### Snowball — Ingestion refactor: ImportPlan + commit (done)
 
 - [ ] TODO(P1): Implement read-only pull: fetch cloud Accounts/Transactions and hydrate Zustand safely
-- [ ] TODO(P1): Implement outbox queue (local) for idempotent sync writes + retry
 - [ ] TODO(P1): Wire Import Transactions + Sync Accounts apply flow to enqueue backend writes (ImportSession + Transactions) under SyncLock
 - [ ] TODO(P1): Enforce backend idempotency: strongKey-derived Transaction ID (re-import safe)
 
@@ -224,6 +223,7 @@ Sync (P1):
 
 - [x] `TODO`(P1): Implement SyncLock (TTL mutex) for sync-only operations; block “Sync now” when lock held (done 2026-02-28)
 - [x] `TODO`(P1): Add manual “Sync now” button that acquires SyncLock and runs pull/push (done 2026-02-28)
+- [x] `TODO`(P1): Implement outbox queue (local) for idempotent sync writes + retry (done 2026-02-28)
 
 
 Deployment (P1):
