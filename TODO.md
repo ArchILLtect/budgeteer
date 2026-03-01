@@ -116,7 +116,6 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 <a id="snowball"></a>
 ### Snowball — Ingestion refactor: ImportPlan + commit (done)
 
-- [ ] TODO(P1): Add stable client device identity (deviceId in localStorage) for presence + sync lock ownership
 - [ ] TODO(P1): Implement SyncLock (TTL mutex) for sync-only operations; block “Sync now” when lock held
 - [ ] TODO(P1): Add manual “Sync now” button that acquires SyncLock and runs pull/push
 - [ ] TODO(P1): Implement read-only pull: fetch cloud Accounts/Transactions and hydrate Zustand safely
@@ -220,7 +219,8 @@ UI bugfixes (P1):
 
 Presence (P1):
 
-- [x] `TODO`(P1): Implement Presence heartbeat + UI indicator (green/red) in app header (done 2026-02-28)
+- [x] `TODO`(P1): Implement Presence heartbeat + UI indicator (green/red) in app header (done 2026-02-27)
+- [x] `TODO`(P1): Add stable client device identity (deviceId in localStorage) for presence + sync lock ownership (done 2026-02-27)
 
 
 Deployment (P1):
