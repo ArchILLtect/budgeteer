@@ -39,6 +39,15 @@ Actionable TODOs must use one of:
 <a id="p1"></a>
 ### `TODO`(P1)
 
+- [ ] TODO(P1): Decide what remains local-only vs syncs to backend (document in docs)
+  - MVP: UserProfile only (bootstrapping/demo mode)
+  - Post-MVP: consider syncing core budgeting data (scenarios, plans, actuals, savings goals/logs) if it enables key features like multi-device access or backup/restore
+  - For any synced data, ensure we have a clear strategy for conflict resolution and data integrity (e.g. last-write-wins, merge rules, etc.)
+
+- [ ] TODO(P5): Re-evaluate cloud sync strategy after core UX is coherent
+  - If we find that users want multi-device access or backup/restore, we may want to expand the scope of what is synced to include core budgeting data (scenarios, plans, actuals, savings goals/logs).
+  - If we decide to sync more data, we should ensure we have a clear strategy for conflict resolution and data integrity (e.g. last-write-wins, merge rules, etc.)
+
 UI bugfixes (P1):
 
 - [ ] TODO(P1): Imports — add an “Advanced” toggle “Generate suggestions” (heuristics) (default OFF)
@@ -104,12 +113,18 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 <a id="p4"></a>
 ### `TODO`(P4)
 
-- [ ] TODO(P4): Decide what remains local-only vs syncs to backend (document in docs)
+- [ ] TODO(P4): Add background auto-sync (when online + idle) while still keeping manual Sync button
+- [ ] TODO(P4): Add stronger per-field merge rules (avoid overwriting user-edited fields during re-import)
+- [ ] TODO(P4): Add role-based household management (invite, revoke) if needed
+- [ ] TODO(P4): Add fine-grained conflict UI (pick local vs remote per field) if conflicts become common and problematic
+- [ ] TODO(P4): Add automated backups/export (cloud snapshot export) if users express need for it and we want to offer a manual backup option beyond localStorage
 
 <a id="p5"></a>
 ### `TODO`(P5)
 
-- [ ] TODO(P5): Re-evaluate cloud sync strategy after core UX is coherent
+- [ ] TODO(P5): Add true offline mode UX (sync badge + queued ops count + retry controls) if we want to support users with intermittent connectivity or who prefer an offline-first experience
+- [ ] TODO(P5): Add a “note directive” -> “category rule” suggestion for future similar descriptions if we find that users want to derive category rules from import notes and it’s a common enough pattern to automate
+- [ ] TODO(P5): Add a “Promote to Planner income source” action in Tracker and/or Import session review if we find that users want an easy way to convert imported income transactions into recurring income sources for planning purposes
 
 ---
 
