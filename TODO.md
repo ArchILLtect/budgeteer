@@ -15,6 +15,7 @@ Actionable TODOs must use one of:
 
 - [Open Backlog](#open-backlog)
   - [`TODO`(continual)](#continual)
+  - [Syncing](#syncing)
   - [`TODO`(P1)](#p1)
   - [`TODO`(P2)](#p2)
   - [`TODO`(P3)](#p3)
@@ -36,17 +37,55 @@ Actionable TODOs must use one of:
 - [ ] TODO(continual): Remove dead code paths during feature work (don’t let leftovers accumulate)
 - [ ] TODO(continual): Prefer user-scoped storage keys for any persisted UI state
 
-<a id="p1"></a>
-### `TODO`(P1)
+<a id="syncing"></a>
+### Syncing
+
+All cloud/multi-device sync work lives here (including the former “Snowball” list).
 
 - [ ] TODO(P1): Decide what remains local-only vs syncs to backend (document in docs)
   - MVP: UserProfile only (bootstrapping/demo mode)
   - Post-MVP: consider syncing core budgeting data (scenarios, plans, actuals, savings goals/logs) if it enables key features like multi-device access or backup/restore
   - For any synced data, ensure we have a clear strategy for conflict resolution and data integrity (e.g. last-write-wins, merge rules, etc.)
 
+- [ ] TODO(P1): Define backend models: Account, Transaction, ImportSession (Transaction identity must be deterministic via strongKey)
+  - document in `docs/developer/README.md` or similar
+  - ensure frontend models align with backend expectations
+  - consider adding TypeScript types/interfaces for these models in `src/types` and using them at ingestion boundaries
+
+- [ ] TODO(P1): Implement read-only pull: fetch cloud Accounts/Transactions and hydrate Zustand safely
+- [ ] TODO(P1): Wire Import Transactions + Sync Accounts apply flow to enqueue backend writes (ImportSession + Transactions) under SyncLock
+- [ ] TODO(P1): Enforce backend idempotency: strongKey-derived Transaction ID (re-import safe)
+
+- [ ] TODO(P2): Add ImportSession cloud status transitions (STAGED/APPLIED/UNDONE/EXPIRED) and mirror to UI import history
+- [ ] TODO(P2): Add “initial upload” migration path: push existing local accounts/txns to cloud (one-time) with dedupe
+- [ ] TODO(P2): Add basic conflict protection: detect remote newer data and warn before overwriting local
+- [ ] TODO(P2): Add incremental pull (by updatedAt) to avoid downloading everything each sync
+- [ ] TODO(P2): Add sync telemetry panel (last sync time, counts pushed/pulled, last error)
+
+- [ ] TODO(P3): Move persisted data from localStorage blob to IndexedDB (optional) for scalability (transactions can get large)
+- [ ] TODO(P3): Add manual repair tools: edit tx, split tx, mark duplicate/merge
+- [ ] TODO(P3): Add transfer pairing helper UI (optional) for savings/transfer edge cases
+- [ ] TODO(P3): Add backend models for savings + planner/tracker domains (SavingsGoals, SavingsLogs, MonthlyPlans, MonthlyActuals)
+- [ ] TODO(P3): Migrate savings review queue outcomes to persist in cloud
+
+- [ ] TODO(P4): Add background auto-sync (when online + idle) while still keeping manual Sync button
+- [ ] TODO(P4): Add stronger per-field merge rules (avoid overwriting user-edited fields during re-import)
+- [ ] TODO(P4): Add role-based household management (invite, revoke) if needed
+- [ ] TODO(P4): Add fine-grained conflict UI (pick local vs remote per field) if conflicts become common and problematic
+- [ ] TODO(P4): Add automated backups/export (cloud snapshot export) if users express need for it and we want to offer a manual backup option beyond localStorage
+
+- [ ] TODO(P5): Add true offline mode UX (sync badge + queued ops count + retry controls) if we want to support users with intermittent connectivity or who prefer an offline-first experience
 - [ ] TODO(P5): Re-evaluate cloud sync strategy after core UX is coherent
   - If we find that users want multi-device access or backup/restore, we may want to expand the scope of what is synced to include core budgeting data (scenarios, plans, actuals, savings goals/logs).
   - If we decide to sync more data, we should ensure we have a clear strategy for conflict resolution and data integrity (e.g. last-write-wins, merge rules, etc.)
+
+- [ ] TODO(postmvp): Add OFX import + cloud sync integration
+- [ ] TODO(postmvp): Add Plaid-based syncing (replace stub in src/utils/plaidService.js)
+
+<a id="p1"></a>
+### `TODO`(P1)
+
+- Sync-related P1 items moved to [Syncing](#syncing).
 
 UI bugfixes (P1):
 
@@ -56,10 +95,7 @@ UI bugfixes (P1):
 
 Docs(P1):
 
-- [ ] TODO(P1): Define backend models: Account, Transaction, ImportSession (Transaction identity must be deterministic via strongKey)
-  - document in `docs/developer/README.md` or similar
-  - ensure frontend models align with backend expectations
-  - consider adding TypeScript types/interfaces for these models in `src/types` and using them at ingestion boundaries
+- Sync-related docs items moved to [Syncing](#syncing).
 
 <a id="p2"></a>
 ### `TODO`(P2)
@@ -113,16 +149,12 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 <a id="p4"></a>
 ### `TODO`(P4)
 
-- [ ] TODO(P4): Add background auto-sync (when online + idle) while still keeping manual Sync button
-- [ ] TODO(P4): Add stronger per-field merge rules (avoid overwriting user-edited fields during re-import)
-- [ ] TODO(P4): Add role-based household management (invite, revoke) if needed
-- [ ] TODO(P4): Add fine-grained conflict UI (pick local vs remote per field) if conflicts become common and problematic
-- [ ] TODO(P4): Add automated backups/export (cloud snapshot export) if users express need for it and we want to offer a manual backup option beyond localStorage
+- All current P4 items are sync-related; see [Syncing](#syncing).
 
 <a id="p5"></a>
 ### `TODO`(P5)
 
-- [ ] TODO(P5): Add true offline mode UX (sync badge + queued ops count + retry controls) if we want to support users with intermittent connectivity or who prefer an offline-first experience
+- Sync-related P5 items moved to [Syncing](#syncing).
 - [ ] TODO(P5): Add a “note directive” -> “category rule” suggestion for future similar descriptions if we find that users want to derive category rules from import notes and it’s a common enough pattern to automate
 - [ ] TODO(P5): Add a “Promote to Planner income source” action in Tracker and/or Import session review if we find that users want an easy way to convert imported income transactions into recurring income sources for planning purposes
 
@@ -131,25 +163,7 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 <a id="snowball"></a>
 ### Snowball — Ingestion refactor: ImportPlan + commit (done)
 
-- [ ] TODO(P1): Implement read-only pull: fetch cloud Accounts/Transactions and hydrate Zustand safely
-- [ ] TODO(P1): Wire Import Transactions + Sync Accounts apply flow to enqueue backend writes (ImportSession + Transactions) under SyncLock
-- [ ] TODO(P1): Enforce backend idempotency: strongKey-derived Transaction ID (re-import safe)
-
-- [ ] TODO(P2): Add ImportSession cloud status transitions (STAGED/APPLIED/UNDONE/EXPIRED) and mirror to UI import history
-- [ ] TODO(P2): Add “initial upload” migration path: push existing local accounts/txns to cloud (one-time) with dedupe
-- [ ] TODO(P2): Add basic conflict protection: detect remote newer data and warn before overwriting local
-- [ ] TODO(P2): Add incremental pull (by updatedAt) to avoid downloading everything each sync
-- [ ] TODO(P2): Add sync telemetry panel (last sync time, counts pushed/pulled, last error)
-
-- [ ] TODO(P3): Move persisted data from localStorage blob to IndexedDB (optional) for scalability (transactions can get large)
-- [ ] TODO(P3): Add manual repair tools: edit tx, split tx, mark duplicate/merge
-- [ ] TODO(P3): Add transfer pairing helper UI (optional) for savings/transfer edge cases
-- [ ] TODO(P3): Add backend models for savings + planner/tracker domains (SavingsGoals, SavingsLogs, MonthlyPlans, MonthlyActuals)
-- [ ] TODO(P3): Migrate savings review queue outcomes to persist in cloud
-
-- [ ] TODO(P4): Add background auto-sync (when online + idle) while still keeping manual Sync button
-- [ ] TODO(P4): Add stronger per-field merge rules (avoid overwriting user-edited fields during re-import)
-- [ ] TODO(P4): Add role-based household management (invite, revoke) if needed
+- Snowball sync items have been consolidated under [Syncing](#syncing).
 
 
 
@@ -158,9 +172,7 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 <a id="stretch"></a>
 ### Stretch goals (deferred until post-MVP)
 
-- [ ] TODO(stretch): Add true offline mode UX (sync badge + queued ops count + retry controls)
-- [ ] TODO(stretch): Add fine-grained conflict UI (pick local vs remote per field)
-- [ ] TODO(stretch): Add automated backups/export (cloud snapshot export)
+- Sync-related stretch items were consolidated under [Syncing](#syncing).
 - [ ] TODO(stretch): Imports/Tracker — detect recurring income streams from imported transactions and offer “Add as Planner income source(s)” to seed scenario planning (creates new income source tabs)
   - Suggestions: conservative detector (income-only; require >= 3–4 occurrences; amount consistency; show review list with checkbox per suggestion)
   - Gotchas: transfers can look like income; biweekly vs monthly math; avoid surprising “estimated monthly” conversions (prefer explicit frequency and show computed estimate)
@@ -207,8 +219,8 @@ Type hardening follow-ups (deferred until Milestone 4A is browser-testable):
 ### Post-MVP possibilities (deferred until core UX is stable and we have a better sense of user needs)
 
 - [ ] TODO(postmvp): Evaluate double-entry ledger redesign only if transfer/reconciliation bugs dominate
-- [ ] TODO(postmvp): Add OFX import + cloud sync integration
-- [ ] TODO(postmvp): Add Plaid-based syncing (replace stub in src/utils/plaidService.js)
+
+- Sync-related post-MVP items were moved to [Syncing](#syncing).
 - [ ] TODO(postmvp): (Optional) Add Tier B (raw provenance) persistence for diagnostic/archive purposes
   - MUST be opt-in and explicit; default remains Tier A-only cloud sync
   - define retention/TTL + access policy; avoid shipping raw bank exports by default
