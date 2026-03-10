@@ -28,6 +28,7 @@ For process & quality checklist see: `../CONTRIBUTING.md` (contribution workflow
 -   **API Reference:** [API](./API.md)
 -   **Data Model:** [DATA_MODEL](./DATA_MODEL.md)
 -   **Deployment (Netlify):** [DEPLOYMENT_CHECKLIST](./DEPLOYMENT_CHECKLIST.md)
+-   **Volunteer Manual Testing:** [TESTER_SCRIPT](./TESTER_SCRIPT.md)
 -   **Security:** [SECURITY_CHECKLIST](./SECURITY_CHECKLIST.md)
 -   **Risk Register:** [RISK_REGISTER](./RISK_REGISTER.md)
 -   **Milestones:** [MILESTONES](./MILESTONES.md)

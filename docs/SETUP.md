@@ -70,11 +70,11 @@ Budgeteer consumes an existing Amplify backend configuration.
 
 Key files:
 - `src/amplifyConfig.ts` (calls `Amplify.configure(...)`)
-- `src/amplifyconfiguration.json` (endpoints/regions/ids)
-- `src/aws-exports.js` (generated; not hand-edited)
+- `src/amplifyConfiguration.ts` (endpoints/regions/ids; committed so CI/CD builds work)
 
 Notes:
 - Treat `amplify/` as infrastructure config; avoid manual edits unless you are deliberately running an Amplify workflow.
+- Some Amplify-generated files are intentionally gitignored (per Amplify defaults). This repo’s deployable frontend should not depend on gitignored config files.
 
 For backend details, see:
 - `docs/legacy/AMPLIFY_BACKEND_OVERVIEW.md`
