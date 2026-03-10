@@ -4,7 +4,7 @@ Last updated: 2026-02-10
 
 Target: Netlify with CI/CD auto-deploy from GitHub to:
 
-- https://bugeteer.nickhanson.me/
+- https://budgeteer.nickhanson.me/
 
 This checklist focuses on deploying the **frontend-only** Budgeteer app.
 
