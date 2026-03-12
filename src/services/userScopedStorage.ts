@@ -80,9 +80,29 @@ export function userScopedGetItem(baseKey: string): string | null {
   }
 }
 
+export function userScopedGetItemWithScope(baseKey: string, scopeOverride: string | null): string | null {
+  try {
+    return localStorage.getItem(makeUserScopedKey(baseKey, scopeOverride));
+  } catch {
+    return null;
+  }
+}
+
 export function userScopedSetItem(baseKey: string, value: string): void {
   try {
     localStorage.setItem(makeUserScopedKey(baseKey), value);
+  } catch {
+    // ignore
+  }
+}
+
+export function userScopedSetItemWithScope(
+  baseKey: string,
+  value: string,
+  scopeOverride: string | null,
+): void {
+  try {
+    localStorage.setItem(makeUserScopedKey(baseKey, scopeOverride), value);
   } catch {
     // ignore
   }
