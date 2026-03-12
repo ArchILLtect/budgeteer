@@ -4,6 +4,8 @@ Thank you for helping test Budgeteer. You do **not** need to be technical.
 
 Goal: try normal usage **and** “weird” usage to spot confusing UX, bugs, and edge cases.
 
+This page includes checkboxes you can tick as you go — they save automatically in your browser on this device.
+
 ---
 
 ## Copy/paste invite (send to testers)
@@ -54,40 +56,40 @@ Sample CSV downloads (safe):
 ## Quick test (10–15 minutes)
 
 ### 1) Load the app
-- Open: https://budgeteer.nickhanson.me/
-- First impression: is it clear what the app is and what you should click?
+- [ ] Open: https://budgeteer.nickhanson.me/
+- [ ] First impression: is it clear what the app is and what you should click?
 
 ### 2) Basic navigation
 Click each of these and make sure the page loads and looks “normal”:
-- Home
-- About
-- Planner
-- Tracker
-- Settings
+- [ ] Home
+- [ ] About
+- [ ] Planner
+- [ ] Tracker
+- [ ] Settings
 
 Try:
-- The browser Back button
-- Refresh (reload the page) on at least one page
+- [ ] The browser Back button
+- [ ] Refresh (reload the page) on at least one page
 
 ### 3) Demo Mode (no login)
 On the Home page, click **Try Demo (No Signup)**.
 
 Then:
-- Click around Planner / Tracker / Accounts (if shown)
-- Try to find where imports happen (import/account data)
+- [ ] Click around Planner / Tracker / Accounts (if shown)
+- [ ] Try to find where imports happen (import/account data)
 
 ### 4) Import (demo data)
 In Demo Mode, find the import flow and try to load a demo dataset (Tiny).
 
 Confirm:
-- You see some transactions appear (staged/imported)
-- You can “apply” the import to your budget (if prompted)
-- You can find “Import history” (if available) and see your import session
+- [ ] You see some transactions appear (staged/imported)
+- [ ] You can “apply” the import to your budget (if prompted)
+- [ ] You can find “Import history” (if available) and see your import session
 
 ### 5) General “does it feel right?” feedback
-- Anything confusing?
-- Any wording that feels unclear?
-- Any button you expected to exist but didn’t?
+- [ ] Anything confusing?
+- [ ] Any wording that feels unclear?
+- [ ] Any button you expected to exist but didn’t?
 
 ---
 
@@ -96,67 +98,67 @@ Confirm:
 If you have time, do everything in “Quick test”, plus:
 
 ### A) Planner: create a simple plan
-- Create or open a scenario/month plan
-- Add at least:
-  - 1 income item
-  - 2 expense items
-  - (optional) a savings goal
+- [ ] Create or open a scenario/month plan
+- [ ] Add at least:
+  - [ ] 1 income item
+  - [ ] 2 expense items
+  - [ ] (optional) a savings goal
 
 Try edge cases:
-- Enter a value like `0`
-- Try deleting an item you just added
-- Try very large numbers (e.g. `999999`)
+- [ ] Enter a value like `0`
+- [ ] Try deleting an item you just added
+- [ ] Try very large numbers (e.g. `999999`)
 
 What to look for:
-- Do totals update quickly and correctly?
-- Any negative totals that don’t make sense?
-- Any weird formatting (too many decimals, etc.)?
+- [ ] Do totals update quickly and correctly?
+- [ ] Any negative totals that don’t make sense?
+- [ ] Any weird formatting (too many decimals, etc.)?
 
 ### B) Tracker: compare planned vs actual
-- Go to Tracker
-- Change months (if there’s a month picker)
+- [ ] Go to Tracker
+- [ ] Change months (if there’s a month picker)
 
 What to look for:
-- Is it obvious what numbers are “planned” vs “actual”?
-- Is anything confusing about the summary?
+- [ ] Is it obvious what numbers are “planned” vs “actual”?
+- [ ] Is anything confusing about the summary?
 
 ### C) CSV import (upload a file)
 If there’s an “Import CSV” button that lets you upload a file:
-- Download `demo-tiny.csv` (link at top)
-- Upload it
+- [ ] Download `demo-tiny.csv` (link at top)
+- [ ] Upload it
 
 Try edge cases:
-- Upload the same file twice (do you get duplicate transactions or does it handle re-import?)
-- Cancel out of the import flow half-way through (does the app stay stable?)
-- Refresh during or right after importing
+- [ ] Upload the same file twice (do you get duplicate transactions or does it handle re-import?)
+- [ ] Cancel out of the import flow half-way through (does the app stay stable?)
+- [ ] Refresh during or right after importing
 
 What to look for:
-- Does the UI explain what “staged” means?
-- Is it clear what “apply” and “undo” will do?
-- Do you ever feel afraid to click something because it’s unclear?
+- [ ] Does the UI explain what “staged” means?
+- [ ] Is it clear what “apply” and “undo” will do?
+- [ ] Do you ever feel afraid to click something because it’s unclear?
 
 ### D) Settings
-- Change at least one setting
-- Leave Settings and come back
+- [ ] Change at least one setting
+- [ ] Leave Settings and come back
 
 What to look for:
-- Did your setting actually save?
-- Any setting that feels risky or unclear?
+- [ ] Did your setting actually save?
+- [ ] Any setting that feels risky or unclear?
 
 ### E) “Weird user” behavior (edge case hunting)
 Try a few of these (stop if anything feels annoying):
-- Open the site in two tabs at once
-- Use Back/Forward a lot
-- Reload the page while on a non-home page
-- Click buttons quickly 2–3 times
-- Resize the browser window (wide → narrow)
-- On mobile: rotate portrait ↔ landscape
+- [ ] Open the site in two tabs at once
+- [ ] Use Back/Forward a lot
+- [ ] Reload the page while on a non-home page
+- [ ] Click buttons quickly 2–3 times
+- [ ] Resize the browser window (wide → narrow)
+- [ ] On mobile: rotate portrait ↔ landscape
 
 What to look for:
-- App crash / blank screen
-- Frozen loading state
-- Buttons that stop working
-- Layout that becomes unusable on smaller screens
+- [ ] App crash / blank screen
+- [ ] Frozen loading state
+- [ ] Buttons that stop working
+- [ ] Layout that becomes unusable on smaller screens
 
 ---
 
