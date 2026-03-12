@@ -33,7 +33,7 @@ export function StorageDisclosureBanner() {
   return (
     <Box
       borderTopWidth="1px"
-      bg="gray.600"
+      bg="bg.emphasized"
       width="75vw"
       height="130px"
       color="none"
@@ -52,7 +52,7 @@ export function StorageDisclosureBanner() {
         </Text>
 
         <HStack gap={2} flexShrink={0}>
-          <Button size="sm" color="gray.800" fontWeight="bold" bg="fg" onClick={acknowledge}>
+          <Button size="sm" color="fg" fontWeight="bold" bg="bg" onClick={acknowledge}>
             OK
           </Button>
         </HStack>
