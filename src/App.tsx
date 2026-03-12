@@ -21,6 +21,7 @@ import { DevPage } from './pages/DevPage';
 import { useDefaultLandingRoute } from './store/localSettingsStore';
 import AdminPage from "./pages/AdminPage";
 import { RequireAdmin } from "./routes/RequireAdmin";
+import { TesterScriptPage } from "./pages/TesterScriptPage";
 
 // TODO(P3): Add lazy loading for pages and components, especially ones that pull in a lot of dependencies (e.g. the login page with Amplify UI).
 
@@ -77,6 +78,7 @@ function App() {
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/login" element={<LoginPage signedIn={signedIn} authLoading={authLoading} />} />
+          <Route path="/tester-script" element={<TesterScriptPage />} />
 
           {/* Protected routes */}
           <Route element={<RequireAuth signedIn={signedIn} loading={authLoading} />}>
