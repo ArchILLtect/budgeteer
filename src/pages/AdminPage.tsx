@@ -136,27 +136,44 @@ export default function AdminPage() {
     }
   };
 
+  const testingInvitePerson = inviteName.trim() || "there";
+
+  const testingInviteSubject = "Budgeteer volunteer test";
+
+  const testingInviteText = useMemo(() => {
+    return [
+      `Hey ${testingInvitePerson},`,
+      "",
+      "Thanks for agreeing to test this product. This is important because it helps me catch confusing UX and bugs before wider launch.",
+      "",
+      "- Site: https://budgeteer.nickhanson.me/",
+      "- Time: 10–15 minutes (quick), or 30–60 minutes (full)",
+      "- Please don’t use real bank data — use Demo Mode / sample CSVs in the script.",
+      "",
+      "If you find anything confusing or broken, please send me:",
+      "- What you were trying to do",
+      "- What happened vs what you expected",
+      "- Your device + browser",
+      "- Screenshot/screen recording",
+      "- The page URL",
+      "",
+      `Start here: ${testerInviteUrl}`,
+      "",
+      "Once you’re in, the ‘Tester Script’ link will show in the sidebar — please sign in using DEMO MODE and work through the checklist and send me any notes.",
+      "",
+      "Thanks!",
+      "Nick",
+    ].join("\n");
+  }, []);
+
   const sendTesterInvite = () => {
     const to = inviteEmail.trim();
     if (!to) {
       fireToast("warning", "Email required", "Enter a tester email address.");
       return;
     }
-
-    const person = inviteName.trim() || "there";
-    const subject = "Budgeteer volunteer test";
-    const body = [
-      `Hey ${person},`,
-      "",
-      "Thanks for agreeing to test this product. This is important because it helps me catch confusing UX and bugs before wider launch.",
-      "",
-      `Start here: ${testerInviteUrl}`,
-      "",
-      "Once you’re in, the ‘Tester Script’ link will show in the sidebar — please work through the checklist and send me any notes.",
-      "",
-      "Thanks!",
-      "Nick",
-    ].join("\n");
+    const subject = testingInviteSubject;
+    const body = testingInviteText;
 
     const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
@@ -314,6 +331,36 @@ export default function AdminPage() {
         <Text mt={3} fontSize="sm" color="fg.muted">
           Link: <Code>{testerInviteUrl}</Code>
         </Text>
+
+        <Heading size="md" mt={2} mb={3}>
+          Invite message preview
+        </Heading>
+        <Box
+          as="pre"
+          bg="bg.muted"
+          borderWidth="1px"
+          borderColor="border"
+          rounded="md"
+          p={3}
+          mb={4}
+          overflowX="auto"
+          whiteSpace="pre-wrap"
+        >
+          <Code>{testingInviteSubject}</Code>
+        </Box>
+        <Box
+          as="pre"
+          bg="bg.muted"
+          borderWidth="1px"
+          borderColor="border"
+          rounded="md"
+          p={3}
+          mb={4}
+          overflowX="auto"
+          whiteSpace="pre-wrap"
+        >
+          <Code>{testingInviteText}</Code>
+        </Box>
       </Box>
 
       <Flex mt={4} gap={3} wrap="wrap" align="center">
@@ -334,6 +381,7 @@ export default function AdminPage() {
           maxW="340px"
           size="sm"
         />
+        
 
         <Checkbox.Root checked={onlyFailures} onCheckedChange={(d) => setOnlyFailures(!!d.checked)} colorPalette={"orange"}>
           <Checkbox.HiddenInput />

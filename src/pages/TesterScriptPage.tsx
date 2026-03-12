@@ -1,5 +1,5 @@
 import { Box, Checkbox, Code, Heading, Link, List, Separator, Text } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { idbGetItem, idbSetItem } from "../services/indexedDbKeyValue";
 
 type ChecklistState = Record<string, boolean>;
@@ -87,24 +87,7 @@ export function TesterScriptPage() {
     void idbSetItem(TESTER_CHECKLIST_STORAGE_KEY, serialized);
   }, [checks, hasLoaded]);
 
-  const inviteText = useMemo(() => {
-    return [
-      "Hey! Can you help me test my budgeting app?",
-      "",
-      "- Site: https://budgeteer.nickhanson.me/",
-      "- Time: 10–15 minutes (quick), or 30–60 minutes (full)",
-      "- Please don’t use real bank data — use Demo Mode / sample CSVs in the script.",
-      "",
-      "If you find anything confusing or broken, please send me:",
-      "- What you were trying to do",
-      "- What happened vs what you expected",
-      "- Your device + browser",
-      "- Screenshot/screen recording",
-      "- The page URL",
-      "",
-      "Thank you!",
-    ].join("\n");
-  }, []);
+
 
   return (
     <Box minH="100%" p={4} rounded="md" boxShadow="sm" bg="bg" mx={10} my={2}>
@@ -125,23 +108,6 @@ export function TesterScriptPage() {
       </Text>
 
       <Separator my={6} />
-
-      <Heading size="xl" mt={2} mb={3}>
-        Copy/paste invite (send to testers)
-      </Heading>
-      <Box
-        as="pre"
-        bg="bg.muted"
-        borderWidth="1px"
-        borderColor="border"
-        rounded="md"
-        p={3}
-        mb={4}
-        overflowX="auto"
-        whiteSpace="pre-wrap"
-      >
-        <Code>{inviteText}</Code>
-      </Box>
 
       <Heading size="xl" mt={8} mb={3}>
         What to send me (so I can fix things)
