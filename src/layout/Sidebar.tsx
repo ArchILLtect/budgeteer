@@ -67,7 +67,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <Box>
         {import.meta.env.DEV || isTesterRole || testerModeEnabled ? (
           <>
+            <Separator my={3} />
             <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
+            <Separator my={3} />
           </>
         ) : null}
       </Box>
