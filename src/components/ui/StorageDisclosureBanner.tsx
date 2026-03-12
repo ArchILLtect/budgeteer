@@ -32,7 +32,8 @@ export function StorageDisclosureBanner() {
 
   return (
     <Box
-      borderTopWidth="1px"
+      borderWidth="3px"
+      borderColor="bg.inverted"
       bg="bg.emphasized"
       width="75vw"
       height="130px"
