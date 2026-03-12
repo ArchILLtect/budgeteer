@@ -24,13 +24,13 @@ export function PublicSidebar({ onNavigate }: PublicSidebarProps) {
       bg={{ base: "teal.300", _dark: "teal.700" }}
       boxShadow="sm"
       position={"sticky"}
-      minH="100%"
+      height="100%"
       zIndex="1000"
       shadow="md"
       borderY={"2px solid lightgray"}
       padding={3}
-      >
-      <Box height={"70vh"}>
+    >
+      <Box height={"100%"}>
         {publicSidebarItems.map((item) => (
           <Box key={item.to}>
             <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
@@ -38,10 +38,12 @@ export function PublicSidebar({ onNavigate }: PublicSidebarProps) {
           </Box>
         ))}
         {import.meta.env.DEV || testerModeEnabled ? (
-          <Box key="/tester-script" height="100%" display="flex" flexDirection="column" textAlign="center" justifyContent="center">
-            <Separator my={3} />
-            <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
-            <Separator my={3} />
+          <Box h="50%" display="flex" flexDirection="column" textAlign="center" justifyContent="center">
+            <Box key="/tester-script">
+              <Separator my={3} />
+              <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
+              <Separator my={3} />
+            </Box>
           </Box>
         ) : null}
       </Box>
