@@ -102,6 +102,9 @@ export default function AdminPage() {
   const events = usePerfLogStore((s) => s.events);
   const clear = usePerfLogStore((s) => s.clear);
 
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+
   const [search, setSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
   const [kind, setKind] = useState<PerfEventKind | "all">("all");
@@ -112,6 +115,52 @@ export default function AdminPage() {
   const [endDateTimeLocal, setEndDateTimeLocal] = useState("");
   const [pageSize, setPageSize] = useState(50);
   const [pageIndex, setPageIndex] = useState(0);
+
+  const testerInviteUrl = useMemo(() => {
+    try {
+      const url = new URL("/tester-script", window.location.origin);
+      url.searchParams.set("tester", "1");
+      return url.toString();
+    } catch {
+      return "/tester-script?tester=1";
+    }
+  }, []);
+
+  const copyTesterInviteLink = async () => {
+    try {
+      await navigator.clipboard.writeText(testerInviteUrl);
+      fireToast("success", "Copied", "Invite link copied.");
+    } catch (err) {
+      fireToast("error", "Copy failed", "Could not copy invite link.");
+      if (import.meta.env.DEV) console.warn("[admin] copy invite link failed", err);
+    }
+  };
+
+  const sendTesterInvite = () => {
+    const to = inviteEmail.trim();
+    if (!to) {
+      fireToast("warning", "Email required", "Enter a tester email address.");
+      return;
+    }
+
+    const person = inviteName.trim() || "there";
+    const subject = "Budgeteer volunteer test";
+    const body = [
+      `Hey ${person},`,
+      "",
+      "Thanks for agreeing to test this product. This is important because it helps me catch confusing UX and bugs before wider launch.",
+      "",
+      `Start here: ${testerInviteUrl}`,
+      "",
+      "Once you’re in, the ‘Tester Script’ link will show in the sidebar — please work through the checklist and send me any notes.",
+      "",
+      "Thanks!",
+      "Nick",
+    ].join("\n");
+
+    const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+  };
 
   const resetFilters = () => {
     setSearch("");
@@ -230,6 +279,42 @@ export default function AdminPage() {
           </HStack>
         </HStack>
       </Flex>
+
+      <Box mt={4} p={4} borderWidth={1} borderRadius="md" bg="bg.panel">
+        <Heading size="md">Invite a tester</Heading>
+        <Text mt={1} fontSize="sm" color="fg.muted">
+          Sends via your email client (mailto). The link enables “Tester Script” in the sidebar.
+        </Text>
+
+        <Flex mt={3} gap={3} wrap="wrap" align="center">
+          <Input
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="Tester email (e.g. alex@example.com)"
+            bg="bg"
+            maxW="360px"
+            size="sm"
+          />
+          <Input
+            value={inviteName}
+            onChange={(e) => setInviteName(e.target.value)}
+            placeholder="Name (optional)"
+            bg="bg"
+            maxW="220px"
+            size="sm"
+          />
+          <Button size="sm" colorPalette="teal" onClick={sendTesterInvite}>
+            Send
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => void copyTesterInviteLink()}>
+            Copy invite link
+          </Button>
+        </Flex>
+
+        <Text mt={3} fontSize="sm" color="fg.muted">
+          Link: <Code>{testerInviteUrl}</Code>
+        </Text>
+      </Box>
 
       <Flex mt={4} gap={3} wrap="wrap" align="center">
         <Input
