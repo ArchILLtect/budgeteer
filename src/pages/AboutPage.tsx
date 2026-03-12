@@ -9,6 +9,14 @@ export function AboutPage() {
           Budgeteer is a privacy-aware personal finance app built for planning-first budgeting, safe CSV imports, and
           clear monthly tracking.
         </Text>
+
+        <HStack gap={2} pt={2} flexWrap="wrap">
+          <Button asChild variant="outline">
+            <a href="https://github.com/ArchILLtect/budgeteer" target="_blank" rel="noreferrer">
+              View project on GitHub
+            </a>
+          </Button>
+        </HStack>
       </VStack>
 
       <Box>

@@ -164,7 +164,7 @@ export default function AdminPage() {
       "Thanks!",
       "Nick",
     ].join("\n");
-  }, []);
+  }, [testerInviteUrl, testingInvitePerson]);
 
   const sendTesterInvite = () => {
     const to = inviteEmail.trim();
