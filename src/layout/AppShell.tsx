@@ -26,6 +26,7 @@ import { FullPageLoading } from "./FullPageLoading";
 import { useRouteLoadingStore } from "../store/routeLoadingStore";
 import { recordRouteLoadComplete } from "../services/perfLogger";
 import { useDemoMode } from "../hooks/useDemoMode";
+import { setTesterModeEnabled, shouldEnableTesterModeFromSearch } from "../services/testerMode";
 
 const DemoTourModal = lazy(() =>
   import("../components/demo-mode/DemoTourModal").then((mod) => ({ default: mod.DemoTourModal }))
@@ -80,6 +81,13 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
   const [showRouteOverlay, setShowRouteOverlay] = useState(false);
 
   useBootstrapUserProfile(user);
+
+  // Tester invites: allow a public link like `/?tester=1` or `/tester-script?tester=1`
+  // to enable the Tester Script nav entry (even while logged out).
+  useEffect(() => {
+    if (!shouldEnableTesterModeFromSearch(location.search)) return;
+    void setTesterModeEnabled(true);
+  }, [location.search]);
 
   // Avoid flashing the full-page overlay for fast navigations.
   useEffect(() => {

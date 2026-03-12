@@ -3,6 +3,7 @@ import { Box, Flex, Separator } from "@chakra-ui/react";
 import { SidebarItem } from "../components/SidebarItem";
 import { publicSidebarItems, SIDEBAR_WIDTH } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
+import { useTesterModeEnabled } from "../hooks/useTesterMode";
 
 export type PublicSidebarProps = {
   onNavigate?: () => void;
@@ -12,6 +13,7 @@ export function PublicSidebar({ onNavigate }: PublicSidebarProps) {
 
   const sidebarWidthPreset = useSidebarWidthPreset();
   const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH[sidebarWidthPreset] ?? SIDEBAR_WIDTH.small;
+  const testerModeEnabled = useTesterModeEnabled();
   
   return (
     <Flex
@@ -29,6 +31,12 @@ export function PublicSidebar({ onNavigate }: PublicSidebarProps) {
       padding={3}
       >
       <Box>
+        {import.meta.env.DEV || testerModeEnabled ? (
+          <Box key="/tester-script">
+            <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
+            <Separator my={3} />
+          </Box>
+        ) : null}
         {publicSidebarItems.map((item) => (
           <Box key={item.to}>
             <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />

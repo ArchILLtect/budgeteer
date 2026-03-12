@@ -3,6 +3,7 @@ import { SidebarItem } from "../components/SidebarItem";
 import { sidebarItems, SIDEBAR_WIDTH, publicSidebarItems } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
 import { useUserUI } from "../hooks/useUserUI";
+import { useTesterModeEnabled } from "../hooks/useTesterMode";
 
 export type SidebarProps = {
   onNavigate?: () => void;
@@ -12,7 +13,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   const { userUI } = useUserUI();
   const isAdmin = userUI?.role === "Admin";
-  const isTester = userUI?.role === "Tester"; // But instead of role we need some other way to determine if we should show the tester script link, so it is visible even if not logged in and it set via clicking a link in an email. We could do this via a query param that we set when linking to the tester script in the email, and then persist that in local storage so it "sticks" after auth resolves. We would also want to make sure that the tester script page itself also checks for that persisted flag so it doesn't look broken if you navigate there directly without the query param.
+  const isTesterRole = userUI?.role === "Tester";
+  const testerModeEnabled = useTesterModeEnabled();
 
   const sidebarWidthPreset = useSidebarWidthPreset();
   const CURRENT_SIDEBAR_WIDTH = SIDEBAR_WIDTH[sidebarWidthPreset] ?? SIDEBAR_WIDTH.small;
@@ -63,7 +65,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ) : null}
       </Box>
       <Box>
-        {import.meta.env.DEV || isTester ? (
+        {import.meta.env.DEV || isTesterRole || testerModeEnabled ? (
           <>
             <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
           </>
