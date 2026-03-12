@@ -30,19 +30,20 @@ export function PublicSidebar({ onNavigate }: PublicSidebarProps) {
       borderY={"2px solid lightgray"}
       padding={3}
       >
-      <Box>
-        {import.meta.env.DEV || testerModeEnabled ? (
-          <Box key="/tester-script">
-            <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
-            <Separator my={3} />
-          </Box>
-        ) : null}
+      <Box height={"70vh"}>
         {publicSidebarItems.map((item) => (
           <Box key={item.to}>
             <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
             <Separator my={3} />
           </Box>
         ))}
+        {import.meta.env.DEV || testerModeEnabled ? (
+          <Box key="/tester-script" height="100%" display="flex" flexDirection="column" textAlign="center" justifyContent="center">
+            <Separator my={3} />
+            <SidebarItem to="/tester-script" label="Tester Script" onNavigate={onNavigate} />
+            <Separator my={3} />
+          </Box>
+        ) : null}
       </Box>
     </Flex>
   );
