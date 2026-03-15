@@ -12,8 +12,6 @@ export const sidebarItems: SidebarLink[] = [
   { to: "/tracker", label: "Tracker" },
   { to: "/insights", label: "Insights" },
   { to: "/imports", label: "Imports" },
-  { to: "/profile", label: "Profile" },
-  { to: "/settings", label: "Settings" },
 ];
 
 export const publicSidebarItems: SidebarLink[] = [
