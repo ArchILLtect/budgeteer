@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Box, Heading, Center, Text, VStack, useMediaQuery } from '@chakra-ui/react'
+import { Box, Button, Center, Heading, HStack, Text, VStack, useMediaQuery } from '@chakra-ui/react'
 import ScenarioSelector from '../components/planner/ScenarioSelector';
 import IncomeCalculator from '../components/planner/IncomeCalculator';
 import ExpenseTracker from '../components/planner/ExpenseTracker';
 import { Suspense, lazy } from 'react';
 import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from '../store/budgetStore';
+import { Tip } from '../components/ui/Tip';
+import { RouterLink } from '../components/RouterLink';
 const ExpensePie = lazy(() => import('../components/ExpensePie'));
 const preloadExpensePie = () => import('../components/ExpensePie');
 
@@ -40,6 +42,27 @@ function BudgetPlannerPage() {
             </Text>
           </VStack>
         </Center>
+
+        <Tip
+          title="Getting started"
+          storageKey="tip:planner-getting-started:v1"
+          action={
+            <HStack gap={2} flexWrap="wrap">
+              <Button asChild size="sm" variant="outline" colorPalette="teal">
+                <RouterLink to="/tracker">Go to Tracker</RouterLink>
+              </Button>
+              <Button asChild size="sm" variant="outline" colorPalette="gray">
+                <RouterLink to="/accounts">Import CSV (Accounts)</RouterLink>
+              </Button>
+            </HStack>
+          }
+        >
+          Use Planner to enter a realistic baseline (income + monthly expenses), then try different scenarios to find a
+          “sweet spot” you can actually stick to. You can add more scenarios to try different combinations. When you’re
+          happy with a scenario, open Tracker and click “Set plan” to save it as this month’s baseline — that’s what
+          makes the plan vs actual comparison meaningful once you start importing and applying real transactions.
+        </Tip>
+
         <ScenarioSelector isOpen={isOpen} onOpen={() => setIsOpen(true)} onClose={() => setIsOpen(false)} />
         <hr style={{marginTop: 15 + "px", marginBottom: 15 + "px"}}/>
         <IncomeCalculator selectedMonth={selectedMonth} />

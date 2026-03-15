@@ -4,6 +4,8 @@ import InlineSpinner from '../components/ui/InlineSpinner';
 import { useBudgetStore } from "../store/budgetStore";
 import AccountCard from '../components/accounts/AccountCard';
 import { usePerfMilestone } from "../hooks/usePerfMilestone";
+import { Tip } from '../components/ui/Tip';
+import { RouterLink } from '../components/RouterLink';
 // Dev harness can still be imported manually when needed
 // import IngestionDevHarness from '../../dev/IngestionDevHarness';
 const SyncAccountsModal = lazy(() => import('../components/ui/SyncAccountsModal'));
@@ -63,6 +65,31 @@ export default function AccountsTracker() {
             This page may take a bit to load depending on the number of accounts and transactions imported.
           </Text>
         </VStack>
+
+        <Tip
+          title="Getting started"
+          storageKey="tip:accounts-getting-started:v1"
+          action={
+            <HStack gap={2} flexWrap="wrap">
+              <Button asChild size="sm" variant="outline" colorPalette="teal">
+                <RouterLink to="/imports">Go to Import History (Apply/Undo)</RouterLink>
+              </Button>
+              <Button asChild size="sm" variant="outline" colorPalette="gray">
+                <RouterLink to="/tracker">Go to Tracker</RouterLink>
+              </Button>
+              <Button asChild size="sm" variant="outline" colorPalette="gray">
+                <RouterLink to="/planner">Go to Planner</RouterLink>
+              </Button>
+            </HStack>
+          }
+        >
+          Use Accounts to import transactions without bank linking. Imports are designed to be deliberate and safe:
+          preview first, then stage results so you can apply them to your budget (or undo within the window). After you
+          import, click "Apply To Budget" to apply that session; then Tracker will show those transactions as “actuals”
+          so you can compare against your plan. Use Import History if you need to review or undo previous imports.
+          Imported transactions are kept in sync with your accounts list, so if you undo an import that added an account,
+          that account and its transactions will be removed.
+        </Tip>
 
         <HStack gap={4}>
           <Button colorPalette="teal" onClick={syncModal.onOpen} onMouseEnter={preloadSyncModal}>

@@ -5,10 +5,12 @@ import { fireToast } from "../hooks/useFireToast";
 import { TiArrowRepeat, TiDownloadOutline } from "react-icons/ti";
 import { FiTrash2 } from "react-icons/fi";
 import { AppSelect } from '../components/ui/AppSelect';
+import { Tip } from '../components/ui/Tip';
 import { Tooltip } from '../components/ui/Tooltip';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { maskAccountNumber } from '../utils/maskAccountNumber';
 import { DialogModal } from '../components/ui/DialogModal';
+import { RouterLink } from '../components/RouterLink';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { formatLocalIsoMonthDayTime24 } from "../services/dateTime";
@@ -202,6 +204,28 @@ export default function ImportHistoryPage() {
           </IconButton>
         </HStack>
       </Flex>
+
+      <Tip
+        title="Getting started"
+        storageKey="tip:imports-getting-started:v1"
+        action={
+          <HStack gap={2} flexWrap="wrap">
+            <Button asChild size="sm" variant="outline" colorPalette="teal">
+              <RouterLink to="/accounts">Go to Accounts (Import)</RouterLink>
+            </Button>
+            <Button asChild size="sm" variant="outline" colorPalette="teal">
+              <RouterLink to="/tracker">Go to Tracker (Plan vs actual)</RouterLink>
+            </Button>
+            <Button asChild size="sm" variant="outline" colorPalette="gray">
+              <RouterLink to="/planner">Go to Planner (Adjust plan)</RouterLink>
+            </Button>
+          </HStack>
+        }
+      >
+        Import History is the “commit step”: it’s where staged imports become real budget data. Use Apply to push a
+        selected session into monthly actuals (and Undo if you made a mistake within the window). Once applied, open
+        Tracker for the affected month(s) to compare your actual spending vs the plan baseline you set.
+      </Tip>
 
       <Flex mb={3} gap={2} wrap='wrap' align='center'>
         {someSelected ? (
