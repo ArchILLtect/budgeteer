@@ -1,6 +1,6 @@
 import { Box, Flex, Separator } from "@chakra-ui/react";
 import { SidebarItem } from "../components/SidebarItem";
-import { sidebarItems, SIDEBAR_WIDTH, publicSidebarItems } from "../config/sidebar";
+import { sidebarItems, SIDEBAR_WIDTH } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
 import { useUserUI } from "../hooks/useUserUI";
 import { useTesterModeEnabled } from "../hooks/useTesterMode";
@@ -9,7 +9,7 @@ export type SidebarProps = {
   onNavigate?: () => void;
 };
 
-export function Sidebar({ onNavigate }: SidebarProps) {
+export function PrivateSidebar({ onNavigate }: SidebarProps) {
 
   const { userUI } = useUserUI();
   const isAdmin = userUI?.role === "Admin";
@@ -72,14 +72,6 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <Separator my={3} />
           </>
         ) : null}
-      </Box>
-      <Box mt={4}>
-        {publicSidebarItems.map((item) => (
-          <Box key={item.to}>
-            <Separator my={3} />
-            <SidebarItem key={item.to} to={item.to} label={item.label} onNavigate={onNavigate} />
-          </Box>
-        ))}
       </Box>
     </Flex>
   );
