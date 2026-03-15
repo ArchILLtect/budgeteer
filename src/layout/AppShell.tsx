@@ -12,7 +12,7 @@ import { BasicSpinner } from "../components/ui/BasicSpinner.tsx";
 import { useBootstrapUserProfile } from "../hooks/useBootstrapUserProfile";
 import { WelcomeModal } from "../components/ui/WelcomeModal";
 import { GlobalProgressOverlay } from "../components/ui/GlobalProgressOverlay";
-import { Sidebar } from "./Sidebar.tsx";
+import { PrivateSidebar } from "./PrivateSidebar.tsx";
 import { PublicSidebar } from "./PublicSidebar.tsx";
 import { SIDEBAR_WIDTH } from "../config/sidebar";
 import { useSidebarWidthPreset } from "../store/localSettingsStore";
@@ -202,7 +202,7 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
                 <BasicSpinner height="100%" width="100%" size="md" />
               </Box>
             ) : signedIn ? (
-              <Sidebar onNavigate={handleSidebarNavigate} />
+              <PrivateSidebar onNavigate={handleSidebarNavigate} />
             ) : (
               <PublicSidebar onNavigate={handleSidebarNavigate} />
             )}
@@ -224,7 +224,7 @@ export function AppShell({ user, onSignOut, signedIn, authLoading }: AppShellPro
                 top="50%"
                 left={sidebarOpen ? sidebarWidth : "0px"}
                 transform={sidebarOpen ? "translate(-50%, -50%)" : "translate(0, -50%)"}
-                zIndex={1500} //TODO(continual): ensure this is above all sidebar elements but below the header after recent changes.
+                zIndex={1500}
                 onClick={() => setSidebarOpen((v) => !v)}
               >
                 {sidebarOpen ? <MdChevronLeft /> : <MdChevronRight />}
