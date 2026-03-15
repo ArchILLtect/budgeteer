@@ -1,16 +1,14 @@
-import { Box, Flex, Button, HStack, Heading, Badge, IconButton } from '@chakra-ui/react';
+import { Box, Flex, Button, HStack, Heading, Badge, IconButton, Menu, Portal, Separator } from '@chakra-ui/react';
 import { useMemo, useState } from "react";
 import { RouterLink } from "../components/RouterLink";
 import { Tooltip } from '../components/ui/Tooltip';
 import { requestOpenWelcomeModal } from '../services/welcomeModalPreference';
-import { IoSettingsSharp } from 'react-icons/io5';
-import { MdDarkMode, MdLightMode, MdNewReleases } from "react-icons/md";
+import { MdMenu, MdNewReleases } from "react-icons/md";
 import { formatUsernameForDisplay } from '../services/userDisplay';
 import type { AuthUserLike, UserUI } from '../types';
 import { useUserUI } from '../hooks/useUserUI';
 import { useDemoMode } from "../hooks/useDemoMode";
 import { useDemoTourStore } from "../store/demoTourStore";
-import { useColorModeClass } from "../hooks/useColorModeClass";
 import { usePresenceHeartbeat } from "../hooks/usePresenceHeartbeat";
 import { usePresenceStore } from "../store/presenceStore";
 import { useShallow } from "zustand/react/shallow";
@@ -18,6 +16,10 @@ import { getOrCreateDeviceId } from "../services/deviceIdentity";
 import { useSyncLock } from "../hooks/useSyncLock";
 import { runSyncNow } from "../services/cloudSyncService";
 import { fireToast } from "../hooks/useFireToast";
+import { signedInMenuItemLinks, signedOutMenuItemLinks } from "../config/menu";
+import { useNavigate } from "react-router-dom";
+import { useRouteLoadingStore } from "../store/routeLoadingStore";
+import { StatusIndicator } from "../components/ui/StatusIndicator";
 
 type NavigationProps = {
   user?: AuthUserLike | null;
@@ -25,8 +27,6 @@ type NavigationProps = {
 };
 
 export default function Navigation({ user, userUI }: NavigationProps) {
-
-  const { mode, toggle } = useColorModeClass();
 
   const { userUI: hookUserUI } = useUserUI();
   const effectiveUserUI = userUI ?? hookUserUI;
@@ -46,6 +46,16 @@ export default function Navigation({ user, userUI }: NavigationProps) {
 
   const displayUsername = signedIn ? formatUsernameForDisplay(username ?? null) : null;
 
+  const navigate = useNavigate();
+  const startRouteLoading = useRouteLoadingStore((s) => s.startRouteLoading);
+
+  const headerMenuItems = signedIn ? signedInMenuItemLinks : signedOutMenuItemLinks;
+
+  const navigateWithOverlay = (to: string) => {
+    startRouteLoading(to);
+    navigate(to, { viewTransition: true });
+  };
+
   const userId = user?.userId ?? null;
   usePresenceHeartbeat({ enabled: Boolean(userId), userId });
 
@@ -53,6 +63,23 @@ export default function Navigation({ user, userUI }: NavigationProps) {
   const syncLock = useSyncLock();
   const syncLockHeldByOther = Boolean(syncLock && deviceId && syncLock.ownerDeviceId !== deviceId);
   const [syncing, setSyncing] = useState(false);
+
+  const handleSyncNow = async () => {
+    if (!userId) return;
+    setSyncing(true);
+    try {
+      const res = await runSyncNow(userId);
+      if (res.ok) {
+        fireToast("success", "Synced", "Cloud sync probe completed.");
+      } else if (res.reason === "locked") {
+        fireToast("warning", "Sync busy", res.message);
+      } else {
+        fireToast("error", "Sync failed", res.message);
+      }
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const presence = usePresenceStore(
     useShallow((s) => ({
@@ -93,23 +120,24 @@ export default function Navigation({ user, userUI }: NavigationProps) {
     presenceTooltipParts.length > 0 ? presenceTooltipParts.join(" • ") : "Presence";
 
   return (
-    <HStack
-      position="sticky"
-      top="0"
-      zIndex="1000"
-      bg={{ base: "teal.300", _dark: "teal.700" }}
-      color="teal.800"
-      boxShadow="sm"
-      px={{ base: 2, sm: 4 }}
-      py={{ base: 2, sm: 3 }}
-      shadow="md"
-      w="100%"
-      minW={0}
-      borderBottomWidth="1px"
-      borderBottomColor={{ base: "teal.400", _dark: "teal.600" }}
-      overflowX="hidden"
-    >
-      <Flex justifyContent="space-between" alignItems="center" width="100%" minW={0}>
+    <Box>
+      <HStack
+        position="sticky"
+        top="0"
+        zIndex="1000"
+        bg={{ base: "teal.300", _dark: "teal.700" }}
+        color="teal.800"
+        boxShadow="sm"
+        px={{ base: 2, sm: 4 }}
+        py={{ base: 2, sm: 3 }}
+        shadow="md"
+        w="100%"
+        minW={0}
+        borderBottomWidth="1px"
+        borderBottomColor={{ base: "teal.400", _dark: "teal.600" }}
+        overflowX="hidden"
+      >
+        <Flex justifyContent="space-between" alignItems="center" width="100%" minW={0}>
         <RouterLink to="/">{() =>
           <Heading
             size={{ base: "xl", sm: "2xl" }}
@@ -186,17 +214,38 @@ export default function Navigation({ user, userUI }: NavigationProps) {
                 </RouterLink>
 
                 {isAdmin ? (
-                  <Badge rounded="md" bg="purple.100" color="purple.800">
+                  <Badge
+                    display={{ base: "none", sm: "inline-flex" }}
+                    rounded="md"
+                    bg="purple.100"
+                    color="purple.800"
+                  >
                     Admin
                   </Badge>
                 ) : null}
 
                 {userId ? (
-                  <Tooltip content={presenceTooltip} showArrow>
-                    <Badge rounded="md" colorPalette={presencePalette}>
-                      {presenceLabel}
-                    </Badge>
-                  </Tooltip>
+                  <>
+                    <Box display={{ base: "none", sm: "block" }}>
+                      <Tooltip content={presenceTooltip} showArrow>
+                        <Badge rounded="md" colorPalette={presencePalette}>
+                          {presenceLabel}
+                        </Badge>
+                      </Tooltip>
+                    </Box>
+                    <Box display={{ base: "inline-flex", sm: "none" }} alignItems="center" px={2}>
+                      <StatusIndicator
+                        status={
+                          presence.status === "online"
+                            ? "online"
+                            : presence.status === "offline"
+                              ? "offline"
+                              : "checking"
+                        }
+                        title={presenceTooltip}
+                      />
+                    </Box>
+                  </>
                 ) : null}
 
                 {userId ? (
@@ -211,25 +260,11 @@ export default function Navigation({ user, userUI }: NavigationProps) {
                     showArrow
                   >
                     <Button
+                      display={{ base: "none", sm: "inline-flex" }}
                       size="sm"
                       variant="ghost"
                       disabled={syncing || syncLockHeldByOther}
-                      onClick={async () => {
-                        if (!userId) return;
-                        setSyncing(true);
-                        try {
-                          const res = await runSyncNow(userId);
-                          if (res.ok) {
-                            fireToast("success", "Synced", "Cloud sync probe completed.");
-                          } else if (res.reason === "locked") {
-                            fireToast("warning", "Sync busy", res.message);
-                          } else {
-                            fireToast("error", "Sync failed", res.message);
-                          }
-                        } finally {
-                          setSyncing(false);
-                        }
-                      }}
+                      onClick={handleSyncNow}
                     >
                       Sync now
                     </Button>
@@ -238,13 +273,19 @@ export default function Navigation({ user, userUI }: NavigationProps) {
 
                 {isDemo ? (
                   demoTourDisabled ? (
-                    <Badge rounded="md" bg="orange.100" color="orange.800">
+                    <Badge
+                      display={{ base: "none", sm: "inline-flex" }}
+                      rounded="md"
+                      bg="orange.100"
+                      color="orange.800"
+                    >
                       Demo Mode
                     </Badge>
                   ) : (
                     <Tooltip content="Open demo tour" showArrow>
                       <Badge
                         as="button"
+                        display={{ base: "none", sm: "inline-flex" }}
                         rounded="md"
                         bg="orange.100"
                         color="orange.800"
@@ -265,39 +306,73 @@ export default function Navigation({ user, userUI }: NavigationProps) {
               <RouterLink to="/login">{() => <Button as="span" size="sm" variant="solid">Sign in</Button>}</RouterLink>
             )}
 
-            <Tooltip content={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} showArrow>
-              <IconButton
-                aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                variant="ghost"
-                onClick={toggle}
-                color={{ base: "teal.800", _dark: "teal.300" }}
-                _hover={{ bg: { base: "teal.800", _dark: "teal.300" }, color: { base: "teal.300", _dark: "teal.800" } }}
-              >
-                {mode === "dark" ? <MdLightMode /> : <MdDarkMode />}
-              </IconButton>
-            </Tooltip>
+            <Menu.Root positioning={{ placement: "bottom-end" }}>
+              <Menu.Trigger asChild>
+                <IconButton
+                  aria-label="Menu"
+                  title="Menu"
+                  variant="ghost"
+                  color={{ base: "teal.800", _dark: "teal.300" }}
+                  _hover={{ bg: { base: "teal.800", _dark: "teal.300" }, color: { base: "teal.300", _dark: "teal.800" } }}
+                >
+                  <MdMenu />
+                </IconButton>
+              </Menu.Trigger>
 
-            {signedIn ? (
-              <RouterLink to={"/settings"} aria-label="Settings">
-                {({ isActive }) => (
-                  <Button
-                    as="span"
-                    variant="ghost"
-                    justifyContent="flex-start"
-                    width="100%"
-                    paddingX={2}
-                    fontWeight="700"
-                    color={{ base: "teal.800", _dark: "teal.300" }}
-                    _hover={{ bg: { base: "teal.800", _dark: "teal.300" }, color: { base: "teal.300", _dark: "teal.800" } }}
-                    bg={isActive ? "teal.00" : { base: "teal.300", _dark: "teal.700" }}
-                  >
-                    <IoSettingsSharp />
-                  </Button>
-                )}
-              </RouterLink>
-            ) : null}
+              <Portal>
+                <Menu.Positioner>
+                  <Menu.Content minW="220px" bg="bg.panel" borderWidth="1px" borderColor="border" boxShadow="md">
+                    {headerMenuItems.map((item) => (
+                      <Menu.Item key={item.to} value={item.to} onClick={() => navigateWithOverlay(item.to)}>
+                        {item.label}
+                      </Menu.Item>
+                    ))}
+                    <Separator my={1} />
+                    {signedIn ? (
+                      <>
+                        <Menu.Item value="Role" disabled>
+                          Role: {role ?? "User"}
+                        </Menu.Item>
+                        {userId ? (
+                          <Menu.Item
+                            value="SyncNow"
+                            disabled={syncing || syncLockHeldByOther}
+                            onClick={handleSyncNow}
+                          >
+                            {syncLockHeldByOther ? "Sync busy" : syncing ? "Syncing…" : "Sync now"}
+                          </Menu.Item>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </Menu.Content>
+                </Menu.Positioner>
+              </Portal>
+            </Menu.Root>
           </HStack>
         </Flex>
-    </HStack>
+      </HStack>
+
+      {signedIn ? (
+        <HStack
+          display={{ base: "flex", sm: "none" }}
+          justify="space-around"
+          flexWrap="wrap"
+          py={1}
+          bg="bg.panel"
+          borderBottomWidth="1px"
+          borderBottomColor="bg.panel"
+        >
+          {isDemo ? (
+            <Badge rounded="md" bg="orange.100" color="orange.800">
+              Demo Mode
+            </Badge>
+          ) : (
+            <Badge rounded="md" bg="teal.600" color="white" maxW="80%" overflow="hidden" textOverflow="ellipsis">
+              {displayUsername}
+            </Badge>
+          )}
+        </HStack>
+      ) : null}
+    </Box>
   );
 }
