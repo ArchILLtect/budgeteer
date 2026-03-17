@@ -22,6 +22,18 @@ import {
 
 const WHATS_NEW: Array<{ title: string; body: string }> = [
   {
+    title: "Getting started tips",
+    body: "Planner, Tracker, Accounts, and Import History now include a dismissible ‘Getting started’ tip to make the end-to-end workflow clearer.",
+  },
+  {
+    title: "Header + mobile navigation",
+    body: "Header navigation has been simplified for small screens (status dot + hamburger menu), and ‘Sync now’ lives in the menu on mobile.",
+  },
+  {
+    title: "Theme toggle in footer",
+    body: "You can now switch light/dark mode from the footer, next to Sign in/Sign out.",
+  },
+  {
     title: "Sample data vs Demo Mode",
     body: "New accounts can be seeded with sample data without being treated as a demo account.",
   },
@@ -208,7 +220,14 @@ export function WelcomeModal({ signedIn, authLoading }: { signedIn: boolean; aut
                   Enable Demo Mode + Start tour
                 </Button>
               ) : (
-                <Button size="sm" variant="outline" onClick={startDemoTour}>
+                <Button size="sm"
+                  bg={{_dark: "orange.700", base: "orange.300" }}
+                  color={{ _dark: "orange.200", base: "orange.800" }}
+                  borderColor={{ _dark: "orange.300", base: "orange.700" }}
+                  _hover={{ bg: { _dark: "orange.300", base: "orange.800" }, color: { _dark: "orange.900", base: "orange.300" }, transform: "translateY(-2px)" }}
+                  onClick={startDemoTour}
+                  transitionDuration="0.2s"
+                >
                   Start tour
                 </Button>
               )}
